@@ -1,16 +1,16 @@
-命名規則
-    クラス          UpperCamel
-        public変数      lowerCamel
-        private変数     lowerCamel_
-    変数            lowerCamel
-    関数            lowerCamel
+    命名規則
+        クラス              UpperCamel
+        public変数          lowerCamel
+        private変数         lowerCamel_
+        変数            lowerCamel
+        関数            lowerCamel
 
-    ファイル名
-        クラスファイル  UpperCamel.cpp UpperCamel.hpp
-        その他          lowerCamel.cpp
-        mdファイル      UPPER
+        ファイル名
+            クラスファイル  UpperCamel.cpp UpperCamel.hpp
+            その他          lowerCamel.cpp
+            mdファイル      UPPER
 
-クラスの宣言の順序
-    public:
-    protected:
-    private:
+    クラスの宣言の順序
+        public:
+        protected:
+        private:
