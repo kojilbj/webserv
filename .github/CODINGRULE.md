@@ -9,3 +9,8 @@
         クラスファイル  UpperCamel.cpp UpperCamel.hpp
         その他          lowerCamel.cpp
         mdファイル      UPPER
+
+クラスの宣言の順序
+    public:
+    protected:
+    private:
