@@ -24,7 +24,13 @@ void ngx_single_process_cycle(ngx_cycle_t* cycle)
 	for (i = 0; cycle->modules[i]; i++)
 	{
 		if (cycle->modules[i]->init_process)
+		{
 			cycle->modules[i]->init_process(cycle);
+			/* ngx_core_module == DONTHAVE */
+			/* ngx_events_module == DONTHAVE */
+			/* ngx_epoll_module == DONTHAVE */
+			/* ngx_event_core_module == HAVE */
+		}
 	}
 	for (;;)
 	{
@@ -34,7 +40,13 @@ void ngx_single_process_cycle(ngx_cycle_t* cycle)
 			for (i = 0; cycle->modules[i]; i++)
 			{
 				if (cycle->modules[i]->exit_process)
+				{
 					cycle->modules[i]->exit_process(cycle);
+					/* ngx_core_module == DONTHAVE */
+					/* ngx_events_module == DONTHAVE */
+					/* ngx_epoll_module == DONTHAVE */
+					/* ngx_event_core_module == DONTHAVE */
+				}
 			}
 			ngx_master_process_exit(cycle);
 		}

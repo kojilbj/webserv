@@ -15,11 +15,15 @@ ngx_cycle_t* ngx_init_cycle(ngx_cycle_t* old_cycle)
 	/* ##variation points## reference C++ software design p .38 */
 	for (i = 0; cycle->modules[i]; i++)
 	{
-		if (cycle->modules[i]->type == NGX_CORE_MODULE)
+		if (cycle->modules[i]->type != NGX_CORE_MODULE)
 			continue;
-		module = cycle->modules[i]->ctx;
+		module = cycle->modules[i]->ctx; // --> get foo_core_module_t
 		rv = module->create_conf(cycle);
 		/* --> allocate memory for the configuration and set default value */
+		/* ngx_core_module == HAVE */
+		/* ngx_events_module == DONTHAVE */
+		/* ngx_epoll_module == HAVE */
+		/* ngx_event_core_module == HAVE */
 		cycle->conf_ctx[cycle->modules[i]->index] = rv;
 	}
 	ngx_conf_t conf;
@@ -28,11 +32,17 @@ ngx_cycle_t* ngx_init_cycle(ngx_cycle_t* old_cycle)
 	ngx_conf_parse(&conf, &cycle->conf_file);
 	for (i = 0; cycle->modules[i]; i++)
 	{
-		if (cycle->modules[i]->type == NGX_CORE_MODULE)
+		if (cycle->modules[i]->type != NGX_CORE_MODULE)
 			continue;
 		module = cycle->modules[i]->ctx;
 		if (module->init_conf)
+		{
 			module->init_conf(cycle, cycle->conf_ctx[cycle->modules[i]->index]);
+			/* ngx_core_module == HAVE */
+			/* ngx_events_module == HAVE */
+			/* ngx_epoll_module == HAVE */
+			/* ngx_event_core_module == HAVE */
+		}
 	}
 	ngx_listening_t* ls = cycle->listening.elts;
 	ngx_open_listening_socket(cycle);
