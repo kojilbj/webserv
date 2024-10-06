@@ -39,6 +39,8 @@ static ngx_int_t ngx_conf_handler(ngx_conf_t* cf, ngx_int_t last)
 			if (ngx_strcmp(name->data, cmd->name.data) != 0)
 				continue;
 			/* some parse code */
+			rv = cf->set(cf, cmd, conf);
+			/* this call ngx_http_block() in case of http module */
 		}
 	}
 }
