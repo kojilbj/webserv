@@ -23,4 +23,6 @@ namespace Webserv
 	}
 } // namespace Webserv
 
+extern Epoll ev;
+
 #endif
