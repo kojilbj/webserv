@@ -16,7 +16,7 @@ namespace Webserv
 	private:
 		int ep;
 		struct epoll_event* eventList;
-		int nevents;
+		int maxEvents;
 	}
 
 } // namespace Webserv

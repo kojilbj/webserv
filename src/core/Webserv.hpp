@@ -3,6 +3,7 @@
 
 #include "ConfFile.hpp"
 #include "Connection.hpp"
+#include <errno.h>
 #include <vector>
 
 namespace Webserv
