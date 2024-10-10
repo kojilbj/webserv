@@ -34,6 +34,8 @@ namespace Webserv
 		struct sockaddr_t* remoteSockaddr;
 		socklen_t remoteSocklen;
 		Listening* ls;
+		/* arbitrary value */
+		void* data;
 	}
 } // namespace Webserv
 
