@@ -32,6 +32,8 @@ void Webserv::init()
 	std::vector<ConfCtx*>::iterator it = (*confCtxs_).begin();
 	for (it = (*confCtxs_).begin(); it != (*confCtxs_).end(); it++)
 	{
+		Listening ls;
+		(*it)->initListening(ls);
 		if ((*it)->getProtocol() == "HTTP")
 		{
 			HttpConfCtx* hcc = (HttpConfCtx*)*it;

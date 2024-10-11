@@ -10,10 +10,9 @@ namespace Wbsv
 	class Listening
 	{
 	public:
-	private:
 		int sfd;
 		int type;
-		struct sockaddr_t localSockaddr;
+		struct sockaddr localSockaddr;
 		socklen_t localSocklen;
 		int backlog;
 		std::string protocol;
