@@ -46,10 +46,12 @@ void Epoll::processEvents(Webserv& ws)
 	for (int i = 0; i < events; i++)
 	{
 		ls = reinterpret_cast<Listening*>(eventList[i].data.ptr);
+		/* this connection instance will be automatically distroyed when get out of this scope (next loop or out of loop) */
 		Connection c;
 		c.setListening(ls);
-		if (ls->protocol == HTTP)
+		if (ls->protocol == "HTTP")
 		{
+			/* c.protocol = http; */
 			c.revHandler = reventHandler;
 			c.wevHandler = weventHandler;
 		}
