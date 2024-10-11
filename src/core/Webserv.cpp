@@ -34,14 +34,6 @@ void Webserv::init()
 	{
 		Listening ls;
 		(*it)->initListening(ls);
-		if ((*it)->getProtocol() == "HTTP")
-		{
-			HttpConfCtx* hcc = (HttpConfCtx*)*it;
-			Listening ls;
-
-			ls.type = SOCK_STREAM;
-			ls.protocol = hcc->getProtocol();
-		}
 	}
 }
 
@@ -53,6 +45,8 @@ void Webserv::init()
 
 /* 	for (it = lss.begin(); it != lss.end(); it++) */
 /* 	{ */
+/* 		struct sockaddr hints; */
+/* 		getaddrinfo(); */
 /* 		s = socket(it->sockaddr->sa_family, it->type, 0); */
 /* 		/1* setsockopt(); *1/ */
 /* 		/1* nonblocking(); *1/ */

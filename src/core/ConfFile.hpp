@@ -76,6 +76,7 @@ namespace Wbsv
 		void initListening(Listening& ls) const
 		{
 			ls.type = SOCK_STREAM;
+			ls.
 		}
 
 	private:
