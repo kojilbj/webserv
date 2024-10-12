@@ -14,6 +14,7 @@ Webserv::~Webserv()
 		delete *it;
 	}
 	delete confCtxs_;
+	delete listenings_;
 }
 
 std::vector<ConfCtx*>* Webserv::getConfCtxs()
@@ -41,24 +42,34 @@ void Webserv::init()
 	}
 }
 
-/* void Webserv::openListeningSocket(Webserv& ws) */
-/* { */
-/* 	std::vector<Listening> lss = ws.listenings; */
-/* 	std::vector<Listening>::iterator it; */
-/* 	int s; */
+void Webserv::openListeningSocket()
+{
+	std::vector<Listening>::iterator it;
+	int s;
 
-/* 	for (it = lss.begin(); it != lss.end(); it++) */
-/* 	{ */
-/* 		struct sockaddr hints; */
-/* 		getaddrinfo(); */
-/* 		s = socket(it->sockaddr->sa_family, it->type, 0); */
-/* 		/1* setsockopt(); *1/ */
-/* 		/1* nonblocking(); *1/ */
-/* 		bind(s, it->sockaddr, it->socklen); */
-/* 		listen(s, it->backlog); */
-/* 		it->fd = s; */
-/* 	} */
-/* } */
+	for (it = listenings_->begin(); it != listenings_->end(); it++)
+	{
+		s = socket(it->family, it->socktype, 0);
+		if (s == -1)
+		{
+			std::cerr << strerror(errno) << std::endl;
+			exit(1);
+		}
+		/* setsockopt(); */
+		/* nonblocking(); */
+		if (bind(s, (struct sockaddr*)&it->sockaddrIn, it->socklen) != 0)
+		{
+			std::cerr << strerror(errno) << std::endl;
+			exit(1);
+		}
+		if (listen(s, it->backlog) == -1)
+		{
+			std::cerr << strerror(errno) << std::endl;
+			exit(1);
+		}
+		it->sfd = s;
+	}
+}
 
 /* void Webserv::processLoop() */
 /* { */

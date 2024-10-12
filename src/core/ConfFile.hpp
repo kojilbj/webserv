@@ -14,6 +14,7 @@
 namespace Wbsv
 {
 	class Webserv;
+	class Listening;
 	void errorExit(int errnum);
 
 	class ConfCtx

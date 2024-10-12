@@ -39,21 +39,12 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 				std::cerr << strerror(errno) << std::endl;
 				exit(1);
 			}
-			ls.result = new struct addrinfo;
-			ls.result->ai_flags = result->ai_flags;
-			ls.result->ai_family = result->ai_family;
-			ls.result->ai_socktype = result->ai_socktype;
-			ls.result->ai_protocol = result->ai_protocol;
-			ls.result->ai_addrlen = result->ai_addrlen;
-			ls.result->ai_canonname = NULL;
-			ls.result->ai_addr = new struct sockaddr;
-			ls.result->ai_addr->sin_family = result->ai_addr->sin_family;
-			ls.result->ai_addr->sin_port = result->ai_addr->sin_port;
-			std::memcpy(
-				&ls.result->ai_addr->sin_addr, &result->ai_addr->sin_addr, sizeof(struct in_addr));
-			ls.result->ai_next = NULL;
+			ls.family = result->ai_family;
+			ls.socktype = result->ai_socktype;
+			ls.socklen = result->ai_addrlen;
+			std::memcpy(&ls.sockaddrIn, &(result->ai_addr), sizeof(struct sockaddr_in));
 			ls.backlog = 10;
-			ls.protocol = "HTTP";
+			freeaddrinfo(result);
 		}
 		lss->push_back(ls);
 	}

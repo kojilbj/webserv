@@ -81,11 +81,12 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 	for (it = lss->begin(); it != lss->end(); it++)
 	{
 		std::cout << "\tsfd: " << it->sfd << std::endl;
-		std::cout << "\taddrinfo: " << std::endl;
-		if (it->result->ai_family == AF_INET)
-			std::cout << "\t\tai_family: AF_INET" << std::endl;
-		if (it->result->ai_socktype == SOCK_STREAM)
-			std::cout << "\t\tai_socktype: SOCK_STREAM" << std::endl;
+		if (it->family == AF_INET)
+			std::cout << "\tfamily: AF_INET" << std::endl;
+		if (it->socktype == SOCK_STREAM)
+			std::cout << "\tsocktype: SOCK_STREAM" << std::endl;
+		/* std::cout << "\taddr: " << it->sockaddrIn.sin_addr.s_addr << std::endl; */
+		/* std::cout << "\tport: " << it->sockaddrIn.sin_port << std::endl; */
 		std::cout << "\tbacklog: " << it->backlog << std::endl;
 		std::cout << "\tprotocol: " << it->protocol << std::endl;
 	}
@@ -112,7 +113,7 @@ int main(int argc, char* argv[])
 		/* listenings[i].port = htons(port); */
 		ws.init();
 		printListening(ws.getListenings());
-		/* ws.openListeningSocket(); */
+		ws.openListeningSocket();
 		/* ready for events */
 		/* ex. */
 		/* epoll_create(); */

@@ -1,5 +1,5 @@
 NAME = webserv
-SRCS = main.cpp Webserv.cpp ConfFile.cpp
+SRCS = main.cpp Webserv.cpp ConfFile.cpp Connection.cpp
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++

@@ -20,7 +20,7 @@ namespace Wbsv
 		std::vector<Listening>* getListenings();
 		void setConfCtxs(std::vector<ConfCtx*>* confCtxs);
 		void init();
-		/* void openListeningSocket(); */
+		void openListeningSocket();
 		/* void processLoop(); */
 
 	private:
