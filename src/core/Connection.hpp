@@ -2,6 +2,7 @@
 #define CONNECTION_HPP
 
 #include "Webserv.hpp"
+#include <netdb.h>
 #include <string>
 #include <sys/socket.h>
 
@@ -10,7 +11,14 @@ namespace Wbsv
 	class Listening
 	{
 	public:
+		Listening()
+			: result(NULL){};
+		~Listening()
+		{
+			freeaddrinfo(result);
+		};
 		int sfd;
+		struct addrinfo* result;
 		int type;
 		struct sockaddr localSockaddr;
 		socklen_t localSocklen;

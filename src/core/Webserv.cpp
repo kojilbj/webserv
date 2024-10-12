@@ -3,7 +3,7 @@
 using namespace Wbsv;
 
 Webserv::Webserv()
-	: confCtxs_(NULL) //, listenings_(NULL)
+	: confCtxs_(NULL), listenings_(NULL)
 { }
 
 Webserv::~Webserv()
@@ -21,6 +21,11 @@ std::vector<ConfCtx*>* Webserv::getConfCtxs()
 	return confCtxs_;
 }
 
+std::vector<Listening>* Webserv::getListenings()
+{
+	return listenings_;
+}
+
 void Webserv::setConfCtxs(std::vector<ConfCtx*>* confCtxs)
 {
 	confCtxs_ = confCtxs;
@@ -32,8 +37,7 @@ void Webserv::init()
 	std::vector<ConfCtx*>::iterator it = (*confCtxs_).begin();
 	for (it = (*confCtxs_).begin(); it != (*confCtxs_).end(); it++)
 	{
-		Listening ls;
-		(*it)->initListening(ls);
+		(*it)->initListening(listenings_);
 	}
 }
 

@@ -4,10 +4,12 @@
 #include "ConfFile.hpp"
 #include "Connection.hpp"
 #include <vector>
-/* #include <errno.h> */
 
 namespace Wbsv
 {
+	class ConfCtx;
+	class Listening;
+
 	class Webserv
 	{
 	public:
@@ -15,6 +17,7 @@ namespace Wbsv
 		~Webserv();
 
 		std::vector<ConfCtx*>* getConfCtxs();
+		std::vector<Listening>* getListenings();
 		void setConfCtxs(std::vector<ConfCtx*>* confCtxs);
 		void init();
 		/* void openListeningSocket(); */
