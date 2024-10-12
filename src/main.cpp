@@ -77,6 +77,18 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 {
 	std::cout << "--- Listenings ---" << std::endl << std::endl;
 	std::cout << "size: " << lss->size() << std::endl;
+	std::vector<Wbsv::Listening>::iterator it;
+	for (it = lss->begin(); it != lss->end(); it++)
+	{
+		std::cout << "\tsfd: " << it->sfd << std::endl;
+		std::cout << "\taddrinfo: " << std::endl;
+		if (it->result->ai_family == AF_INET)
+			std::cout << "\t\tai_family: AF_INET" << std::endl;
+		if (it->result->ai_socktype == SOCK_STREAM)
+			std::cout << "\t\tai_socktype: SOCK_STREAM" << std::endl;
+		std::cout << "\tbacklog: " << it->backlog << std::endl;
+		std::cout << "\tprotocol: " << it->protocol << std::endl;
+	}
 	std::cout << "------------------" << std::endl << std::endl;
 }
 
