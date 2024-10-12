@@ -1,5 +1,7 @@
 #include "core/Webserv.hpp"
 
+Wbsv::Epoll ev();
+
 /* ---- substitution for test ---- */
 
 /* http { */
@@ -85,8 +87,12 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 			std::cout << "\tfamily: AF_INET" << std::endl;
 		if (it->socktype == SOCK_STREAM)
 			std::cout << "\tsocktype: SOCK_STREAM" << std::endl;
-		/* std::cout << "\taddr: " << it->sockaddrIn.sin_addr.s_addr << std::endl; */
-		/* std::cout << "\tport: " << it->sockaddrIn.sin_port << std::endl; */
+		char host[NI_MAXHOST];
+		char port[NI_MAXSERV];
+		getnameinfo(
+			(struct sockaddr*)&it->sockaddrIn, it->socklen, host, NI_MAXHOST, port, NI_MAXSERV, 0);
+		std::cout << "\thost: " << host << std::endl;
+		std::cout << "\tport: " << port << std::endl;
 		std::cout << "\tbacklog: " << it->backlog << std::endl;
 		std::cout << "\tprotocol: " << it->protocol << std::endl;
 	}
@@ -118,7 +124,7 @@ int main(int argc, char* argv[])
 		/* ex. */
 		/* epoll_create(); */
 		/* epoll_ctl(); */
-		/* ev.init(ws); */
+		ev.init(ws);
 		/* ws.processLoop(); */
 	}
 	catch (std::exception& e)

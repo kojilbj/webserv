@@ -1,6 +1,7 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
+#include "../event/module/EpollModule.hpp"
 #include "ConfFile.hpp"
 #include "Connection.hpp"
 #include <vector>
@@ -9,6 +10,7 @@ namespace Wbsv
 {
 	class ConfCtx;
 	class Listening;
+	class Epoll;
 
 	class Webserv
 	{
@@ -27,8 +29,7 @@ namespace Wbsv
 		std::vector<ConfCtx*>* confCtxs_;
 		std::vector<Listening>* listenings_;
 	};
-} // namespace Wbsv
 
-/* extern Epoll ev; */
+} // namespace Wbsv
 
 #endif

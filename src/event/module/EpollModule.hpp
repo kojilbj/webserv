@@ -1,8 +1,8 @@
 #ifndef EPOLLMODULE_HPP
 #define EPOLLMODULE_HPP
 
+#include "../../core/Webserv.hpp"
 #include "Module.hpp"
-#include "Webserv.hpp"
 #include <sys/epoll.h>
 
 namespace Webserv
@@ -10,14 +10,14 @@ namespace Webserv
 	class Epoll : public Module
 	{
 	public:
-		init(Webserv::Webserv& ws);
-		processEvents(Webserv::Webserv& ws);
+		void init(Webserv& ws);
+		/* processEvents(Webserv& ws); */
 
 	private:
 		int ep;
-		struct epoll_event* eventList;
-		int maxEvents;
-	}
+		struct epoll_event eventList;
+		/* int maxEvents; */
+	};
 
 } // namespace Webserv
 
