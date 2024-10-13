@@ -1,6 +1,7 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
+#include "../protocol/Protocol.hpp"
 #include "Webserv.hpp"
 #include <cstring>
 #include <netdb.h>
@@ -25,24 +26,19 @@ namespace Wbsv //Core
 		std::string protocol;
 	};
 
-	/* class Connection */
-	/* { */
-	/* public: */
-	/* 	Connection(); */
-	/* 	~Connection(); */
-	/* 	void setListening(Listening* ls); */
-	/* 	void setAcceptRev(int cfd, struct sockaddr_t* sockaddr, socklen_t socklen); */
-	/* 	void (*revHandler)(Connection& c); */
-	/* 	void (*wevHandler)(Connection& c); */
+	class Connection
+	{
+	public:
+		Connection(){};
+		~Connection(){};
+		void setListening(Listening* listening);
+		void setAcceptRev(int fd, struct sockaddr_in* sockaddrIn, socklen_t socklen);
 
-	/* private: */
-	/* 	int cfd; */
-	/* 	struct sockaddr_t* remoteSockaddr; */
-	/* 	socklen_t remoteSocklen; */
-	/* 	Listening* ls; */
-	/* 	 arbitrary value (ex. http structure) */
-	/* 	Protocol* data; */
-	/* } */
+		int cfd;
+		struct sockaddr_in remoteSockaddrIn;
+		socklen_t remoteSocklen;
+		Listening* ls;
+	};
 } // namespace Wbsv
 
 #endif

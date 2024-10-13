@@ -23,7 +23,7 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	std::vector<ConfCtx*>* confCtxs = new std::vector<ConfCtx*>;
 	HttpConfCtx* httpConfCtx = new HttpConfCtx;
 	ServerCtx sc;
-	sc.addListen("localhost", "80");
+	sc.addListen("172.17.0.2", "80");
 	VServerCtx vsc;
 	vsc.defaultServer = true;
 	vsc.server_name = "localhost";

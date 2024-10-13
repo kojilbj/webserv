@@ -1,11 +1,11 @@
 NAME = webserv
-SRCS = main.cpp Webserv.cpp ConfFile.cpp Connection.cpp EpollModule.cpp
+SRCS = main.cpp Webserv.cpp ConfFile.cpp Connection.cpp EpollModule.cpp Http.cpp
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
-VPATH = src:src/core:src/event:src/event/module
+VPATH = src:src/core:src/event:src/event/module:src/protocol/http
 
 $(OBJDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
