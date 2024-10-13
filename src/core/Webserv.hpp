@@ -23,7 +23,7 @@ namespace Wbsv
 		void setConfCtxs(std::vector<ConfCtx*>* confCtxs);
 		void init();
 		void openListeningSocket();
-		/* void processLoop(); */
+		void processLoop();
 
 	private:
 		std::vector<ConfCtx*>* confCtxs_;

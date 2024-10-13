@@ -7,7 +7,7 @@
 #include <string>
 #include <sys/socket.h>
 
-namespace Wbsv
+namespace Wbsv //Core
 {
 	class Listening
 	{

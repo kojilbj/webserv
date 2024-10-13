@@ -1,6 +1,6 @@
 #include "core/Webserv.hpp"
 
-Wbsv::Epoll ev();
+extern Wbsv::Module* ev;
 
 /* ---- substitution for test ---- */
 
@@ -124,8 +124,8 @@ int main(int argc, char* argv[])
 		/* ex. */
 		/* epoll_create(); */
 		/* epoll_ctl(); */
-		ev.init(ws);
-		/* ws.processLoop(); */
+		ev->init(ws);
+		ws.processLoop();
 	}
 	catch (std::exception& e)
 	{

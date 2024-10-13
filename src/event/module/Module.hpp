@@ -3,7 +3,7 @@
 
 #include "../../core/Webserv.hpp"
 
-namespace Webserv
+namespace Wbsv
 {
 	class Webserv;
 
@@ -12,8 +12,8 @@ namespace Webserv
 	public:
 		virtual ~Module(){};
 		virtual void init(Webserv& ws) = 0;
-		/* virtual processEvents(Webserv& ws) = 0; */
+		virtual void processEvents(Webserv& ws) = 0;
 	};
-} // namespace Webserv
+} // namespace Wbsv
 
 #endif

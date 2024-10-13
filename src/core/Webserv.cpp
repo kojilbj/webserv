@@ -2,6 +2,8 @@
 
 using namespace Wbsv;
 
+extern Wbsv::Module* ev;
+
 Webserv::Webserv()
 	: confCtxs_(NULL), listenings_(NULL)
 { }
@@ -71,10 +73,10 @@ void Webserv::openListeningSocket()
 	}
 }
 
-/* void Webserv::processLoop() */
-/* { */
-/* 	for (;;) */
-/* 	{ */
-/* 		processEventsAndTimers(*this); */
-/* 	} */
-/* } */
+void Webserv::processLoop()
+{
+	for (;;)
+	{
+		ev->processEvents(*this);
+	}
+}
