@@ -1,9 +1,10 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#include "../event/module/EpollModule.hpp"
 #include "ConfFile.hpp"
-#include "Connection.hpp"
+#include "Event.hpp"
+#include "Listening.hpp"
+#include <sys/socket.h>
 #include <vector>
 
 namespace Wbsv

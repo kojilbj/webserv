@@ -1,11 +1,19 @@
 #ifndef EVENT_HPP
 #define EVENT_HPP
 
-#include "EpollModule.hpp"
 #include "Webserv.hpp"
 
-extern Epoll ev;
+namespace Wbsv
+{
+	class Webserv;
 
-void proceeEventsAndTimers(Webserv& ws);
+	class Event
+	{
+	public:
+		virtual ~Event(){};
+		virtual void init(Webserv& ws) = 0;
+		virtual void processEvents(Webserv& ws) = 0;
+	};
+} // namespace Wbsv
 
 #endif

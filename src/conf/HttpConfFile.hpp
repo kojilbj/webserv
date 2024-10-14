@@ -1,7 +1,7 @@
-#ifndef CONFFILE_HPP
-#define CONFFILE_HPP
+#ifndef HTTPCONFFILE_HPP
+#define HTTPCONFFILE_HPP
 
-#include "Connection.hpp"
+#include "Listening.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -13,18 +13,6 @@
 
 namespace Wbsv
 {
-	class Webserv;
-	class Listening;
-	void errorExit(int errnum);
-
-	class ConfCtx
-	{
-	public:
-		virtual ~ConfCtx(){};
-		virtual std::string getProtocol() const = 0;
-		virtual void initListening(std::vector<Listening>*) const = 0;
-	};
-
 	class LocationCtx
 	{
 	public:
@@ -109,9 +97,6 @@ namespace Wbsv
 		std::vector<std::vector<std::string> > mainCtxs_;
 		std::vector<ServerCtx> serverCtxs_;
 	};
-
-	void confParse(Webserv& ws);
-
 } // namespace Wbsv
 
 #endif

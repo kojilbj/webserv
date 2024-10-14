@@ -1,12 +1,9 @@
-#include "EpollModule.hpp"
+#include "EpollEvent.hpp"
 
 using namespace Wbsv;
 
 class Epoll epoll;
-Module* ev = &epoll;
-
-/* extern reventHandler; */
-/* extern weventHandler; */
+Event* ev = &epoll;
 
 void Epoll::init(Webserv& ws)
 {

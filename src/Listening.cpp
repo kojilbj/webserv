@@ -1,4 +1,4 @@
-#include "Connection.hpp"
+#include "Listening.hpp"
 
 using namespace Wbsv;
 
@@ -19,16 +19,4 @@ Listening::Listening(const Listening& other)
 	, protocol(other.protocol)
 {
 	std::memcpy(&sockaddrIn, &other.sockaddrIn, sizeof(struct sockaddr_in));
-}
-
-void Connection::setListening(Listening* listening)
-{
-	ls = listening;
-}
-
-void Connection::setAcceptRev(int fd, struct sockaddr_in* sockaddrIn, socklen_t socklen)
-{
-	cfd = fd;
-	std::memcpy(&remoteSockaddrIn, sockaddrIn, socklen);
-	remoteSocklen = socklen;
 }

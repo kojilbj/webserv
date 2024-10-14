@@ -1,9 +1,11 @@
 #ifndef HTTP_HPP
 #define HTTP_HPP
 
-#include "../../core/ConfFile.hpp"
-#include "../../core/Connection.hpp"
-#include "../Protocol.hpp"
+#include "Connection.hpp"
+#include "HttpConfFile.hpp"
+#include "Protocol.hpp"
+#include <iostream>
+#include <unistd.h>
 
 namespace Wbsv
 {

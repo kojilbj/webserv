@@ -1,31 +1,12 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "../protocol/Protocol.hpp"
-#include "Webserv.hpp"
+#include "Listening.hpp"
 #include <cstring>
-#include <netdb.h>
-#include <string>
 #include <sys/socket.h>
 
-namespace Wbsv //Core
+namespace Wbsv
 {
-	class Listening
-	{
-	public:
-		Listening();
-		~Listening();
-		Listening(const Listening& other);
-		int sfd;
-		int family;
-		int socktype;
-		struct sockaddr_in sockaddrIn;
-		socklen_t socklen;
-		int backlog;
-		/* Http */
-		std::string protocol;
-	};
-
 	class Connection
 	{
 	public:

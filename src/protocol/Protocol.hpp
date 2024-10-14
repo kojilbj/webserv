@@ -1,7 +1,7 @@
-#ifndef PROTOCOL_HH
-#define PROTOCOL_HH
+#ifndef PROTOCOL_HPP
+#define PROTOCOL_HPP
 
-#include "../core/Connection.hpp"
+#include "Connection.hpp"
 
 namespace Wbsv
 {

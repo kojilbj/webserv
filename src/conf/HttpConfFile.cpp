@@ -1,4 +1,4 @@
-#include "ConfFile.hpp"
+#include "HttpConfFile.hpp"
 
 using namespace Wbsv;
 
