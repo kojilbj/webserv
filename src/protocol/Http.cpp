@@ -6,7 +6,7 @@ void Http::revHandler(Connection& c)
 {
 	int bufSize = 1024;
 	char buf[bufSize];
-	ssize_t readnum = read(c.fd, buf, bufSize);
+	read(c.cfd, buf, bufSize);
 	std::cout << buf << std::endl;
 	/* HttpRequest hr; */
 	/* confCtx = ; */

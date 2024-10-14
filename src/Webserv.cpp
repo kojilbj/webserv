@@ -2,7 +2,7 @@
 
 using namespace Wbsv;
 
-extern Wbsv::Module* ev;
+extern Wbsv::Event* ev;
 
 Webserv::Webserv()
 	: confCtxs_(NULL), listenings_(NULL)

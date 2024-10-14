@@ -2,6 +2,7 @@
 #define LISTENING_HPP
 
 #include <cstring>
+#include <netinet/in.h>
 #include <string>
 #include <sys/socket.h>
 

@@ -4,6 +4,8 @@
 #include "ConfFile.hpp"
 #include "Event.hpp"
 #include "Listening.hpp"
+#include <cstdlib>
+#include <iostream>
 #include <sys/socket.h>
 #include <vector>
 

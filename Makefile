@@ -1,12 +1,12 @@
 NAME = webserv
-SRCS = main.cpp Webserv.cpp HttpConfFile.cpp Listening.cpp Connection.cpp EpollModule.cpp Http.cpp
+SRCS = main.cpp Webserv.cpp HttpConfFile.cpp Listening.cpp Connection.cpp EpollEvent.cpp Http.cpp
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++
 INCLUDEDIRS = -Isrc -Isrc/conf -Isrc/event -Isrc/protocol
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 $(INCLUDEDIRS)
 
-VPATH = src:src/core:src/event:src/event/module:src/protocol/http
+VPATH = src:src/conf:src/event:src/protocol
 
 $(OBJDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

@@ -1,6 +1,6 @@
 #include "Webserv.hpp"
 
-extern Wbsv::Module* ev;
+extern Wbsv::Event* ev;
 
 /* ---- substitution for test ---- */
 
@@ -16,6 +16,7 @@ extern Wbsv::Module* ev;
 /* 	} */
 /* } */
 
+#include "HttpConfFile.hpp"
 #include <iostream>
 
 void Wbsv::confParse(Wbsv::Webserv& ws)

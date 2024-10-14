@@ -1,6 +1,7 @@
 #ifndef HTTPCONFFILE_HPP
 #define HTTPCONFFILE_HPP
 
+#include "ConfFile.hpp"
 #include "Listening.hpp"
 #include <cstdlib>
 #include <cstring>
