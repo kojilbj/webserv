@@ -51,12 +51,13 @@ void Epoll::processEvents(Webserv& ws)
 		ls = reinterpret_cast<Listening*>(eventResult[i].data.ptr);
 		/* this connection instance will be automatically distroyed when get out of this scope (next loop or out of loop) */
 		Connection c;
-		c.setListening(ls);
+		c.ls = ls;
 		Protocol* p = NULL;
 		if (ls->protocol == "HTTP")
 		{
 			/* p must be dynamically allocated */
 			p = new Http;
+			p->getServerCtx(ws.getConfCtxs(), ls);
 		}
 		else
 		{
@@ -64,7 +65,7 @@ void Epoll::processEvents(Webserv& ws)
 			std::cerr << "no such protocol" << std::endl;
 			exit(1);
 		}
-		if (eventResult[i].events & EPOLLIN)
+		if (eventResult[i].events & (EPOLLIN & EPOLLOUT))
 		{
 			int cfd = accept(ls->sfd, (struct sockaddr*)&sockaddrIn, &socklen);
 			if (cfd == -1)
@@ -74,11 +75,8 @@ void Epoll::processEvents(Webserv& ws)
 			}
 			/* nonblocking(cfd) */
 			c.setAcceptRev(cfd, &sockaddrIn, socklen);
-			/* this call httpInitConnection() */
 			p->revHandler(c);
 		}
-		/* if (eventList[i].events & EPOLLOUT) */
-		/* 	c.wevHandler(c); */
 		delete p;
 	}
 }

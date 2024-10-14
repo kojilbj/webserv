@@ -10,9 +10,8 @@ namespace Wbsv
 	class Connection
 	{
 	public:
-		Connection(){};
-		~Connection(){};
-		void setListening(Listening* listening);
+		Connection();
+		~Connection();
 		void setAcceptRev(int fd, struct sockaddr_in* sockaddrIn, socklen_t socklen);
 
 		int cfd;

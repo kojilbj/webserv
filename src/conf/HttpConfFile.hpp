@@ -14,6 +14,8 @@
 
 namespace Wbsv
 {
+	class ConfCtx;
+
 	class LocationCtx
 	{
 	public:

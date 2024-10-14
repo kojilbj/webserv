@@ -2,10 +2,13 @@
 
 using namespace Wbsv;
 
-void Connection::setListening(Listening* listening)
+Connection::Connection()
+	: cfd(-1), remoteSocklen(0), ls(NULL)
 {
-	ls = listening;
-}
+	std::memset(&remoteSockaddrIn, 0, sizeof(struct sockaddr_in));
+};
+
+Connection::~Connection() { }
 
 void Connection::setAcceptRev(int fd, struct sockaddr_in* sockaddrIn, socklen_t socklen)
 {
