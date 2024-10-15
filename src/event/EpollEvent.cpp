@@ -29,11 +29,10 @@ void Epoll::init(Webserv& ws)
 
 void Epoll::processEvents(Webserv& ws)
 {
-	/* this may be used by other event modules */
-	(void)ws;
 	int maxEvents = 5;
 	struct epoll_event eventResult[maxEvents];
-	int events = epoll_wait(ep, eventResult, maxEvents, 0);
+	int events = epoll_wait(ep, eventResult, maxEvents, -1);
+	std::cout << events << std::endl;
 	if (events == -1)
 	{
 		std::cerr << strerror(errno) << std::endl;
@@ -65,7 +64,7 @@ void Epoll::processEvents(Webserv& ws)
 			std::cerr << "no such protocol" << std::endl;
 			exit(1);
 		}
-		if (eventResult[i].events & (EPOLLIN & EPOLLOUT))
+		if (eventResult[i].events & EPOLLIN) // EPOLLOUT ???
 		{
 			int cfd = accept(ls->sfd, (struct sockaddr*)&sockaddrIn, &socklen);
 			if (cfd == -1)
@@ -73,9 +72,14 @@ void Epoll::processEvents(Webserv& ws)
 				std::cerr << strerror(errno) << std::endl;
 				exit(1);
 			}
-			/* nonblocking(cfd) */
 			c.setAcceptRev(cfd, &sockaddrIn, socklen);
 			p->revHandler(c);
+			close(cfd);
+		}
+		if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
+		{
+			std::cout << "error!!!" << std::endl;
+			exit(1);
 		}
 		delete p;
 	}

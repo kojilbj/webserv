@@ -6,8 +6,21 @@ void Http::revHandler(Connection& c)
 {
 	int bufSize = 1024;
 	char buf[bufSize];
-	read(c.cfd, buf, bufSize);
-	std::cout << buf << std::endl;
+	for (;;)
+	{
+		ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
+		std::cout << "readnum: " << readnum << std::endl;
+		if (readnum <= 0)
+		{
+			if (errno == EAGAIN)
+				std::cout << "EAGAIN" << std::endl;
+			std::cout << "readnum <= 0" << std::endl;
+			std::cout << strerror(errno) << std::endl;
+			break;
+		}
+		buf[readnum] = '\0';
+		std::cout << buf << std::endl;
+	}
 	/* HttpRequest hr; */
 	/* confCtx = ; */
 	/* waitRequestHandler(c); */
@@ -25,7 +38,7 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 		ConfCtx* c = *it;
 		if (c->getProtocol() == "HTTP")
 		{
-			HttpConfCtx* hc = dynamic_cast<HttpConfCtx*>(c);
+			HttpConfCtx* hc = reinterpret_cast<HttpConfCtx*>(c);
 			std::vector<ServerCtx>::const_iterator sit;
 			for (sit = hc->getServerCtxs().begin(); sit != hc->getServerCtxs().end(); sit++)
 			{
