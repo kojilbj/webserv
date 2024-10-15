@@ -57,13 +57,13 @@ void Webserv::openListeningSocket()
 			std::cerr << strerror(errno) << std::endl;
 			exit(1);
 		}
+		fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
 		int optval = 1;
 		if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1)
 		{
 			std::cerr << strerror(errno) << std::endl;
 			exit(1);
 		}
-		/* nonblocking(); */
 		if (bind(s, (struct sockaddr*)&it->sockaddrIn, it->socklen) != 0)
 		{
 			std::cerr << strerror(errno) << std::endl;

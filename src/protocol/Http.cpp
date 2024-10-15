@@ -8,7 +8,8 @@ void Http::revHandler(Connection& c)
 	char buf[bufSize];
 	for (;;)
 	{
-		ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
+		/* block at here, when request delay ? */
+		ssize_t readnum = read(c.cfd, buf, bufSize);
 		std::cout << "readnum: " << readnum << std::endl;
 		if (readnum <= 0)
 		{

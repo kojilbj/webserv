@@ -5,6 +5,7 @@
 #include "Event.hpp"
 #include "Listening.hpp"
 #include <cstdlib>
+#include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <vector>

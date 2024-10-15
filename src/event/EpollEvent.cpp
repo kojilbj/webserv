@@ -16,7 +16,7 @@ void Epoll::init(Webserv& ws)
 	std::vector<Listening>::iterator it;
 	for (it = ws.getListenings()->begin(); it != ws.getListenings()->end(); it++)
 	{
-		eventList.events = EPOLLIN | EPOLLOUT | EPOLLET;
+		eventList.events = EPOLLIN | EPOLLOUT;
 		/* 'it' may be changed if you add some functionality to use addListening() */
 		eventList.data.ptr = reinterpret_cast<void*>(&(*it));
 		if (epoll_ctl(ep, EPOLL_CTL_ADD, it->sfd, &eventList) == -1)
@@ -72,6 +72,7 @@ void Epoll::processEvents(Webserv& ws)
 				std::cerr << strerror(errno) << std::endl;
 				exit(1);
 			}
+			fcntl(cfd, F_SETFL, fcntl(cfd, F_GETFL) | O_NONBLOCK);
 			c.setAcceptRev(cfd, &sockaddrIn, socklen);
 			p->revHandler(c);
 			close(cfd);
