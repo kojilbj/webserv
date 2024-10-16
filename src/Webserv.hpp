@@ -3,7 +3,9 @@
 
 #include "ConfFile.hpp"
 #include "Event.hpp"
+#include "Http.hpp"
 #include "Listening.hpp"
+#include "Protocol.hpp"
 #include <cstdlib>
 #include <fcntl.h>
 #include <iostream>
@@ -28,6 +30,7 @@ namespace Wbsv
 		void init();
 		void openListeningSocket();
 		void processLoop();
+		void acceptEvent(Listening* ls);
 
 	private:
 		std::vector<ConfCtx*>* confCtxs_;

@@ -81,7 +81,7 @@ namespace Wbsv
 		{
 			return mainCtxs_;
 		}
-		const std::vector<ServerCtx>& getServerCtxs() const
+		std::vector<ServerCtx>& getServerCtxs()
 		{
 			return serverCtxs_;
 		}

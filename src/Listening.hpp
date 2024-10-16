@@ -22,7 +22,9 @@ namespace Wbsv
 		int backlog;
 		/* Http */
 		std::string protocol;
+		const std::string type;
 	};
+
 } // namespace Wbsv
 
 #endif

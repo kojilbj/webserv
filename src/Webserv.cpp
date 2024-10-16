@@ -85,3 +85,34 @@ void Webserv::processLoop()
 		ev->processEvents(*this);
 	}
 }
+
+void Webserv::acceptEvent(Listening* ls)
+{
+	struct sockaddr_in sockaddrIn;
+	socklen_t socklen = sizeof(struct sockaddr_in);
+
+	int cfd = accept(ls->sfd, (struct sockaddr*)&sockaddrIn, &socklen);
+	if (cfd == -1)
+	{
+		std::cerr << strerror(errno) << std::endl;
+		exit(1);
+	}
+	fcntl(cfd, F_SETFL, fcntl(cfd, F_GETFL) | O_NONBLOCK);
+	if (ls->protocol == "HTTP")
+	{
+		std::cout << "fd after accept: " << cfd << std::endl;
+		/* p must be dynamically allocated */
+		Protocol* p = new Http;
+		p->getServerCtx(getConfCtxs(), ls);
+		Connection* c = &p->c;
+		c->ls = ls;
+		c->setAcceptRev(cfd, &sockaddrIn, socklen);
+		ev->addEvent(cfd, p);
+	}
+	else
+	{
+		/* you can add protocol (ex. mail, stream in nginx) */
+		std::cerr << "no such protocol" << std::endl;
+		exit(1);
+	}
+}

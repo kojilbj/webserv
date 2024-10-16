@@ -5,6 +5,15 @@ using namespace Wbsv;
 class Epoll epoll;
 Event* ev = &epoll;
 
+Epoll::Epoll()
+	: ep(-1)
+{
+	eventList.events = 0;
+	eventList.data.ptr = NULL;
+}
+
+Epoll::~Epoll() { }
+
 void Epoll::init(Webserv& ws)
 {
 	ep = epoll_create(ws.getListenings()->size());
@@ -16,9 +25,12 @@ void Epoll::init(Webserv& ws)
 	std::vector<Listening>::iterator it;
 	for (it = ws.getListenings()->begin(); it != ws.getListenings()->end(); it++)
 	{
-		eventList.events = EPOLLIN | EPOLLOUT;
+		eventList.events = EPOLLIN | EPOLLOUT | EPOLLET;
 		/* 'it' may be changed if you add some functionality to use addListening() */
-		eventList.data.ptr = reinterpret_cast<void*>(&(*it));
+		eventData* ed = new eventData;
+		ed->type = "LISTENING";
+		ed->data.ls = &(*it);
+		eventList.data.ptr = reinterpret_cast<void*>(ed);
 		if (epoll_ctl(ep, EPOLL_CTL_ADD, it->sfd, &eventList) == -1)
 		{
 			std::cerr << strerror(errno) << std::endl;
@@ -40,48 +52,56 @@ void Epoll::processEvents(Webserv& ws)
 	}
 	if (events == 0)
 		return;
-
-	Listening* ls;
-	struct sockaddr_in sockaddrIn;
-	socklen_t socklen = sizeof(struct sockaddr_in);
-
 	for (int i = 0; i < events; i++)
 	{
-		ls = reinterpret_cast<Listening*>(eventResult[i].data.ptr);
-		/* this connection instance will be automatically distroyed when get out of this scope (next loop or out of loop) */
-		Connection c;
-		c.ls = ls;
-		Protocol* p = NULL;
-		if (ls->protocol == "HTTP")
+		/* this data pointer must be freed after use */
+		eventData* ed = reinterpret_cast<eventData*>(eventResult[i].data.ptr);
+		if (ed->type == "LISTENING")
 		{
-			/* p must be dynamically allocated */
-			p = new Http;
-			p->getServerCtx(ws.getConfCtxs(), ls);
+			std::cout << "type: " << ed->type << std::endl;
+			Listening* ls = ed->data.ls;
+			if (eventResult[i].events & EPOLLIN) // EPOLLOUT ???
+				ws.acceptEvent(ls);
+			delete ed;
+			if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
+			{
+				std::cout << "EPOLLHUP or EPOLLERR" << std::endl;
+				exit(1);
+			}
+		}
+		else if (ed->type == "PROTOCOL")
+		{
+			if (eventResult[i].events & EPOLLOUT)
+				break;
+			if (eventResult[i].events & EPOLLIN)
+				std::cout << "EPOLLIN" << std::endl;
+			if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
+				std::cout << "EPOLLHUP or EPOLLERR" << std::endl;
+			std::cout << "type: " << ed->type << std::endl;
+			Protocol* p = ed->data.p;
+			p->revHandler();
+			delete p;
+			delete ed;
+			close(p->c.cfd);
 		}
 		else
 		{
-			/* you can add protocol (ex. mail, stream in nginx) */
-			std::cerr << "no such protocol" << std::endl;
-			exit(1);
+			/* std::cerr << "unknown event" << std::endl; */
+			break;
 		}
-		if (eventResult[i].events & EPOLLIN) // EPOLLOUT ???
-		{
-			int cfd = accept(ls->sfd, (struct sockaddr*)&sockaddrIn, &socklen);
-			if (cfd == -1)
-			{
-				std::cerr << strerror(errno) << std::endl;
-				exit(1);
-			}
-			fcntl(cfd, F_SETFL, fcntl(cfd, F_GETFL) | O_NONBLOCK);
-			c.setAcceptRev(cfd, &sockaddrIn, socklen);
-			p->revHandler(c);
-			close(cfd);
-		}
-		if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
-		{
-			std::cout << "error!!!" << std::endl;
-			exit(1);
-		}
-		delete p;
+	}
+}
+
+void Epoll::addEvent(int fd, Protocol* p)
+{
+	eventList.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	eventData* ed = new eventData;
+	ed->type = "PROTOCOL";
+	ed->data.p = p;
+	eventList.data.ptr = reinterpret_cast<void*>(ed);
+	if (epoll_ctl(ep, EPOLL_CTL_ADD, fd, &eventList) == -1)
+	{
+		std::cerr << strerror(errno) << std::endl;
+		exit(1);
 	}
 }

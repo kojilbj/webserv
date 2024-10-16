@@ -2,7 +2,7 @@
 
 using namespace Wbsv;
 
-void Http::revHandler(Connection& c)
+void Http::revHandler()
 {
 	int bufSize = 1024;
 	char buf[bufSize];
@@ -10,17 +10,26 @@ void Http::revHandler(Connection& c)
 	{
 		/* block at here, when request delay ? */
 		ssize_t readnum = read(c.cfd, buf, bufSize);
-		std::cout << "readnum: " << readnum << std::endl;
-		if (readnum <= 0)
-		{
-			if (errno == EAGAIN)
-				std::cout << "EAGAIN" << std::endl;
-			std::cout << "readnum <= 0" << std::endl;
-			std::cout << strerror(errno) << std::endl;
-			break;
-		}
+		std::cout << "after read:" << std::endl;
+		std::cout << "readnum:" << readnum << std::endl;
+		std::cout << "c.cfd: " << c.cfd << std::endl;
+		/* std::cout << "readnum: " << readnum << std::endl; */
 		buf[readnum] = '\0';
 		std::cout << buf << std::endl;
+
+		char buf2[bufSize];
+		int fd = open("../../test/html/index.html", O_RDONLY);
+		std::cout << "open fd: " << fd << std::endl;
+		for (;;)
+		{
+			std::cout << "entered for(;;)" << std::endl;
+			if (read(fd, buf2, bufSize) <= 0)
+				break;
+			write(c.cfd, buf2, bufSize);
+		}
+		close(fd);
+		if (readnum <= 0)
+			break;
 	}
 	/* HttpRequest hr; */
 	/* confCtx = ; */
@@ -40,7 +49,7 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 		if (c->getProtocol() == "HTTP")
 		{
 			HttpConfCtx* hc = reinterpret_cast<HttpConfCtx*>(c);
-			std::vector<ServerCtx>::const_iterator sit;
+			std::vector<ServerCtx>::iterator sit;
 			for (sit = hc->getServerCtxs().begin(); sit != hc->getServerCtxs().end(); sit++)
 			{
 				struct addrinfo hints;
@@ -63,6 +72,7 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 				if (addrIn->sin_port == ls->sockaddrIn.sin_port &&
 					addrIn->sin_addr.s_addr == ls->sockaddrIn.sin_addr.s_addr)
 				{
+					serverCtx = &(*sit);
 					std::cout << "found server at listen: " << listen.first << ":" << listen.second
 							  << std::endl;
 				}

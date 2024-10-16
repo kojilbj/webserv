@@ -1,8 +1,6 @@
 #ifndef CONFFILE_HPP
 #define CONFFILE_HPP
 
-#include "Listening.hpp"
-#include "Webserv.hpp"
 #include <errno.h>
 #include <string>
 #include <vector>
@@ -21,7 +19,9 @@ namespace Wbsv
 	};
 
 	void confParse(Webserv& ws);
-
 } // namespace Wbsv
+
+#include "Listening.hpp"
+#include "Webserv.hpp"
 
 #endif
