@@ -75,7 +75,6 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 	}
 	std::cout << "---------------------------------" << std::endl << std::endl;
 }
-
 void printListening(std::vector<Wbsv::Listening>* lss)
 {
 	std::cout << "--- Listenings ---" << std::endl << std::endl;
@@ -90,8 +89,13 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 			std::cout << "\tsocktype: SOCK_STREAM" << std::endl;
 		char host[NI_MAXHOST];
 		char port[NI_MAXSERV];
-		getnameinfo(
-			(struct sockaddr*)&it->sockaddrIn, it->socklen, host, NI_MAXHOST, port, NI_MAXSERV, 0);
+		getnameinfo((struct sockaddr*)&it->sockaddrIn,
+					it->socklen,
+					host,
+					NI_MAXHOST,
+					port,
+					NI_MAXSERV,
+					NI_NUMERICHOST);
 		std::cout << "\thost: " << host << std::endl;
 		std::cout << "\tport: " << port << std::endl;
 		std::cout << "\tbacklog: " << it->backlog << std::endl;
@@ -101,6 +105,14 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 }
 
 /* ----------- end ------------- */
+
+sig_atomic_t sigInterrupt = 0;
+
+void sigintHandler(int signal)
+{
+	(void)signal;
+	sigInterrupt = 1;
+}
 
 int main(int argc, char* argv[])
 {
@@ -113,20 +125,23 @@ int main(int argc, char* argv[])
 		/* confFileModule */
 		confParse(ws);
 
-		printConf(ws.getConfCtxs());
 		/* initialize 'ws' elements with values got by configuration file */
 		/* ex. */
 		/* listenings[i].addr = addr; */
 		/* listenings[i].port = htons(port); */
 		ws.init();
-		printListening(ws.getListenings());
 		ws.openListeningSocket();
+#ifdef DEBUG
+		printConf(ws.getConfCtxs());
+		printListening(ws.getListenings());
+#endif
 		/* ready for events */
 		/* ex. */
 		/* epoll_create(); */
 		/* epoll_ctl(); */
 		ev->init(ws);
-		ws.processLoop();
+		signal(SIGINT, sigintHandler);
+		ev->processEventsLoop(ws);
 	}
 	catch (std::exception& e)
 	{

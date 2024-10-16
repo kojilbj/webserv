@@ -14,6 +14,7 @@ namespace Wbsv
 		Listening();
 		~Listening();
 		Listening(const Listening& other);
+		Listening& operator=(const Listening& other);
 		int sfd;
 		int family;
 		int socktype;

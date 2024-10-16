@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <iostream>
+#include <list>
+#include <signal.h>
 #include <sys/socket.h>
 #include <vector>
 
@@ -29,12 +31,12 @@ namespace Wbsv
 		void setConfCtxs(std::vector<ConfCtx*>* confCtxs);
 		void init();
 		void openListeningSocket();
-		void processLoop();
 		void acceptEvent(Listening* ls);
 
 	private:
 		std::vector<ConfCtx*>* confCtxs_;
 		std::vector<Listening>* listenings_;
+		std::list<Protocol*> freeList;
 	};
 
 } // namespace Wbsv

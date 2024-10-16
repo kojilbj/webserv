@@ -20,3 +20,15 @@ Listening::Listening(const Listening& other)
 {
 	std::memcpy(&sockaddrIn, &other.sockaddrIn, sizeof(struct sockaddr_in));
 }
+
+Listening& Listening::operator=(const Listening& other)
+{
+	sfd = other.sfd;
+	family = other.family;
+	socktype = other.socktype;
+	socklen = other.socklen;
+	backlog = other.backlog;
+	protocol = other.protocol;
+	std::memcpy(&sockaddrIn, &other.sockaddrIn, sizeof(struct sockaddr_in));
+	return *this;
+}

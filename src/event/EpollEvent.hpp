@@ -11,6 +11,7 @@
 #	include <sys/socket.h>
 #	include <unistd.h>
 #	include <fcntl.h>
+#	include <list>
 
 namespace Wbsv
 {
@@ -20,11 +21,11 @@ namespace Wbsv
 		Listening* ls;
 	} data_t;
 
-	typedef struct
+	struct eventData
 	{
 		std::string type;
 		data_t data;
-	} eventData;
+	};
 
 	class Epoll : public Event
 	{
@@ -32,12 +33,13 @@ namespace Wbsv
 		Epoll();
 		~Epoll();
 		void init(Webserv& ws);
+		void processEventsLoop(Webserv& ws);
 		void processEvents(Webserv& ws);
 		void addEvent(int fd, Protocol* p);
 
 	private:
 		int ep;
-		struct epoll_event eventList;
+		std::list<struct eventData*> freeList;
 	};
 
 } // namespace Wbsv

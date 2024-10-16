@@ -18,7 +18,8 @@ namespace Wbsv
 	class Http : public Protocol
 	{
 	public:
-		Http(){};
+		Http()
+			: serverCtx(NULL){};
 		~Http(){};
 		void revHandler();
 		void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls);

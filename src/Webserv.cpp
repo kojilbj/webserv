@@ -17,6 +17,11 @@ Webserv::~Webserv()
 	}
 	delete confCtxs_;
 	delete listenings_;
+	std::list<Protocol*>::iterator pit;
+	for (pit = freeList.begin(); pit != freeList.end(); pit++)
+	{
+		delete *pit;
+	}
 }
 
 std::vector<ConfCtx*>* Webserv::getConfCtxs()
@@ -78,14 +83,6 @@ void Webserv::openListeningSocket()
 	}
 }
 
-void Webserv::processLoop()
-{
-	for (;;)
-	{
-		ev->processEvents(*this);
-	}
-}
-
 void Webserv::acceptEvent(Listening* ls)
 {
 	struct sockaddr_in sockaddrIn;
@@ -100,9 +97,9 @@ void Webserv::acceptEvent(Listening* ls)
 	fcntl(cfd, F_SETFL, fcntl(cfd, F_GETFL) | O_NONBLOCK);
 	if (ls->protocol == "HTTP")
 	{
-		std::cout << "fd after accept: " << cfd << std::endl;
 		/* p must be dynamically allocated */
 		Protocol* p = new Http;
+		freeList.push_back(p);
 		p->getServerCtx(getConfCtxs(), ls);
 		Connection* c = &p->c;
 		c->ls = ls;

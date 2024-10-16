@@ -6,30 +6,43 @@ void Http::revHandler()
 {
 	int bufSize = 1024;
 	char buf[bufSize];
+	std::memset(buf, 0, bufSize);
 	for (;;)
 	{
-		/* block at here, when request delay ? */
+/* block at here, when request delay ? */
+#ifdef DEBUG
+		std::cout << "reading from connection socket (" << c.cfd << ") ..." << std::endl;
+#endif
 		ssize_t readnum = read(c.cfd, buf, bufSize);
-		std::cout << "after read:" << std::endl;
-		std::cout << "readnum:" << readnum << std::endl;
-		std::cout << "c.cfd: " << c.cfd << std::endl;
-		/* std::cout << "readnum: " << readnum << std::endl; */
-		buf[readnum] = '\0';
-		std::cout << buf << std::endl;
-
-		char buf2[bufSize];
-		int fd = open("../../test/html/index.html", O_RDONLY);
-		std::cout << "open fd: " << fd << std::endl;
-		for (;;)
-		{
-			std::cout << "entered for(;;)" << std::endl;
-			if (read(fd, buf2, bufSize) <= 0)
-				break;
-			write(c.cfd, buf2, bufSize);
-		}
-		close(fd);
 		if (readnum <= 0)
+		{
+#ifdef DEBUG
+			std::cout << "Reading from connection fd (" << c.cfd << ") completed with return value "
+					  << readnum << std::endl;
+#endif
 			break;
+		}
+#ifdef DEBUG
+		std::cout << readnum << " words were read" << std::endl;
+		std::cout << "buf:\n" << buf << std::endl;
+#endif
+		std::memset(buf, 0, bufSize);
+
+		/* char buf2[bufSize]; */
+		/* int fd = open("/root/webserv/test/html/index.html", O_RDONLY); */
+		/* if (fd < 0) */
+		/* { */
+		/* 	std::cerr << "failed to open html file" << std::endl; */
+		/* 	exit(1); */
+		/* } */
+		/* for (;;) */
+		/* { */
+		/* 	std::cout << "entered for(;;)" << std::endl; */
+		/* 	if ((readnum = read(fd, buf2, bufSize)) <= 0) */
+		/* 		break; */
+		/* 	write(c.cfd, buf2, bufSize); */
+		/* } */
+		/* close(fd); */
 	}
 	/* HttpRequest hr; */
 	/* confCtx = ; */
@@ -73,8 +86,11 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 					addrIn->sin_addr.s_addr == ls->sockaddrIn.sin_addr.s_addr)
 				{
 					serverCtx = &(*sit);
-					std::cout << "found server at listen: " << listen.first << ":" << listen.second
-							  << std::endl;
+#ifdef DEBUG
+					std::cout << "Listening socket (" << ls->sfd
+							  << ") is belong to the server which is ..." << std::endl;
+					std::cout << "\tlisten: " << listen.first << ":" << listen.second << std::endl;
+#endif
 				}
 				freeaddrinfo(result);
 			}
