@@ -15,6 +15,12 @@
 
 namespace Wbsv
 {
+	typedef enum
+	{
+		ConnectionFd,
+		ListeningFd
+	} type_t;
+
 	typedef union
 	{
 		Protocol* p;
@@ -23,7 +29,7 @@ namespace Wbsv
 
 	struct eventData
 	{
-		std::string type;
+		type_t type;
 		data_t data;
 	};
 

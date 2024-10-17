@@ -26,7 +26,8 @@ namespace Wbsv
 
 	private:
 		ServerCtx* serverCtx;
-		void wevHandler(Connection& c);
+		void waitRequestHandler();
+		void wevHandler();
 	};
 
 } // namespace Wbsv

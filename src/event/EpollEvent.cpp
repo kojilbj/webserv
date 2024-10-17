@@ -28,7 +28,7 @@ void Epoll::init(Webserv& ws)
 		eventList.events = EPOLLIN | EPOLLOUT | EPOLLET;
 		/* 'it' may be changed if you add some functionality to use addListening() */
 		struct eventData* ed = new struct eventData;
-		ed->type = "LISTENING";
+		ed->type = ListeningFd;
 		ed->data.ls = &(*it);
 		eventList.data.ptr = reinterpret_cast<void*>(ed);
 #ifdef DEBUG
@@ -90,7 +90,7 @@ void Epoll::processEvents(Webserv& ws)
 		std::cout << "\teventData: " << ed << std::endl;
 		std::cout << "\teventData->data.ls: " << ed->data.ls << std::endl;
 #endif
-		if (ed->type == "LISTENING")
+		if (ed->type == ListeningFd)
 		{
 			Listening* ls = ed->data.ls;
 #ifdef DEBUG
@@ -98,19 +98,18 @@ void Epoll::processEvents(Webserv& ws)
 			std::cout << "fd: " << ls->sfd << std::endl;
 			if (eventResult[i].events & EPOLLIN)
 				std::cout << "event: EPOLLIN" << std::endl;
-			else if (eventResult[i].events & EPOLLOUT)
+			if (eventResult[i].events & EPOLLOUT)
 				std::cout << "event: EPOLLOUT" << std::endl;
-			else
+			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 				std::cout << "event: EPOLLERR" << std::endl;
 			std::cout << std::endl;
 #endif
-			if (eventResult[i].events & EPOLLIN) // EPOLLOUT ???
+			if (eventResult[i].events & EPOLLIN)
 				ws.acceptEvent(ls);
-			if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
-				return;
-			/* delete ed; */
+			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+				break;
 		}
-		else if (ed->type == "PROTOCOL")
+		else if (ed->type == ConnectionFd)
 		{
 			Protocol* p = ed->data.p;
 #ifdef DEBUG
@@ -118,21 +117,21 @@ void Epoll::processEvents(Webserv& ws)
 			std::cout << "fd: " << p->c.cfd << std::endl;
 			if (eventResult[i].events & EPOLLIN)
 				std::cout << "event: EPOLLIN" << std::endl;
-			else if (eventResult[i].events & EPOLLOUT)
+			if (eventResult[i].events & EPOLLOUT)
 				std::cout << "event: EPOLLOUT" << std::endl;
-			else
+			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 				std::cout << "event: EPOLLERR" << std::endl;
 			std::cout << std::endl;
 #endif
-			if (eventResult[i].events & EPOLLIN) // EPOLLOUT ???
+			if ((eventResult[i].events & EPOLLIN) && (eventResult[i].events & EPOLLOUT))
 			{
 				p->revHandler();
 				freeList.remove(ed);
 				delete ed;
 				close(p->c.cfd);
 			}
-			if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
-				return;
+			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+				break;
 		}
 		else
 		{
@@ -147,7 +146,7 @@ void Epoll::addEvent(int fd, Protocol* p)
 	struct epoll_event eventList;
 	eventList.events = EPOLLIN | EPOLLOUT | EPOLLET;
 	struct eventData* ed = new struct eventData;
-	ed->type = "PROTOCOL";
+	ed->type = ConnectionFd;
 	ed->data.p = p;
 	eventList.data.ptr = reinterpret_cast<void*>(ed);
 	freeList.push_back(ed);
