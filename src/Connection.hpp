@@ -18,6 +18,7 @@ namespace Wbsv
 		struct sockaddr_in remoteSockaddrIn;
 		socklen_t remoteSocklen;
 		Listening* ls;
+		ServerCtx* serverCtx;
 	};
 } // namespace Wbsv
 

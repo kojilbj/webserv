@@ -125,11 +125,11 @@ void Epoll::processEvents(Webserv& ws)
 #endif
 			if ((eventResult[i].events & EPOLLIN) && (eventResult[i].events & EPOLLOUT))
 			{
-				int rv = p->revHandler();
+				int rv = p->revHandler(p->c);
 				if (rv == OK)
 					close(p->c.cfd);
 				else if (rv == AGAIN)
-					ev->addEvent(p->cfd, p, EPOLL_CTL_MOD);
+					ev->addEvent(p->cfd, p, MOD);
 				freeList.remove(ed);
 				delete ed;
 			}
@@ -144,16 +144,21 @@ void Epoll::processEvents(Webserv& ws)
 	}
 }
 
-void Epoll::addEvent(int fd, Protocol* p)
+void Epoll::addEvent(int fd, Protocol* p, int option)
 {
 	struct epoll_event eventList;
 	eventList.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	int op;
+	if (option == ADD)
+		op = EPOLL_CTL_ADD;
+	else // MOD
+		op = EPOLL_CTL_MOD;
 	struct eventData* ed = new struct eventData;
 	ed->type = ConnectionFd;
 	ed->data.p = p;
 	eventList.data.ptr = reinterpret_cast<void*>(ed);
 	freeList.push_back(ed);
-	if (epoll_ctl(ep, EPOLL_CTL_ADD, fd, &eventList) == -1)
+	if (epoll_ctl(ep, op, fd, &eventList) == -1)
 	{
 		std::cerr << strerror(errno) << std::endl;
 		exit(1);

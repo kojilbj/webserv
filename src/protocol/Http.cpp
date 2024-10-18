@@ -36,6 +36,7 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 					addrIn->sin_addr.s_addr == ls->sockaddrIn.sin_addr.s_addr)
 				{
 					serverCtx = &(*sit);
+					c.serverCtx = serverCtx;
 #ifdef DEBUG
 					std::cout << "Listening socket (" << ls->sfd
 							  << ") is belong to the server which is ..." << std::endl;

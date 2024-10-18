@@ -100,12 +100,12 @@ void Webserv::acceptEvent(Listening* ls)
 		/* p must be dynamically allocated */
 		Protocol* p = new Http;
 		freeList.push_back(p);
-		p->revHandler = p->processRequestLine;
+		p->revHandler = p->waitRequestHandler;
 		p->getServerCtx(getConfCtxs(), ls);
 		Connection* c = &p->c;
 		c->ls = ls;
 		c->setAcceptRev(cfd, &sockaddrIn, socklen);
-		ev->addEvent(cfd, p);
+		ev->addEvent(cfd, p, ADD);
 	}
 	else
 	{

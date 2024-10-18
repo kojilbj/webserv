@@ -1,6 +1,6 @@
 #include "HttpRequest.hpp"
 
-void HttpRequest::processRequestHeader(Connection& c)
+int HttpRequest::processRequestHeader(Connection& c)
 {
 	int rv;
 
@@ -10,7 +10,7 @@ void HttpRequest::processRequestHeader(Connection& c)
 		if (rv == WbsvSuccess)
 			continue;
 		else if (rv == WbsvDone)
-			return;
+			return OK;
 		else // WbsvAgain
 		{
 			int currentHeaderSize = headerIn.size() - requestLineLen;
@@ -23,13 +23,16 @@ void HttpRequest::processRequestHeader(Connection& c)
 				if (readnum < 0)
 				{
 					// 500 (Internal Server Error) error
-					break;
+					return AGAIN;
 				}
 				std::string largeBuf(largeTmp, readnum);
 				std::copy(largeBuf.begin(), largeBuf.end(), std::back_inserter(headerIn));
 			}
 			else
-			// 414 (Request-URI Too Large) error
+			{
+				// 414 (Request-URI Too Large) error
+				return ERROR;
+			}
 		}
 	}
 }
@@ -46,20 +49,9 @@ int HttpRequest::parseRequestLine()
 	}
 }
 
-int HttpRequest::processRequestLine(Connection& c, ServerCtxs* srvCtxs)
+int HttpRequest::processRequestLine(Connection& c)
 {
-	char tmp[clientHeaderSize];
 	int rv;
-	std::memset(tmp, 0, clientHeaderSize);
-
-	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize);
-	if (readnum <= 0)
-	{
-		// 500 (Internal Server Error) error
-		return WbsvFailure;
-	}
-	std::string buf(tmp, readnum);
-	std::copy(buf.begin(), buf.end(), std::back_inserter(headerIn));
 	for (;;)
 	{
 		rv = parseRequestLine();
@@ -92,5 +84,20 @@ int HttpRequest::processRequestLine(Connection& c, ServerCtxs* srvCtxs)
 			// 414 (Request-URI Too Large) error
 		}
 	}
-	return WbsvSuccess;
+	return OK;
+}
+
+int HttpRequest::waitRequestHandler(Connection& c)
+{
+	char tmp[clientHeaderSize];
+	std::memset(tmp, 0, clientHeaderSize);
+	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize);
+	if (readnum <= 0)
+	{
+		// 500 (Internal Server Error) error
+		return WbsvFailure;
+	}
+	std::string buf(tmp, readnum);
+	std::copy(buf.begin(), buf.end(), std::back_inserter(headerIn));
+	return processRequestLine(c);
 }

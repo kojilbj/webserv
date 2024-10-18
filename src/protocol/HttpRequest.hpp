@@ -11,8 +11,8 @@ namespace Wbsv
 	class HttpRequest
 	{
 	public:
-		void processRequestLine();
-		void processRequestHeader();
+		void processRequestLine(Connection& c);
+		void processRequestHeader(Connection& c);
 		void parseRequestLine();
 		void parseRequestHeader();
 
@@ -24,6 +24,7 @@ namespace Wbsv
 		static const int clientHeaderSize;
 		/* default 8k byte */
 		static const int largeHeaderSize;
+		std::vector<char>::iterator pos;
 	};
 
 	/* default 1k byte */

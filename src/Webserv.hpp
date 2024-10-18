@@ -20,12 +20,18 @@ namespace Wbsv
 	class Listening;
 	class Epoll;
 
-	enum
+	enum returnVal
 	{
 		OK = 0,
 		ERROR,
 		AGAIN
 	};
+
+	enum eventCtl
+	{
+		ADD = 0,
+		MOD
+	}
 
 	class Webserv
 	{
