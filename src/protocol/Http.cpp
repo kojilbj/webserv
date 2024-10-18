@@ -2,76 +2,6 @@
 
 using namespace Wbsv;
 
-void Http::processRequestLine(HttpRequest& r)
-{
-	size_t bufSize = 1024;
-	char buf[bufSize];
-	ssize_t readnum;
-
-	/* client_header_buffer_size 1k; */
-	/* large_client_header_buffers 4 8k; */
-	for (;;)
-	{
-		std::memset(buf, 0, bufSize);
-		readnum = recv(c.cfd, buf, bufSize);
-		if (readnum < 0)
-		{
-			std::cerr << "recv failed: unknown error" << std::endl;
-			exit(1);
-		}
-		if (readnum >= bufSize)
-			readnum = recv(c.cfd, buf, bufSize);
-	}
-}
-
-void Http::revHandler()
-{
-	HttpRequest r;
-	processRequestLine();
-	processRequestHeaders();
-	wevHandler();
-	/* int bufSize = 1024; */
-	/* char buf[bufSize]; */
-	/* std::memset(buf, 0, bufSize); */
-	/* for (;;) */
-	/* { */
-	/* /1* block at here, when request delay ? *1/ */
-	/* #ifdef DEBUG */
-	/* 	std::cout << "reading from connection socket (" << c.cfd << ") ..." << std::endl; */
-	/* #endif */
-	/* 	ssize_t readnum = read(c.cfd, buf, bufSize); */
-	/* 	if (readnum <= 0) */
-	/* 	{ */
-	/* #ifdef DEBUG */
-	/* 		std::cout << "Reading from connection fd (" << c.cfd << ") completed with return value " */
-	/* 				  << readnum << std::endl; */
-	/* #endif */
-	/* 		break; */
-	/* 	} */
-	/* #ifdef DEBUG */
-	/* 	std::cout << readnum << " words were read" << std::endl; */
-	/* 	std::cout << "buf:\n" << buf << std::endl; */
-	/* #endif */
-	/* 	std::memset(buf, 0, bufSize); */
-
-	/* 	/1* char buf2[bufSize]; *1/ */
-	/* 	/1* int fd = open("/root/webserv/test/html/index.html", O_RDONLY); *1/ */
-	/* 	/1* if (fd < 0) *1/ */
-	/* 	/1* { *1/ */
-	/* 	/1* 	std::cerr << "failed to open html file" << std::endl; *1/ */
-	/* 	/1* 	exit(1); *1/ */
-	/* 	/1* } *1/ */
-	/* 	/1* for (;;) *1/ */
-	/* 	/1* { *1/ */
-	/* 	/1* 	std::cout << "entered for(;;)" << std::endl; *1/ */
-	/* 	/1* 	if ((readnum = read(fd, buf2, bufSize)) <= 0) *1/ */
-	/* 	/1* 		break; *1/ */
-	/* 	/1* 	write(c.cfd, buf2, bufSize); *1/ */
-	/* 	/1* } *1/ */
-	/* 	/1* close(fd); *1/ */
-	/* } */
-}
-
 void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 {
 	std::vector<ConfCtx*>::iterator it;
@@ -116,6 +46,13 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 			}
 		}
 	}
+}
+
+void Http::revHandler()
+{
+	if (processRequestLine(c, srvCtxs) == WbsvFailure)
+		return;
+	wevHandler();
 }
 
 void Http::wevHandler()

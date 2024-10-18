@@ -12,16 +12,17 @@
 namespace Wbsv
 {
 	class HttpConfCtx;
+	class HttpRequest;
 	class ServerCtx;
 	class Protocol;
 
-	class Http : public Protocol
+	class Http : public Protocol, public HttpRequest
 	{
 	public:
 		Http()
-			: serverCtx(NULL){};
+			: serverCtx(NULL), revHandler(NULL){};
 		~Http(){};
-		void revHandler();
+		(int)(*revHandler)(void);
 		void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls);
 
 	private:

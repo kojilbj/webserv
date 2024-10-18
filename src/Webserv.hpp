@@ -20,6 +20,13 @@ namespace Wbsv
 	class Listening;
 	class Epoll;
 
+	enum
+	{
+		OK = 0,
+		ERROR,
+		AGAIN
+	};
+
 	class Webserv
 	{
 	public:

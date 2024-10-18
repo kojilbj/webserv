@@ -125,10 +125,13 @@ void Epoll::processEvents(Webserv& ws)
 #endif
 			if ((eventResult[i].events & EPOLLIN) && (eventResult[i].events & EPOLLOUT))
 			{
-				p->revHandler();
+				int rv = p->revHandler();
+				if (rv == OK)
+					close(p->c.cfd);
+				else if (rv == AGAIN)
+					ev->addEvent(p->cfd, p, EPOLL_CTL_MOD);
 				freeList.remove(ed);
 				delete ed;
-				close(p->c.cfd);
 			}
 			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 				break;
