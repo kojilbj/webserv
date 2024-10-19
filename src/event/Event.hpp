@@ -16,7 +16,7 @@ namespace Wbsv
 		virtual void init(Webserv& ws) = 0;
 		virtual void processEventsLoop(Webserv& ws) = 0;
 		virtual void processEvents(Webserv& ws) = 0;
-		virtual void addEvent(int fd, Protocol* p) = 0;
+		virtual void addEvent(int fd, Protocol* p, int option) = 0;
 	};
 } // namespace Wbsv
 

@@ -1,12 +1,15 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "Listening.hpp"
 #include <cstring>
+#include <netdb.h>
 #include <sys/socket.h>
 
 namespace Wbsv
 {
+	class Listening;
+	class ServerCtx;
+
 	class Connection
 	{
 	public:
@@ -21,5 +24,8 @@ namespace Wbsv
 		ServerCtx* serverCtx;
 	};
 } // namespace Wbsv
+
+#include "HttpConfFile.hpp"
+#include "Listening.hpp"
 
 #endif

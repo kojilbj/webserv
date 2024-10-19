@@ -1,11 +1,6 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#include "ConfFile.hpp"
-#include "Event.hpp"
-#include "Http.hpp"
-#include "Listening.hpp"
-#include "Protocol.hpp"
 #include <cstdlib>
 #include <fcntl.h>
 #include <iostream>
@@ -17,6 +12,7 @@
 namespace Wbsv
 {
 	class ConfCtx;
+	class Protocol;
 	class Listening;
 	class Epoll;
 
@@ -24,6 +20,7 @@ namespace Wbsv
 	{
 		OK = 0,
 		ERROR,
+		DONE,
 		AGAIN
 	};
 
@@ -31,7 +28,7 @@ namespace Wbsv
 	{
 		ADD = 0,
 		MOD
-	}
+	};
 
 	class Webserv
 	{
@@ -53,5 +50,11 @@ namespace Wbsv
 	};
 
 } // namespace Wbsv
+
+#include "ConfFile.hpp"
+#include "Event.hpp"
+#include "Http.hpp"
+#include "Listening.hpp"
+#include "Protocol.hpp"
 
 #endif

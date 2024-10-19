@@ -8,10 +8,10 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 
 	for (it = cfs->begin(); it != cfs->end(); it++)
 	{
-		ConfCtx* c = *it;
-		if (c->getProtocol() == "HTTP")
+		ConfCtx* ctx = *it;
+		if (ctx->getProtocol() == "HTTP")
 		{
-			HttpConfCtx* hc = reinterpret_cast<HttpConfCtx*>(c);
+			HttpConfCtx* hc = reinterpret_cast<HttpConfCtx*>(ctx);
 			std::vector<ServerCtx>::iterator sit;
 			for (sit = hc->getServerCtxs().begin(); sit != hc->getServerCtxs().end(); sit++)
 			{
@@ -49,11 +49,37 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 	}
 }
 
-void Http::revHandler()
+int Http::waitRequestHandler(Connection& c)
 {
-	if (processRequestLine(c, srvCtxs) == WbsvFailure)
-		return;
-	wevHandler();
+	char tmp[clientHeaderSize];
+	std::memset(tmp, 0, clientHeaderSize);
+	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
+	if (readnum <= 0)
+	{
+		// 500 (Internal Server Error) error
+		return ERROR;
+	}
+	std::string buf(tmp, readnum);
+#ifndef DEBUG
+	std::cout << "after first recv():" << std::endl;
+	std::cout << "size: " << std::endl << buf.size() << std::endl;
+	std::cout << "buf: " << std::endl << buf << std::endl;
+#endif
+	std::copy(buf.begin(), buf.end(), std::back_inserter(headerIn));
+	int rv = processRequestLine(c);
+	if (rv == AGAIN_REQUESTLINE)
+	{
+		this->revHandler =
+			reinterpret_cast<int (Protocol::*)(Connection&)>(&Http::processRequestLine);
+		rv = AGAIN;
+	}
+	else if (rv == AGAIN_REQUESTHEADER)
+	{
+		this->revHandler =
+			reinterpret_cast<int (Protocol::*)(Connection&)>(&Http::processRequestHeader);
+		rv = AGAIN;
+	}
+	return rv;
 }
 
 void Http::wevHandler()

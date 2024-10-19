@@ -100,7 +100,7 @@ void Webserv::acceptEvent(Listening* ls)
 		/* p must be dynamically allocated */
 		Protocol* p = new Http;
 		freeList.push_back(p);
-		p->revHandler = p->waitRequestHandler;
+		p->revHandler = reinterpret_cast<int (Protocol::*)(Connection&)>(&Http::waitRequestHandler);
 		p->getServerCtx(getConfCtxs(), ls);
 		Connection* c = &p->c;
 		c->ls = ls;

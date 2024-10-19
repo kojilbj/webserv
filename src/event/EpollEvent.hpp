@@ -41,7 +41,7 @@ namespace Wbsv
 		void init(Webserv& ws);
 		void processEventsLoop(Webserv& ws);
 		void processEvents(Webserv& ws);
-		void addEvent(int fd, Protocol* p);
+		void addEvent(int fd, Protocol* p, int option);
 
 	private:
 		int ep;
