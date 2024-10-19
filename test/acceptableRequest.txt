@@ -3,12 +3,28 @@ Request = Request-Line
           CRLF
           [message-body]
 
-Request-Line = Method SP Request-URI SP HTTP-Version CRLF
+         Request-Line = Method SP Request-URI SP HTTP-Version CRLF
 
-Method = "GET" | "POST" | "DELETE"
+                  Method = "GET" | "POST" | "DELETE"
 
-Request-URI = abs_path
-  description:
-    abs_path is a part of http-URL. http-URL is a form of { "http:" "//" host [":" port] [abs_path ["?" query]] }.
+                  Request-URI = abs_path
 
-HTTP-Version = "HTTP" "/" 1*DIGIT "." 1*DIGIT
+                           abs_path = "/" path_segments
+
+                                    path_segments = segment *("/" segment)
+
+                                             segment = *pchar *( ";" param )
+
+                                                      param = *pchar
+
+                                                               pchar = unreserved | escaped | ":" | "@" | "&" | "=" | "+" | "$" | ","
+
+                                                                        unreserved = alphanum | mark
+
+                                                                                 alphanum = alpha | digit
+
+                                                                                 mark = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
+
+                                                                        escaped       = "%" hex hex
+
+                  HTTP-Version = "HTTP" "/" 1*DIGIT "." 1*DIGIT
