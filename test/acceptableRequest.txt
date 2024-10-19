@@ -15,16 +15,17 @@ Request = Request-Line
 
                                              segment = *pchar *( ";" param )
 
+                                                      pchar = unreserved | escaped | ":" | "@" | "&" | "=" | "+" | "$" | ","
+
+                                                               unreserved = alphanum | mark
+
+                                                                        alphanum = alpha | digit
+
+                                                                        mark = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
+
+                                                               escaped = "%" hex hex
+                                                                        hex = digit | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f"
+
                                                       param = *pchar
-
-                                                               pchar = unreserved | escaped | ":" | "@" | "&" | "=" | "+" | "$" | ","
-
-                                                                        unreserved = alphanum | mark
-
-                                                                                 alphanum = alpha | digit
-
-                                                                                 mark = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
-
-                                                                        escaped       = "%" hex hex
 
                   HTTP-Version = "HTTP" "/" 1*DIGIT "." 1*DIGIT
