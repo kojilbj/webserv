@@ -29,3 +29,13 @@ Request = Request-Line
                                                       param = *pchar
 
                   HTTP-Version = "HTTP" "/" 1*DIGIT "." 1*DIGIT
+
+         general-header = Cache-Control | Connection | Date | Pragma | Trailer | Transfer-Encoding | Upgrade | Via | Warning
+
+         request-header = Accept | Accept-Charset | Accept-Encoding | Accept-Language | Authorization | Expect | From | Host | If-Match | If-Modified-Since | If-None-Match | If-Range | If-Unmodified-Since | Max-Forwards | Proxy-Authorization | Range | Referer | TE | User-Agent
+
+                  Host = "Host"":" host [":" port]
+
+         entity-header = Allow | Content-Encoding | Content-Language | Content-Length | Content-Location | Content-MD5 | Content-Range | Content-Type | Expires | Last-Modified
+
+                  Content-Length = "Content-Length"":" 1*DIGIT
