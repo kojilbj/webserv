@@ -6,9 +6,6 @@
 #include <iostream>
 #include <unistd.h>
 
-/* delete this !!! */
-#include <stdio.h>
-
 namespace Wbsv
 {
 	class HttpConfCtx;

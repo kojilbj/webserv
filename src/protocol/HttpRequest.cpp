@@ -7,6 +7,9 @@ int HttpRequest::parseRequestHeaderLine()
 #ifdef DEBUG
 	std::cout << "Http::parseRequestHeaderLine" << std::endl;
 #endif
+	for (; pos < headerIn.size(); pos++)
+	{
+	}
 	return DONE;
 }
 
@@ -41,7 +44,7 @@ int HttpRequest::processRequestHeader(Connection& c)
 				std::cout << "size: " << std::endl << largeBuf.size() << std::endl;
 				std::cout << "largeBuf: " << std::endl << largeBuf << std::endl;
 #endif
-				std::copy(largeBuf.begin(), largeBuf.end(), std::back_inserter(headerIn));
+				headerIn += largeBuf;
 			}
 			else
 			{
@@ -57,7 +60,140 @@ int HttpRequest::parseRequestLine()
 #ifdef DEBUG
 	std::cout << "Http::parseRequestLine" << std::endl;
 #endif
-	return OK;
+	int start = 0;
+	for (; pos < headerIn.size(); pos++)
+	{
+		switch (state)
+		{
+		case METHOD:
+			if (std::isupper(headerIn[pos]))
+				break;
+			else if (headerIn[pos] == SP)
+			{
+				std::string tmp(headerIn, 0, pos);
+				if (tmp == "GET")
+					method = GET;
+				else if (tmp == "POST")
+					method = POST;
+				else if (tmp == "DELETE")
+					method = DELETE;
+				else
+					return INVALID_METHOD;
+				state = SLASH_IN_URI;
+				break;
+			}
+			else
+				return INVALID_METHOD;
+		case SLASH_IN_URI:
+			start = pos;
+			if (headerIn[start] != '/')
+				return INVALID_URI;
+			state = SEGMENT;
+			break;
+		case SEGMENT:
+			if (std::isalnum(headerIn[pos]))
+				break;
+			/* else if (headerIn[pos] == '%') */
+			/* { */
+			/* 	state = HEX; */
+			/* 	break; */
+			/* } */
+			else if (headerIn[pos] == SP)
+			{
+				state = VERSION_H;
+				std::string tmp(headerIn, start, pos - start);
+				uri = tmp;
+				start = pos + 1;
+				break;
+			}
+			else if (headerIn[pos] == '/')
+			{
+				if (headerIn[pos - 1] == '/')
+					return INVALID_URI;
+				break;
+			}
+			switch (headerIn[pos])
+			{
+			case ':':
+			case '@':
+			case '&':
+			case '=':
+			case '+':
+			case '$':
+			case ',':
+			case '-':
+			case '_':
+			case '.':
+			case '!':
+			case '~':
+			case '*':
+			case '\'':
+			case '(':
+			case ')':
+			case ';': // it may be out of rules
+				break;
+			default:
+				return INVALID_URI;
+			}
+		case VERSION_H:
+			if (headerIn[pos] != 'H')
+				return INVALID_VERSION;
+			state = VERSION_HT;
+			break;
+		case VERSION_HT:
+			if (headerIn[pos] != 'T')
+				return INVALID_VERSION;
+			state = VERSION_HTT;
+			break;
+		case VERSION_HTT:
+			if (headerIn[pos] != 'T')
+				return INVALID_VERSION;
+			state = VERSION_HTTP;
+			break;
+		case VERSION_HTTP:
+			if (headerIn[pos] != 'P')
+				return INVALID_VERSION;
+			state = VERSION_SLASH;
+			break;
+		case VERSION_SLASH:
+			if (headerIn[pos] != '/')
+				return INVALID_VERSION;
+			state = VERSION_MAJOR;
+			break;
+		case VERSION_MAJOR:
+			if (!std::isdigit(headerIn[pos]))
+				return INVALID_VERSION;
+			// 505 VERSION_NOT_SUPPORTED
+			major = headerIn[pos] - '0';
+			state = VERSION_POINT;
+			break;
+		case VERSION_POINT:
+			if (headerIn[pos] != '.')
+				return INVALID_VERSION;
+			state = VERSION_MINOR;
+			break;
+		case VERSION_MINOR:
+			if (!std::isdigit(headerIn[pos]))
+				return INVALID_VERSION;
+			// 505 VERSION_NOT_SUPPORTED
+			minor = headerIn[pos] - '0';
+			state = END_CR;
+			break;
+		case END_CR:
+			if (headerIn[pos] != CR)
+				return INVALID_VERSION;
+			state = END_LF;
+			break;
+		case END_LF:
+			if (headerIn[pos] != LF)
+				return INVALID_VERSION;
+			state = END;
+			break;
+		case END:
+			return OK;
+		}
+	}
+	return AGAIN;
 }
 
 int HttpRequest::processRequestLine(Connection& c)
@@ -71,14 +207,24 @@ int HttpRequest::processRequestLine(Connection& c)
 		rv = parseRequestLine();
 		if (rv == OK)
 		{
+#ifdef DEBUG
+			std::cout << "Request-line is parsed" << std::endl;
+			std::cout << "Method: "
+					  << (method == GET	   ? "GET"
+						  : method == POST ? "POST"
+										   : "DELETE")
+					  << std::endl;
+			std::cout << "URI: " << uri << std::endl;
+			std::cout << "Version: " << major << "." << minor << std::endl;
+#endif
 			/* processRequestUri(); */
 			/* processValidataHost(); */
 			/* setVirtualServer(); */
 			return processRequestHeader(c);
 		}
-		else if (rv == ERROR)
+		else if (rv != AGAIN)
 			return ERROR;
-		else // WbsvAgain
+		else // AGAIN
 		{
 			if (headerIn.size() < largeClientHeaderSize)
 			{
@@ -93,7 +239,7 @@ int HttpRequest::processRequestLine(Connection& c)
 				std::cout << "size: " << std::endl << largeBuf.size() << std::endl;
 				std::cout << "largeBuf: " << std::endl << largeBuf << std::endl;
 #endif
-				std::copy(largeBuf.begin(), largeBuf.end(), std::back_inserter(headerIn));
+				headerIn += largeBuf;
 			}
 			else
 				return ERROR;

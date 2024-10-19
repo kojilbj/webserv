@@ -52,12 +52,12 @@ void Epoll::processEventsLoop(Webserv& ws)
 		ev->processEvents(ws);
 		if (sigInterrupt)
 		{
-			std::cout << "Program is successfully closing" << std::endl;
 			std::list<struct eventData*>::iterator it;
 			for (it = freeList.begin(); it != freeList.end(); it++)
 			{
 				delete *it;
 			}
+			std::cout << "Program is successfully closed" << std::endl;
 			break;
 		}
 	}

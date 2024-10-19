@@ -84,7 +84,7 @@ int Http::waitRequestHandler(Connection& c)
 	std::cout << "size: " << std::endl << buf.size() << std::endl;
 	std::cout << "buf: " << std::endl << buf << std::endl;
 #endif
-	std::copy(buf.begin(), buf.end(), std::back_inserter(headerIn));
+	headerIn += buf;
 	int rv = processRequestLine(c);
 	if (rv == AGAIN_REQUESTLINE)
 	{
