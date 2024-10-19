@@ -2,6 +2,22 @@
 
 using namespace Wbsv;
 
+int Http::invokeRevHandler(Connection& c)
+{
+#ifdef DEBUG
+	std::cout << "Invoking revHandler: " << std::endl;
+#endif
+	return (this->*(revHandler))(c);
+}
+
+void Http::setRevHandler(revHandler_pt func)
+{
+#ifdef DEBUG
+	std::cout << "Setting revHandler: " << std::endl;
+#endif
+	revHandler = func;
+}
+
 void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 {
 	std::vector<ConfCtx*>::iterator it;
@@ -51,6 +67,9 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 
 int Http::waitRequestHandler(Connection& c)
 {
+#ifdef DEBUG
+	std::cout << "Http::waitRequestHandler" << std::endl;
+#endif
 	char tmp[clientHeaderSize];
 	std::memset(tmp, 0, clientHeaderSize);
 	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
@@ -60,7 +79,7 @@ int Http::waitRequestHandler(Connection& c)
 		return ERROR;
 	}
 	std::string buf(tmp, readnum);
-#ifndef DEBUG
+#ifdef DEBUG
 	std::cout << "after first recv():" << std::endl;
 	std::cout << "size: " << std::endl << buf.size() << std::endl;
 	std::cout << "buf: " << std::endl << buf << std::endl;
@@ -69,14 +88,18 @@ int Http::waitRequestHandler(Connection& c)
 	int rv = processRequestLine(c);
 	if (rv == AGAIN_REQUESTLINE)
 	{
-		this->revHandler =
-			reinterpret_cast<int (Protocol::*)(Connection&)>(&Http::processRequestLine);
+#ifdef DEBUG
+		std::cout << "processRequestLine() is posted" << std::endl;
+#endif
+		this->setRevHandler(reinterpret_cast<revHandler_pt>(&Http::processRequestLine));
 		rv = AGAIN;
 	}
 	else if (rv == AGAIN_REQUESTHEADER)
 	{
-		this->revHandler =
-			reinterpret_cast<int (Protocol::*)(Connection&)>(&Http::processRequestHeader);
+#ifdef DEBUG
+		std::cout << "processRequestHeader() is posted" << std::endl;
+#endif
+		this->setRevHandler(reinterpret_cast<revHandler_pt>(&Http::processRequestHeader));
 		rv = AGAIN;
 	}
 	return rv;

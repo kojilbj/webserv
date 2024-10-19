@@ -4,7 +4,8 @@ OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++
 INCLUDEDIRS = -Isrc -Isrc/conf -Isrc/event -Isrc/protocol
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 $(INCLUDEDIRS)
+CXXFLAGS = -std=c++98 $(INCLUDEDIRS)
+#-Wall -Wextra -Werror 
 
 VPATH = src:src/conf:src/event:src/protocol
 

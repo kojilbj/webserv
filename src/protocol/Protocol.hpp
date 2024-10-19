@@ -10,6 +10,7 @@ namespace Wbsv
 	class Listening;
 	class ConfCtx;
 	class Protocol;
+	class Http;
 
 	typedef int (Protocol::*revHandler_pt)(Connection&);
 
@@ -18,10 +19,8 @@ namespace Wbsv
 	public:
 		virtual ~Protocol(){};
 		virtual void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls) = 0;
-		int invokeRevHandler(Connection& c)
-		{
-			return (this->*(revHandler))(c);
-		}
+		virtual int invokeRevHandler(Connection& c) = 0;
+		virtual void setRevHandler(revHandler_pt) = 0;
 		revHandler_pt revHandler;
 		const std::string type;
 		Connection c;

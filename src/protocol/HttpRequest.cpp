@@ -4,11 +4,17 @@ using namespace Wbsv;
 
 int HttpRequest::parseRequestHeaderLine()
 {
-	return OK;
+#ifdef DEBUG
+	std::cout << "Http::parseRequestHeaderLine" << std::endl;
+#endif
+	return DONE;
 }
 
 int HttpRequest::processRequestHeader(Connection& c)
 {
+#ifdef DEBUG
+	std::cout << "Http::processRequestHeader" << std::endl;
+#endif
 	int rv;
 
 	for (;;)
@@ -48,11 +54,17 @@ int HttpRequest::processRequestHeader(Connection& c)
 
 int HttpRequest::parseRequestLine()
 {
+#ifdef DEBUG
+	std::cout << "Http::parseRequestLine" << std::endl;
+#endif
 	return OK;
 }
 
 int HttpRequest::processRequestLine(Connection& c)
 {
+#ifdef DEBUG
+	std::cout << "Http::processRequestLine" << std::endl;
+#endif
 	int rv;
 	for (;;)
 	{
@@ -76,7 +88,7 @@ int HttpRequest::processRequestLine(Connection& c)
 				if (readnum < 0)
 					return AGAIN_REQUESTLINE;
 				std::string largeBuf(largeTmp, readnum);
-#ifndef DEBUG
+#ifdef DEBUG
 				std::cout << "after recv() in processRequestLine():" << std::endl;
 				std::cout << "size: " << std::endl << largeBuf.size() << std::endl;
 				std::cout << "largeBuf: " << std::endl << largeBuf << std::endl;

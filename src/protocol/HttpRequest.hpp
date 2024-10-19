@@ -10,7 +10,7 @@ namespace Wbsv
 
 	enum againFunctions
 	{
-		AGAIN_REQUESTLINE = 0,
+		AGAIN_REQUESTLINE = 100,
 		AGAIN_REQUESTHEADER
 	};
 
