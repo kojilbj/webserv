@@ -7,10 +7,130 @@ int HttpRequest::parseRequestHeaderLine()
 #ifdef DEBUG
 	std::cout << "Http::parseRequestHeaderLine" << std::endl;
 #endif
+	enum headerState
+	{
+		START = 0,
+		FIELD_NAME,
+		COLON,
+		FIRST_FIELD_VALUE,
+		FIELD_VALUE,
+		LINE_ALMOST_DONE,
+		LINE_DONE,
+		HEADER_ALMOST_DONE,
+		HEADER_DONE
+	};
+
 	for (; pos < headerIn.size(); pos++)
 	{
+		switch (state)
+		{
+		case START:
+			start = pos;
+			if (headerIn[pos] == CR)
+			{
+				state = HEADER_ALMOST_DONE;
+				break;
+			}
+			if (std::iscntrl(headerIn[pos]))
+				return INVALID_HEADER;
+			switch (headerIn[pos])
+			{
+			case '(':
+			case ')':
+			case '<':
+			case '>':
+			case '@':
+			case ',':
+			case ';':
+			case ':':
+			case '\\':
+			case '\"':
+			case '/':
+			case '[':
+			case ']':
+			case '?':
+			case '=':
+			case '{':
+			case '}':
+			case SP:
+				return INVALID_HEADER;
+			}
+			state = FIELD_NAME;
+			break;
+		case FIELD_NAME:
+			if (std::iscntrl(headerIn[pos]))
+				return INVALID_HEADER;
+			switch (headerIn[pos])
+			{
+			case '(':
+			case ')':
+			case '<':
+			case '>':
+			case '@':
+			case ',':
+			case ';':
+			case '\\':
+			case '\"':
+			case '/':
+			case '[':
+			case ']':
+			case '?':
+			case '=':
+			case '{':
+			case '}':
+			case SP:
+				return INVALID_HEADER;
+			}
+			if (headerIn[pos] == ':')
+			{
+				string tmp(headerIn, start, pos - start);
+				headerFieldNameTmp = tmp;
+				state = FIRST_FIELD_VALUE;
+			}
+			break;
+		case FIRST_FIELD_VALUE:
+			/* it may be not sufficient */
+			start = pos;
+			if (headerIn[pos] == CR)
+			{
+				headerFieldValueTmp = "";
+				state = LINE_ALMOST_DONE;
+				break;
+			}
+			if (headerIn[pos] == SP)
+				break;
+			state = FIELD_VALUE;
+			break;
+		case FIELD_VALUE:
+			/* it may be not sufficient */
+			if (headerIn[pos] == CR)
+			{
+				string tmp(headerIn, start, pos - start);
+				headerFieldValueTmp = tmp;
+				state = LINE_ALMOST_DONE;
+				break;
+			}
+			break;
+		case LINE_ALMOST_DONE:
+			if (headerIn[pos] != LF)
+				return INVALID_HEADER;
+			state = LINE_DONE;
+			break;
+		case LINE_DONE:
+			state = 0;
+			return OK;
+		case HEADER_ALMOST_DONE:
+			if (headerIn[pos] != LF)
+				return INVALID_HEADER;
+			state = HEADER_DONE;
+			break;
+		case HEADER_DONE:
+			return DONE;
+		}
 	}
-	return DONE;
+	if (state = HEADER_DONE)
+		return DONE;
+	return AGAIN;
 }
 
 int HttpRequest::processRequestHeader(Connection& c)
@@ -24,10 +144,36 @@ int HttpRequest::processRequestHeader(Connection& c)
 	{
 		rv = parseRequestHeaderLine();
 		if (rv == OK)
+		{
+			map<string, string>::iterator it;
+			it = headersIn.find(headerFieldNameTmp);
+			if (it == headersIn.end())
+				headersIn[headerFieldNameTmp] = headerFieldValueTmp;
+			else
+			{
+				if (it->second[it->second.size() - 1] != ',')
+					return ERROR;
+				it->second += headerFieldValueTmp;
+			}
+			headerFieldNameTmp = "";
+			headerFieldValueTmp = "";
 			continue;
+		}
 		else if (rv == DONE)
+		{
+#ifdef DEBUG
+			map<string, string>::iterator it;
+			std::cout << "Request-header is parsed" << std::endl;
+			for (it = headersIn.begin(); it != headersIn.end(); it++)
+			{
+				std::cout << "{ " << it->first << " : " << it->second << " }" << std::endl;
+			}
+#endif
 			return OK;
-		else // AGAIN || ERROR
+		}
+		else if (rv != AGAIN)
+			return ERROR;
+		else // AGAIN
 		{
 			int currentHeaderSize = headerIn.size() - requestLineLen;
 			int leftAvailableHeaderSize = largeClientHeaderSize - currentHeaderSize;
@@ -38,8 +184,8 @@ int HttpRequest::processRequestHeader(Connection& c)
 				int readnum = recv(c.cfd, largeTmp, leftAvailableHeaderSize, 0);
 				if (readnum < 0)
 					return AGAIN_REQUESTHEADER;
-				std::string largeBuf(largeTmp, readnum);
-#ifndef DEBUG
+				string largeBuf(largeTmp, readnum);
+#ifdef DEBUG
 				std::cout << "after recv() in processRequestHeader():" << std::endl;
 				std::cout << "size: " << std::endl << largeBuf.size() << std::endl;
 				std::cout << "largeBuf: " << std::endl << largeBuf << std::endl;
@@ -60,7 +206,26 @@ int HttpRequest::parseRequestLine()
 #ifdef DEBUG
 	std::cout << "Http::parseRequestLine" << std::endl;
 #endif
-	int start = 0;
+	enum lineState
+	{
+		METHOD = 0,
+		SLASH_IN_URI,
+		SEGMENT,
+		URI,
+		SPACE_BEFORE_VERSION,
+		VERSION_H,
+		VERSION_HT,
+		VERSION_HTT,
+		VERSION_HTTP,
+		VERSION_SLASH,
+		VERSION_MAJOR,
+		VERSION_POINT,
+		VERSION_MINOR,
+		END_CR,
+		END_LF,
+		END
+	};
+
 	for (; pos < headerIn.size(); pos++)
 	{
 		switch (state)
@@ -70,7 +235,7 @@ int HttpRequest::parseRequestLine()
 				break;
 			else if (headerIn[pos] == SP)
 			{
-				std::string tmp(headerIn, 0, pos);
+				string tmp(headerIn, 0, pos);
 				if (tmp == "GET")
 					method = GET;
 				else if (tmp == "POST")
@@ -101,7 +266,7 @@ int HttpRequest::parseRequestLine()
 			else if (headerIn[pos] == SP)
 			{
 				state = VERSION_H;
-				std::string tmp(headerIn, start, pos - start);
+				string tmp(headerIn, start, pos - start);
 				uri = tmp;
 				start = pos + 1;
 				break;
@@ -190,8 +355,14 @@ int HttpRequest::parseRequestLine()
 			state = END;
 			break;
 		case END:
+			state = 0;
 			return OK;
 		}
+	}
+	if (state = END)
+	{
+		state = 0;
+		return OK;
 	}
 	return AGAIN;
 }
@@ -233,7 +404,7 @@ int HttpRequest::processRequestLine(Connection& c)
 				int readnum = recv(c.cfd, largeTmp, largeClientHeaderSize - clientHeaderSize, 0);
 				if (readnum < 0)
 					return AGAIN_REQUESTLINE;
-				std::string largeBuf(largeTmp, readnum);
+				string largeBuf(largeTmp, readnum);
 #ifdef DEBUG
 				std::cout << "after recv() in processRequestLine():" << std::endl;
 				std::cout << "size: " << std::endl << largeBuf.size() << std::endl;
