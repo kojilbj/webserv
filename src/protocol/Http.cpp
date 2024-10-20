@@ -102,13 +102,29 @@ int Http::waitRequestHandler(Connection& c)
 		this->setRevHandler(reinterpret_cast<revHandler_pt>(&Http::processRequestHeader));
 		rv = AGAIN;
 	}
+	else if (rv == OK)
+		processRequest();
 	return rv;
 }
 
-void Http::wevHandler()
+void Http::processRequest()
 {
+	int fd = open("/root/webserv/test/html/index.html", O_RDONLY);
+	if (fd < 0)
+		return;
+	std::string responseHeader("HTTP/1.1 200 OK\r\n\r\n");
+	write(c.cfd, responseHeader.c_str(), responseHeader.size());
+	int bufSize = 1024;
+	char buf[bufSize];
+	for (;;)
+	{
+		std::memset(buf, 0, bufSize);
+		ssize_t readnum = read(fd, buf, bufSize);
+		if (readnum <= 0)
+			break;
+		write(c.cfd, buf, readnum);
+	}
 	/* coreRunPhase(c); */
 	/* finalizeRequest(c); */
 	/* finalizeConnection(c); */
 }
-

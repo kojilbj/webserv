@@ -23,10 +23,10 @@ namespace Wbsv
 		void setRevHandler(revHandler_pt func);
 		void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls);
 		int waitRequestHandler(Connection& c);
+		void processRequest();
 
 	private:
 		ServerCtx* serverCtx;
-		void wevHandler();
 	};
 
 } // namespace Wbsv
