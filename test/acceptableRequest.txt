@@ -1,3 +1,5 @@
+Request header rules:
+
 Request = Request-Line
           *((general-header | request-header | entity-header) CRLF)
           CRLF
@@ -39,3 +41,18 @@ Request = Request-Line
          entity-header = Allow | Content-Encoding | Content-Language | Content-Length | Content-Location | Content-MD5 | Content-Range | Content-Type | Expires | Last-Modified
 
                   Content-Length = "Content-Length"":" 1*DIGIT
+
+__________________________________________________________________________________________________________________________
+Interpretable headers:
+
+general-header:
+         Transfer-Encoding
+request-header:
+         Host
+entity-header:
+         Content-Encoding
+         Content-Length
+
+___________________________________________________________________________________________________________________________
+Available response headers:
+
