@@ -45,7 +45,7 @@ namespace Wbsv
 		int parseRequestHeaderLine();
 		void getVServerCtx(ServerCtx* serverCtx, string host);
 
-	protected:
+		/* protected: */
 		string headerIn;
 		map<string, string> headersIn;
 		/* default 1k byte */
@@ -54,7 +54,7 @@ namespace Wbsv
 		const unsigned int largeClientHeaderSize;
 		VServerCtx* vserverCtx;
 
-	private:
+		/* private: */
 		string headerOut;
 		unsigned int requestLineLen;
 		int pos;

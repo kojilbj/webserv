@@ -13,14 +13,17 @@ namespace Wbsv
 	class ServerCtx;
 	class Protocol;
 
+	typedef int (Http::*revHandler_pt)(Connection&);
+
 	class Http : public Protocol, public HttpRequest
 	{
 	public:
 		Http(){};
 		~Http(){};
+		revHandler_pt revHandler;
 		void initPhaseHandler();
 		int invokeRevHandler(Connection& c);
-		void setRevHandler(revHandler_pt func);
+		/* void setRevHandler(revHandler_pt func); */
 		void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls);
 		int waitRequestHandler(Connection& c);
 		void processRequest();

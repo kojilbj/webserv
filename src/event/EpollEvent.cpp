@@ -138,7 +138,7 @@ void Epoll::processEvents(Webserv& ws)
 		}
 		else
 		{
-			std::cerr << "unknown event" << std::endl;
+			std::cerr << "unknown event: " << ed->type << std::endl;
 			break;
 		}
 	}

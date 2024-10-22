@@ -211,6 +211,9 @@ int HttpRequest::processRequestHeader(Connection& c)
 				char largeTmp[leftAvailableHeaderSize];
 				std::memset(largeTmp, 0, leftAvailableHeaderSize);
 				int readnum = recv(c.cfd, largeTmp, leftAvailableHeaderSize, 0);
+#ifdef DEBUG
+				std::cout << "third recv return value: " << readnum << std::endl;
+#endif
 				if (readnum < 0)
 					return AGAIN_REQUESTHEADER;
 				string largeBuf(largeTmp, readnum);
@@ -388,7 +391,7 @@ int HttpRequest::parseRequestLine()
 			return OK;
 		}
 	}
-	if (state = END)
+	if (state == END)
 	{
 		state = 0;
 		return OK;
@@ -400,6 +403,10 @@ int HttpRequest::processRequestLine(Connection& c)
 {
 #ifdef DEBUG
 	std::cout << "Http::processRequestLine" << std::endl;
+	std::cout << "Current state of Request object: " << std::endl;
+	std::cout << "pos: " << pos << std::endl;
+	std::cout << "state: " << state << std::endl;
+	std::cout << "headerIn: " << headerIn << std::endl;
 #endif
 	int rv;
 	for (;;)
@@ -423,27 +430,41 @@ int HttpRequest::processRequestLine(Connection& c)
 			return processRequestHeader(c);
 		}
 		else if (rv != AGAIN)
+		{
+#ifdef DEBUG
+			std::cout << "Error return after parseRequestLine" << std::endl;
+#endif
 			return ERROR;
+		}
 		else // AGAIN
 		{
 			if (headerIn.size() < largeClientHeaderSize)
 			{
-				char largeTmp[largeClientHeaderSize - clientHeaderSize];
-				std::memset(largeTmp, 0, largeClientHeaderSize - clientHeaderSize);
-				int readnum = recv(c.cfd, largeTmp, largeClientHeaderSize - clientHeaderSize, 0);
-				if (readnum < 0)
-					return AGAIN_REQUESTLINE;
-				string largeBuf(largeTmp, readnum);
-#ifdef DEBUG
-				std::cout << "after recv() in processRequestLine():" << std::endl;
-				std::cout << "size: " << std::endl << largeBuf.size() << std::endl;
-				std::cout << "largeBuf: " << std::endl << largeBuf << std::endl;
-#endif
-				headerIn += largeBuf;
+				return AGAIN_REQUESTLINE;
+				/* char largeTmp[largeClientHeaderSize - clientHeaderSize]; */
+				/* std::memset(largeTmp, 0, largeClientHeaderSize - clientHeaderSize); */
+				/* int readnum = recv(c.cfd, largeTmp, largeClientHeaderSize - clientHeaderSize, 0); */
+				/* #ifdef DEBUG */
+				/* std::cout << "second recv return value: " << readnum << std::endl; */
+				/* #endif */
+				/* if (readnum < 0) */
+				/* 	return AGAIN_REQUESTLINE; */
+				/* string largeBuf(largeTmp, readnum); */
+				/* #ifdef DEBUG */
+				/* std::cout << "after recv() in processRequestLine():" << std::endl; */
+				/* std::cout << "size: " << std::endl << largeBuf.size() << std::endl; */
+				/* std::cout << "largeBuf: " << std::endl << largeBuf << std::endl; */
+				/* #endif */
+				/* headerIn += largeBuf; */
 			}
 			else
+			{
+#ifdef DEBUG
+				std::cout << "Error return after parseRequestLine" << std::endl;
+#endif
 				return ERROR;
-			// 414 (Request-URI Too Large) error
+				// 414 (Request-URI Too Large) error
+			}
 		}
 	}
 }

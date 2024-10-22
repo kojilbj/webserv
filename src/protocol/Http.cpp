@@ -15,13 +15,13 @@ int Http::invokeRevHandler(Connection& c)
 	return (this->*(revHandler))(c);
 }
 
-void Http::setRevHandler(revHandler_pt func)
-{
-#ifdef DEBUG
-	std::cout << "Setting revHandler: " << std::endl;
-#endif
-	revHandler = func;
-}
+/* void Http::setRevHandler(revHandler_pt func) */
+/* { */
+/* #ifdef DEBUG */
+/* 	std::cout << "Setting revHandler: " << std::endl; */
+/* #endif */
+/* 	revHandler = func; */
+/* } */
 
 void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 {
@@ -78,6 +78,9 @@ int Http::waitRequestHandler(Connection& c)
 	char tmp[clientHeaderSize];
 	std::memset(tmp, 0, clientHeaderSize);
 	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
+#ifdef DEBUG
+	std::cout << "first recv return value: " << readnum << std::endl;
+#endif
 	if (readnum <= 0)
 	{
 		// 500 (Internal Server Error) error
@@ -96,7 +99,7 @@ int Http::waitRequestHandler(Connection& c)
 #ifdef DEBUG
 		std::cout << "processRequestLine() is posted" << std::endl;
 #endif
-		this->setRevHandler(reinterpret_cast<revHandler_pt>(&Http::processRequestLine));
+		revHandler = &Http::processRequestLine;
 		rv = AGAIN;
 	}
 	else if (rv == AGAIN_REQUESTHEADER)
@@ -104,7 +107,7 @@ int Http::waitRequestHandler(Connection& c)
 #ifdef DEBUG
 		std::cout << "processRequestHeader() is posted" << std::endl;
 #endif
-		this->setRevHandler(reinterpret_cast<revHandler_pt>(&Http::processRequestHeader));
+		revHandler = &Http::processRequestHeader;
 		rv = AGAIN;
 	}
 	else if (rv == OK)
