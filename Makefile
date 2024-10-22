@@ -1,13 +1,13 @@
 NAME = webserv
-SRCS = main.cpp Webserv.cpp HttpConfFile.cpp Listening.cpp Connection.cpp EpollEvent.cpp Http.cpp HttpRequest.cpp
+SRCS = main.cpp Webserv.cpp HttpConfFile.cpp Listening.cpp Connection.cpp EpollEvent.cpp Protocol.cpp Http.cpp HttpRequest.cpp FindConfig.cpp
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++
-INCLUDEDIRS = -Isrc -Isrc/conf -Isrc/event -Isrc/protocol
+INCLUDEDIRS = -Isrc -Isrc/conf -Isrc/event -Isrc/protocol -Isrc/protocol/phase
 CXXFLAGS = -std=c++98 $(INCLUDEDIRS)
 #-Wall -Wextra -Werror 
 
-VPATH = src:src/conf:src/event:src/protocol
+VPATH = src:src/conf:src/event:src/protocol:src/protocol/phase
 
 $(OBJDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -31,6 +31,6 @@ fclean: clean
 re: fclean all
 
 debug: CXXFLAGS += -D DEBUG
-debug: all
+debug: $(NAME)
 
 .PHONY: all clean fclean re debug

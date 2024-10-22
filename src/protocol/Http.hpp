@@ -16,24 +16,28 @@ namespace Wbsv
 	class Http : public Protocol, public HttpRequest
 	{
 	public:
-		Http()
-			: serverCtx(NULL){};
+		Http(){};
 		~Http(){};
+		void initPhaseHandler();
 		int invokeRevHandler(Connection& c);
 		void setRevHandler(revHandler_pt func);
 		void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls);
 		int waitRequestHandler(Connection& c);
 		void processRequest();
+		void coreRunPhase();
+		void finalizeRequest();
 
 	private:
-		ServerCtx* serverCtx;
+		LocationCtx* locationCtx;
 	};
 
 } // namespace Wbsv
 
 #include "ConfFile.hpp"
 #include "Connection.hpp"
+#include "FindConfig.hpp"
 #include "HttpConfFile.hpp"
 #include "Listening.hpp"
+#include "PhaseHandler.hpp"
 
 #endif

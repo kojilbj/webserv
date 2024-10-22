@@ -2,6 +2,33 @@
 
 using namespace Wbsv;
 
+void HttpRequest::getVServerCtx(ServerCtx* serverCtx, string host)
+{
+#ifdef DEBUG
+	std::cout << "getVServerCtx" << std::endl;
+#endif
+	std::vector<VServerCtx>* v = serverCtx->getVServerCtxs();
+	std::vector<VServerCtx>::iterator it;
+	std::vector<VServerCtx>::iterator defaultServer;
+	for (it = v->begin(); it != v->end(); it++)
+	{
+		if (it->serverName == host)
+		{
+			vserverCtx = &(*it);
+#ifdef DEBUG
+			std::cout << "Host: " << host << " matched" << std::endl;
+#endif
+			return;
+		}
+		if (it->defaultServer)
+			defaultServer = it;
+	}
+#ifdef DEBUG
+	std::cout << "Default server used" << std::endl;
+#endif
+	vserverCtx = &(*defaultServer);
+}
+
 int HttpRequest::parseRequestHeaderLine()
 {
 #ifdef DEBUG
@@ -155,6 +182,8 @@ int HttpRequest::processRequestHeader(Connection& c)
 					return ERROR;
 				it->second += headerFieldValueTmp;
 			}
+			if (headerFieldNameTmp == "Host")
+				getVServerCtx(c.serverCtx, headerFieldValueTmp);
 			headerFieldNameTmp = "";
 			headerFieldValueTmp = "";
 			continue;

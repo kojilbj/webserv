@@ -12,6 +12,8 @@ using std::string;
 namespace Wbsv
 {
 	class Connection;
+	class ServerCtx;
+	class VServerCtx;
 
 	enum rule
 	{
@@ -41,6 +43,7 @@ namespace Wbsv
 		int processRequestHeader(Connection& c);
 		int parseRequestLine();
 		int parseRequestHeaderLine();
+		void getVServerCtx(ServerCtx* serverCtx, string host);
 
 	protected:
 		string headerIn;
@@ -49,6 +52,7 @@ namespace Wbsv
 		const unsigned int clientHeaderSize;
 		/* default 8k byte */
 		const unsigned int largeClientHeaderSize;
+		VServerCtx* vserverCtx;
 
 	private:
 		string headerOut;
@@ -66,6 +70,7 @@ namespace Wbsv
 	};
 } // namespace Wbsv
 
+#include "ConfFile.hpp"
 #include "Connection.hpp"
 
 #endif

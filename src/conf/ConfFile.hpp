@@ -22,7 +22,7 @@ namespace Wbsv
 	{
 	public:
 		bool defaultServer;
-		std::string server_name;
+		std::string serverName;
 
 		VServerCtx()
 			: defaultServer(false){};
@@ -47,9 +47,9 @@ namespace Wbsv
 		{
 			return listen_;
 		}
-		const std::vector<VServerCtx>& getVServerCtxs() const
+		std::vector<VServerCtx>* getVServerCtxs()
 		{
-			return vserverCtxs_;
+			return &vserverCtxs_;
 		}
 		void addListen(const std::string& host, const std::string& port)
 		{

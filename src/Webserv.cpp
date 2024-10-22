@@ -103,6 +103,7 @@ void Webserv::acceptEvent(Listening* ls)
 		p->setRevHandler(
 			reinterpret_cast<int (Protocol::*)(Connection&)>(&Http::waitRequestHandler));
 		p->getServerCtx(getConfCtxs(), ls);
+		p->initPhaseHandler();
 		Connection* c = &p->c;
 		c->ls = ls;
 		c->setAcceptRev(cfd, &sockaddrIn, socklen);

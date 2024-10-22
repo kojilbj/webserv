@@ -27,7 +27,7 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	sc.addListen("172.17.0.2", "80");
 	VServerCtx vsc;
 	vsc.defaultServer = true;
-	vsc.server_name = "localhost";
+	vsc.serverName = "localhost";
 	LocationCtx lc;
 	lc.path = "/";
 	lc.root = "/root/webserv/test/html";
@@ -50,17 +50,18 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 		HttpConfCtx* hcc = (HttpConfCtx*)*it;
 		std::cout << "mainConf size: " << hcc->getMainCtxs().size() << std::endl;
 		std::cout << "serverConf size: " << hcc->getServerCtxs().size() << std::endl;
-		std::vector<ServerCtx>::const_iterator sit;
+		std::vector<ServerCtx>::iterator sit;
 		for (sit = hcc->getServerCtxs().begin(); sit != hcc->getServerCtxs().end(); sit++)
 		{
 			std::cout << "\tlisten.first: " << sit->getListen().first << std::endl;
 			std::cout << "\tlisten.second: " << sit->getListen().second << std::endl;
-			std::vector<VServerCtx>::const_iterator vsit;
-			for (vsit = sit->getVServerCtxs().begin(); vsit != sit->getVServerCtxs().end(); vsit++)
+			std::vector<VServerCtx>::iterator vsit;
+			for (vsit = sit->getVServerCtxs()->begin(); vsit != sit->getVServerCtxs()->end();
+				 vsit++)
 			{
 				std::cout << "\tdefaultServer: " << std::boolalpha << vsit->defaultServer
 						  << std::endl;
-				std::cout << "\tserver_name: " << vsit->server_name << std::endl;
+				std::cout << "\tserver_name: " << vsit->serverName << std::endl;
 				std::cout << "\tlocationConf size: " << vsit->getLocationCtxs().size() << std::endl;
 				std::vector<LocationCtx>::const_iterator lit;
 				for (lit = vsit->getLocationCtxs().begin(); lit != vsit->getLocationCtxs().end();

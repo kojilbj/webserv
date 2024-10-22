@@ -1,6 +1,11 @@
 #include "Http.hpp"
-
 using namespace Wbsv;
+
+void Http::initPhaseHandler()
+{
+	ph.push_back(new FindConfig);
+	/* ... */
+}
 
 int Http::invokeRevHandler(Connection& c)
 {
@@ -109,22 +114,44 @@ int Http::waitRequestHandler(Connection& c)
 
 void Http::processRequest()
 {
-	int fd = open("/root/webserv/test/html/index.html", O_RDONLY);
-	if (fd < 0)
-		return;
-	std::string responseHeader("HTTP/1.1 200 OK\r\n\r\n");
-	write(c.cfd, responseHeader.c_str(), responseHeader.size());
-	int bufSize = 1024;
-	char buf[bufSize];
-	for (;;)
+	std::cout << "processRequest" << std::endl;
+	/* int fd = open("/root/webserv/test/html/index.html", O_RDONLY); */
+	/* if (fd < 0) */
+	/* 	return; */
+	/* std::string responseHeader("HTTP/1.1 200 OK\r\n\r\n"); */
+	/* write(c.cfd, responseHeader.c_str(), responseHeader.size()); */
+	/* int bufSize = 1024; */
+	/* char buf[bufSize]; */
+	/* for (;;) */
+	/* { */
+	/* 	std::memset(buf, 0, bufSize); */
+	/* 	ssize_t readnum = read(fd, buf, bufSize); */
+	/* 	if (readnum <= 0) */
+	/* 		break; */
+	/* 	write(c.cfd, buf, readnum); */
+	/* } */
+	coreRunPhase();
+	/* finalizeRequest(); */
+	/* finalizeConnection(); */
+}
+
+void Http::coreRunPhase()
+{
+#ifdef DEBUG
+	std::cout << "coreRunPhase" << std::endl;
+#endif
+	std::vector<PhaseHandler*>::iterator it;
+	for (it = ph.begin(); it != ph.end(); it++)
 	{
-		std::memset(buf, 0, bufSize);
-		ssize_t readnum = read(fd, buf, bufSize);
-		if (readnum <= 0)
+		if ((*it)->checker(*this) == DONE)
 			break;
-		write(c.cfd, buf, readnum);
 	}
-	/* coreRunPhase(c); */
-	/* finalizeRequest(c); */
-	/* finalizeConnection(c); */
+	finalizeRequest();
+}
+
+void Http::finalizeRequest()
+{
+#ifdef DEBUG
+	std::cout << "finalizeRequest" << std::endl;
+#endif
 }

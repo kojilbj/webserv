@@ -25,7 +25,4 @@ namespace Wbsv
 	};
 } // namespace Wbsv
 
-#include "HttpConfFile.hpp"
-#include "Listening.hpp"
-
 #endif
