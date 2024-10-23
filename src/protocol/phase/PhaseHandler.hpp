@@ -8,8 +8,8 @@ namespace Wbsv
 	class PhaseHandler
 	{
 	public:
-		virtual int checker(Http& http) = 0;
-		virtual void handler(Http& http) = 0;
+		virtual int checker(Http&) = 0;
+		virtual int handler(Http&) = 0;
 	};
 } // namespace Wbsv
 

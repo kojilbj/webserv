@@ -27,9 +27,9 @@ namespace Wbsv
 		VServerCtx()
 			: defaultServer(false){};
 		~VServerCtx(){};
-		const std::vector<LocationCtx>& getLocationCtxs() const
+		std::vector<LocationCtx>* getLocationCtxs()
 		{
-			return locationCtxs_;
+			return &locationCtxs_;
 		}
 		void addLocationCtx(const LocationCtx& lc)
 		{

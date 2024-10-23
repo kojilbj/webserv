@@ -102,7 +102,7 @@ void Webserv::acceptEvent(Listening* ls)
 		freeList.push_back(p);
 		Http* h = reinterpret_cast<Http*>(p);
 		h->revHandler = &Http::waitRequestHandler;
-		p->getServerCtx(getConfCtxs(), ls);
+		p->selectServerCtx(getConfCtxs(), ls);
 		p->initPhaseHandler();
 		Connection* c = &p->c;
 		c->ls = ls;

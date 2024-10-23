@@ -62,9 +62,10 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 				std::cout << "\tdefaultServer: " << std::boolalpha << vsit->defaultServer
 						  << std::endl;
 				std::cout << "\tserver_name: " << vsit->serverName << std::endl;
-				std::cout << "\tlocationConf size: " << vsit->getLocationCtxs().size() << std::endl;
+				std::cout << "\tlocationConf size: " << vsit->getLocationCtxs()->size()
+						  << std::endl;
 				std::vector<LocationCtx>::const_iterator lit;
-				for (lit = vsit->getLocationCtxs().begin(); lit != vsit->getLocationCtxs().end();
+				for (lit = vsit->getLocationCtxs()->begin(); lit != vsit->getLocationCtxs()->end();
 					 lit++)
 				{
 					std::cout << "\t\tpath: " << lit->path << std::endl;

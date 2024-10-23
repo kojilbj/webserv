@@ -5,6 +5,7 @@ using namespace Wbsv;
 void Http::initPhaseHandler()
 {
 	ph.push_back(new FindConfig);
+	ph.push_back(new Content);
 	/* ... */
 }
 
@@ -16,7 +17,7 @@ int Http::invokeRevHandler()
 	return (this->*(revHandler))();
 }
 
-void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
+void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 {
 	std::vector<ConfCtx*>::iterator it;
 
@@ -61,6 +62,33 @@ void Http::getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 			}
 		}
 	}
+}
+
+void Http::selectVServerCtx(ServerCtx* serverCtx, string host)
+{
+#ifdef DEBUG
+	std::cout << "selectVServerCtx" << std::endl;
+#endif
+	std::vector<VServerCtx>* v = serverCtx->getVServerCtxs();
+	std::vector<VServerCtx>::iterator it;
+	std::vector<VServerCtx>::iterator defaultServer;
+	for (it = v->begin(); it != v->end(); it++)
+	{
+		if (it->serverName == host)
+		{
+			vserverCtx_ = &(*it);
+#ifdef DEBUG
+			std::cout << "Host: " << host << " matched" << std::endl;
+#endif
+			return;
+		}
+		if (it->defaultServer)
+			defaultServer = it;
+	}
+#ifdef DEBUG
+	std::cout << "Default server used" << std::endl;
+#endif
+	vserverCtx_ = &(*defaultServer);
 }
 
 int Http::waitRequestHandler()
@@ -225,7 +253,7 @@ int Http::processRequestHeader()
 				it->second += headerFieldValueTmp;
 			}
 			if (headerFieldNameTmp == "Host")
-				getVServerCtx(c.serverCtx, headerFieldValueTmp);
+				selectVServerCtx(c.serverCtx, headerFieldValueTmp);
 			headerFieldNameTmp = "";
 			headerFieldValueTmp = "";
 			continue;
@@ -583,33 +611,6 @@ int Http::processRequest()
 	return coreRunPhase();
 	/* finalizeRequest(); */
 	/* finalizeConnection(); */
-}
-
-void Http::getVServerCtx(ServerCtx* serverCtx, string host)
-{
-#ifdef DEBUG
-	std::cout << "getVServerCtx" << std::endl;
-#endif
-	std::vector<VServerCtx>* v = serverCtx->getVServerCtxs();
-	std::vector<VServerCtx>::iterator it;
-	std::vector<VServerCtx>::iterator defaultServer;
-	for (it = v->begin(); it != v->end(); it++)
-	{
-		if (it->serverName == host)
-		{
-			vserverCtx = &(*it);
-#ifdef DEBUG
-			std::cout << "Host: " << host << " matched" << std::endl;
-#endif
-			return;
-		}
-		if (it->defaultServer)
-			defaultServer = it;
-	}
-#ifdef DEBUG
-	std::cout << "Default server used" << std::endl;
-#endif
-	vserverCtx = &(*defaultServer);
 }
 
 int Http::coreRunPhase()

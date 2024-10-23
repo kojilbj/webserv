@@ -9,8 +9,8 @@ namespace Wbsv
 	class FindConfig : public PhaseHandler
 	{
 	public:
-		int checker(Http& http);
-		void handler(Http& http);
+		int checker(Http& h);
+		int handler(Http& h);
 	};
 } // namespace Wbsv
 

@@ -1,5 +1,5 @@
 NAME = webserv
-SRCS = main.cpp Webserv.cpp HttpConfFile.cpp Listening.cpp Connection.cpp EpollEvent.cpp Protocol.cpp Http.cpp HttpRequest.cpp FindConfig.cpp
+SRCS = main.cpp Webserv.cpp HttpConfFile.cpp Listening.cpp Connection.cpp EpollEvent.cpp Protocol.cpp Http.cpp FindConfig.cpp Content.cpp
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++

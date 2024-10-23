@@ -1,9 +1,9 @@
 #ifndef HTTP_HPP
 #define HTTP_HPP
 
-#include "HttpRequest.hpp"
 #include "Protocol.hpp"
 #include <iostream>
+#include <map>
 #include <unistd.h>
 
 using std::map;
@@ -54,7 +54,28 @@ namespace Wbsv
 		revHandler_pt revHandler;
 		void initPhaseHandler();
 		int invokeRevHandler();
-		void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls);
+		void selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls);
+		void selectVServerCtx(ServerCtx* serverCtx, string host);
+		VServerCtx* getVServerCtx() const
+		{
+			return vserverCtx_;
+		};
+		LocationCtx* getLocationCtx() const
+		{
+			return locationCtx_;
+		}
+		void setLocationCtx(LocationCtx* locationCtx)
+		{
+			locationCtx_ = locationCtx;
+		};
+		std::string& getUri()
+		{
+			return uri;
+		};
+		int getMethod()
+		{
+			return method;
+		};
 
 		/* Request handlers */
 		int waitRequestHandler();
@@ -63,7 +84,6 @@ namespace Wbsv
 		int parseRequestLine();
 		int parseRequestHeaderLine();
 		int processRequest();
-		void getVServerCtx(ServerCtx* serverCtx, string host);
 
 		/* Response handlers */
 		int coreRunPhase();
@@ -75,8 +95,8 @@ namespace Wbsv
 		map<string, string> headersIn;
 		string headerFieldNameTmp;
 		string headerFieldValueTmp;
-		VServerCtx* vserverCtx;
-		LocationCtx* locationCtx;
+		VServerCtx* vserverCtx_;
+		LocationCtx* locationCtx_;
 		/* default 1k byte */
 		const unsigned int clientHeaderSize;
 		/* default 8k byte */
@@ -100,6 +120,7 @@ namespace Wbsv
 
 #include "ConfFile.hpp"
 #include "Connection.hpp"
+#include "Content.hpp"
 #include "FindConfig.hpp"
 #include "HttpConfFile.hpp"
 #include "Listening.hpp"
