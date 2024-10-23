@@ -19,8 +19,7 @@ namespace Wbsv
 	public:
 		virtual ~Protocol();
 		virtual void getServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls) = 0;
-		virtual int invokeRevHandler(Connection& c) = 0;
-		/* virtual void setRevHandler(revHandler_pt) = 0; */
+		virtual int invokeRevHandler() = 0;
 		virtual void initPhaseHandler() = 0;
 		Connection c;
 
