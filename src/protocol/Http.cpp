@@ -5,8 +5,10 @@ using namespace Wbsv;
 void Http::initPhaseHandler()
 {
 	ph.push_back(new FindConfig);
+	ph.push_back(new Rewrite);
+	ph.push_back(new Access);
+	ph.push_back(new CgiContent);
 	ph.push_back(new Content);
-	/* ... */
 }
 
 int Http::invokeRevHandler()

@@ -16,6 +16,8 @@ namespace Wbsv
 		std::string path;
 		std::string root;
 		std::string index;
+		int limitExcept;
+		bool autoindex;
 	};
 
 	class VServerCtx

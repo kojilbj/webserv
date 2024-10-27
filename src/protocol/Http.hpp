@@ -118,6 +118,8 @@ namespace Wbsv
 
 } // namespace Wbsv
 
+#include "Access.hpp"
+#include "CgiContent.hpp"
 #include "ConfFile.hpp"
 #include "Connection.hpp"
 #include "Content.hpp"
@@ -125,5 +127,6 @@ namespace Wbsv
 #include "HttpConfFile.hpp"
 #include "Listening.hpp"
 #include "PhaseHandler.hpp"
+#include "Rewrite.hpp"
 
 #endif
