@@ -24,7 +24,7 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	sc.addListen("localhost", "80");
 	VServerCtx vsc;
 	vsc.defaultServer = true;
-	vsc.server_name = "localhost";
+	vsc.serverName = "localhost";
 	LocationCtx lc;
 	lc.path = "/";
 	lc.root = "/root/webserv/test/html";
@@ -57,7 +57,7 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 			{
 				std::cout << "\tdefaultServer: " << std::boolalpha << vsit->defaultServer
 						  << std::endl;
-				std::cout << "\tserver_name: " << vsit->server_name << std::endl;
+				std::cout << "\tserver_name: " << vsit->serverName << std::endl;
 				std::cout << "\tlocationConf size: " << vsit->getLocationCtxs().size() << std::endl;
 				std::vector<LocationCtx>::const_iterator lit;
 				for (lit = vsit->getLocationCtxs().begin(); lit != vsit->getLocationCtxs().end();
@@ -82,24 +82,30 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 
 /* ----------- end ------------- */
 
+void confParse(std::string& confFileName);
+
 int main(int argc, char* argv[])
 {
 	(void)argv;
+	if (argc < 2)
+		return 0;
+	std::string confFileName(argv[1]);
 	try
 	{
-		if (argc != 1)
+		if (argc != 2)
 			return 0;
-		Wbsv::Webserv ws;
+		// Wbsv::Webserv ws;
 		/* confFileModule */
-		confParse(ws);
+		// confParse(ws);
+		confParse(confFileName);
 
-		printConf(ws.getConfCtxs());
+		// printConf(ws.getConfCtxs());
 		/* initialize 'ws' elements with values got by configuration file */
 		/* ex. */
 		/* listenings[i].addr = addr; */
 		/* listenings[i].port = htons(port); */
-		ws.init();
-		printListening(ws.getListenings());
+		// ws.init();
+		// printListening(ws.getListenings());
 		/* ws.openListeningSocket(); */
 		/* ready for events */
 		/* ex. */

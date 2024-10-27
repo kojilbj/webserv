@@ -36,7 +36,7 @@ namespace Wbsv
 	{
 	public:
 		bool defaultServer;
-		std::string server_name;
+		std::string serverName;
 
 		VServerCtx()
 			: defaultServer(false){};
