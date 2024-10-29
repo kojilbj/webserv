@@ -43,7 +43,7 @@ Request = Request-Line
                   Content-Length = "Content-Length"":" 1*DIGIT
 
 __________________________________________________________________________________________________________________________
-Interpretable headers:
+Interpretable request headers:
 
 general-header:
          Transfer-Encoding
@@ -54,5 +54,20 @@ entity-header:
          Content-Length
 
 ___________________________________________________________________________________________________________________________
+Response header rules:
+
+Response = Status-Line
+         *(( general-header | response-header | entity-header) CRLF)
+         CRLF
+         [message-body]
+
+Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+
+___________________________________________________________________________________________________________________________
 Available response headers:
 
+response-header:
+         Location
+entity-header
+         Allow
+         Content-Length
