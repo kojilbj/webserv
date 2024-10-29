@@ -191,6 +191,18 @@ void parseClientMaxBodySize(VServerCtx& vsCtx, const std::string& value)
 	vsCtx.setClientMaxBodySize(std::atoi(value.substr(value.find(' ') + 1).c_str()));
 }
 
+void	parseErrorPage(VServerCtx& vsCtx, const std::string & value)
+{
+	std::string errorNum;
+	std::string path;
+
+	if (countSpace(value) != 1)
+		throw std::exception();
+	errorNum = value.substr(0, value.find(" "));
+	path = value.substr(value.find(" ") + 1);
+	vsCtx.addErrorPage(std::atoi(errorNum.c_str()), path);
+}
+
 void setServerDirective(VServerCtx& vsCtx, const std::string& directiveValue)
 {
 	std::string key;
@@ -204,17 +216,27 @@ void setServerDirective(VServerCtx& vsCtx, const std::string& directiveValue)
 		parseServerName(vsCtx, value);
 	if (key == "client_max_body_size")
 		parseClientMaxBodySize(vsCtx, value);
+	if (key == "error_page")
+		parseErrorPage(vsCtx, value);
+}
+
+void	parsePath(Location &location, const std::string &value)
+{
+	if (countSpace(value) != 1)
+		throw std::exception();
+
 }
 
 void setLocationDirective(Location& location, std::string directiveValue)
 {
 	std::string key;
-	std::vector<std::string> values;
+	std::string value;
 
-	key = directiveValue.substr(directiveValue.find(" "));
+	key = directiveValue.substr(0, directiveValue.find(" "));
+	value = directiveValue.substr(directiveValue.find(" ") + 1);
 	std::cout << key << std::endl;
 	if (key == "path")
-		;
+		parsePath(location, value);
 	if (key == "root")
 		;
 	if (key == "root")

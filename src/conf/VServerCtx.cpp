@@ -48,3 +48,19 @@ void VServerCtx::setClientMaxBodySize(int clienMacBodySize)
 {
 	std::cout << "VServerCtx setClientBodySize Called" << std::endl;
 }
+
+void	VServerCtx::addErrorPage(int errorNumber, const std::string & path)
+{
+	std::cout << "VServerCtx addErrorPage Called" << std::endl;
+	std::pair<int, std::string> errorPage;
+
+	errorPage.first = errorNumber;
+	errorPage.second = path;
+	errorPage_.push_back(errorPage);
+}
+
+std::vector<std::pair<int, std::string> > VServerCtx::getErrorPage(void)
+{
+	std::cout << "VServerCtx getErrorPage Called" << std::endl;
+	return errorPage_;
+}
