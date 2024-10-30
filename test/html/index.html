@@ -1,100 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Junior Soccer Stars</title>
+    <title>Simple Instagram-like Homepage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #cce7ff;
-            color: #003366;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            font-family: 'Roboto', sans-serif;
+            color: white;
+            text-align: center;
             margin: 0;
             padding: 0;
         }
-        header {
-            background-color: #0066cc;
+
+        .header {
             padding: 20px;
-            text-align: center;
-            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.2);
+            font-size: 24px;
         }
-        nav {
-            background-color: #005bb5;
-            padding: 10px;
-            text-align: center;
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
         }
-        nav a {
-            color: #ffffff;
+
+        .gallery img {
+            width: 200px;
+            height: 200px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-button {
+            margin-top: 20px;
+        }
+
+        a {
             text-decoration: none;
-            margin: 0 15px;
-            font-weight: bold;
-        }
-        nav a:hover {
-            text-decoration: underline;
-        }
-        .content {
-            padding: 20px;
-            text-align: center;
-        }
-        .content h2 {
-            color: #004080;
-        }
-        footer {
-            background-color: #0066cc;
-            color: #ffffff;
-            text-align: center;
-            padding: 10px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-        .team-photo {
-            max-width: 100%;
-            height: auto;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
             border-radius: 10px;
         }
     </style>
 </head>
+
 <body>
-
-    <header>
-        <h1>Welcome to Junior Soccer Stars</h1>
-        <p>Where Fun Meets Soccer!</p>
-        <p>by kisobe</p>
-    </header>
-
-    <nav>
-        <a href="about.html">About Us</a>
-        <a href="#teams">Teams</a>
-        <a href="schedule.html">Schedule</a>
-        <a href="#contact">Contact</a>
-    </nav>
-
-    <div class="content" id="about">
-        <h2>About Us</h2>
-        <p>Welcome to Junior Soccer Stars, the best place for kids to learn soccer while having fun! We focus on teamwork, sportsmanship, and making new friends.</p>
+    <div class="header">
+        <h1>Welcome to Mini-Instagram</h1>
     </div>
 
-    <div class="content" id="teams">
-        <h2>Our Teams</h2>
-        <img src="images/soccerball.png" alt="Team Photo" class="team-photo">
+    <div class="gallery">
+        <!-- Placeholder images for demonstration -->
+        <img src="https://via.placeholder.com/200" alt="Image 1">
+        <img src="https://via.placeholder.com/200" alt="Image 2">
+        <img src="https://via.placeholder.com/200" alt="Image 3">
+        <img src="https://via.placeholder.com/200" alt="Image 4">
     </div>
 
-    <div class="content" id="schedule">
-        <h2>Practice & Game Schedule</h2>
-        <p>Practices are held every Tuesday and Thursday evening. Games are on Saturdays at the local community park. Check out our full schedule for more details!</p>
+    <div class="upload-button">
+        <a href="upload.html">Upload New Image</a>
     </div>
-
-    <div class="content" id="contact">
-        <h2>Contact Us</h2>
-        <p>If you'd like to learn more or join a team, feel free to contact us at:</p>
-        <p><strong>Email:</strong> juniorsoccerstars@example.com</p>
-        <p><strong>Phone:</strong> (123) 456-7890</p>
-    </div>
-
-    <footer>
-        <p>&copy; 2024 Junior Soccer Stars. All Rights Reserved.</p>
-    </footer>
-
 </body>
+
 </html>

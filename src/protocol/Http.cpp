@@ -2,6 +2,54 @@
 
 using namespace Wbsv;
 
+Http::Http()
+	: clientHeaderSize(1024)
+	, largeClientHeaderSize(8192)
+	, requestLineLen(0)
+	, pos(0)
+	, start(0)
+	, state(0)
+	, method(0)
+	, major(0)
+	, minor()
+	, alreadyRead(false)
+	, alreadyWrite(false)
+	, ready(false)
+	, responseState(0)
+	, fd_(-1)
+{
+	defaultErrorPages["400"] =
+		"<html>\r\n<head><title>400 Bad "
+		"Request</title></head>\r\n<body>\r\n<center><h1>400 Bad Request</h1></center>\r\n";
+	defaultErrorPages["404"] =
+		"<html>\r\n<head><title>404 Not "
+		"Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n";
+	defaultErrorPages["405"] =
+		"<html>\r\n<head><title>405 Not "
+		"Allowed</title></head>\r\n<body>\r\n<center><h1>405 Not Allowed</h1></center>\r\n";
+	defaultErrorPages["406"] =
+		"<html>\r\n<head><title>406 Not "
+		"Acceptable</title></head>\r\n<body>\r\n<center><h1>406 Not Acceptable</h1></center>\r\n";
+	defaultErrorPages["413"] = "<html>\r\n<head><title>413 Request "
+							   "Entity Too Large</title></head>\r\n<body>\r\n<center><h1>413 "
+							   "Request Entity Too Large</h1></center>\r\n";
+	defaultErrorPages["414"] = "<html>\r\n<head><title>414 Request-"
+							   "Line Too Long</title></head>\r\n<body>\r\n<center><h1>414 "
+							   "Request-Line Too Long</h1></center>\r\n";
+	defaultErrorPages["415"] = "<html>\r\n<head><title>415 Unsupported "
+							   "Media Type</title></head>\r\n<body>\r\n<center><h1>415 Unsupported "
+							   "Media Type</h1></center>\r\n";
+	defaultErrorPages["500"] = "<html>\r\n<head><title>500 Internal "
+							   "Server Error</title></head>\r\n<body>\r\n<center><h1>500 Internal "
+							   "Server Error</h1></center>\r\n";
+	defaultErrorPages["502"] =
+		"<html>\r\n<head><title>502 Bad "
+		"Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n";
+	defaultErrorPages["505"] = "<html>\r\n<head><title>505 HTTP "
+							   "Version Not Supported</title></head>\r\n<body>\r\n<center><h1>505 "
+							   "HTTP Version Not Supported</h1></center>\r\n";
+}
+
 void Http::initPhaseHandler()
 {
 	ph.push_back(new FindConfig);
@@ -97,6 +145,7 @@ int Http::waitRequestHandler()
 #ifdef DEBUG
 	std::cout << "Http::waitRequestHandler" << std::endl;
 #endif
+	wevReady = true;
 	char tmp[clientHeaderSize + 1];
 	std::memset(tmp, 0, clientHeaderSize + 1);
 	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
@@ -181,20 +230,26 @@ int Http::processRequestLine()
 #ifdef DEBUG
 			std::cout << "Error return after parseRequestLine" << std::endl;
 #endif
-			return ERROR;
+			statusLine = "HTTP/1.1 400 Bad Requet\r\n";
+			headerOut = "\r\n";
+			messageBodyOut = defaultErrorPages["400"];
+			return finalizeRequest();
 		}
 		else // AGAIN
 		{
 			if (headerIn.size() >= largeClientHeaderSize)
 			{
-				std::cout << "Request-URI Too Large" << std::endl;
-				return ERROR;
+				statusLine = "HTTP/1.1 414 Request-Line Too Long\r\n";
+				headerOut = "\r\n";
+				messageBodyOut = defaultErrorPages["414"];
+				return finalizeRequest();
 			}
 			if (!ready)
 			{
-				/* Bad Request (Parse Error) */
-				std::cout << "Bad Request" << std::endl;
-				return ERROR;
+				statusLine = "HTTP/1.1 400 Bad Request\r\n";
+				headerOut = "\r\n";
+				messageBodyOut = defaultErrorPages["400"];
+				return finalizeRequest();
 			}
 			ready = false;
 			alreadyRead = false;
@@ -270,23 +325,30 @@ int Http::processRequestHeader()
 			}
 #endif
 			pos = 0;
-			requestDone = true;
 			return processRequest();
 		}
 		else if (rv != AGAIN)
-			return ERROR;
+		{
+			statusLine = "HTTP/1.1 400 Bad Requet\r\n";
+			headerOut = "\r\n";
+			messageBodyOut = defaultErrorPages["400"];
+			return finalizeRequest();
+		}
 		else // AGAIN
 		{
 			if (headerIn.size() - requestLineLen >= largeClientHeaderSize)
 			{
-				std::cout << "Request-Header Too Large (Bad Request)" << std::endl;
-				return ERROR;
+				statusLine = "HTTP/1.1 400 Bad Requet\r\n";
+				headerOut = "\r\n";
+				messageBodyOut = defaultErrorPages["400"];
+				return finalizeRequest();
 			}
 			if (!ready)
 			{
-				/* Bad Request (Parse Error) */
-				std::cout << "Bad Request" << std::endl;
-				return ERROR;
+				statusLine = "HTTP/1.1 400 Bad Requet\r\n";
+				headerOut = "\r\n";
+				messageBodyOut = defaultErrorPages["400"];
+				return finalizeRequest();
 			}
 			ready = false;
 			alreadyRead = false;
@@ -395,9 +457,13 @@ int Http::parseRequestLine()
 			default:
 				return INVALID_URI;
 			}
+			break;
 		case VERSION_H:
 			if (headerIn[pos] != 'H')
+			{
+				std::cout << "VERSION_H: " << headerIn[pos] << std::endl;
 				return INVALID_VERSION;
+			}
 			state = VERSION_HT;
 			break;
 		case VERSION_HT:

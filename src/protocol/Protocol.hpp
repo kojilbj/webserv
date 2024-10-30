@@ -18,13 +18,13 @@ namespace Wbsv
 	{
 	public:
 		Protocol()
-			: requestDone(false){};
+			: wevReady(false){};
 		virtual ~Protocol();
 		virtual void selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls) = 0;
 		virtual int invokeRevHandler() = 0;
 		virtual void initPhaseHandler() = 0;
 		Connection c;
-		bool requestDone;
+		bool wevReady;
 
 	protected:
 		/* const std::string type; */

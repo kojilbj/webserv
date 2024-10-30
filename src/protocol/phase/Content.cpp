@@ -28,6 +28,7 @@ int htmlContentHandler(Http& h, LocationCtx* lc)
 		{
 			h.statusLine = "HTTP/1.1 404 Not Found\r\n";
 			h.headerOut = "\r\n";
+			h.messageBodyOut = h.defaultErrorPages["404"];
 			return DONE;
 		}
 		h.statusLine = "HTTP/1.1 200 OK\r\n";
@@ -35,6 +36,11 @@ int htmlContentHandler(Http& h, LocationCtx* lc)
 		h.setFd(fd);
 	}
 	return DONE;
+}
+
+int cgiContentHandler(Http& h, LocationCtx* lc)
+{
+	return OK;
 }
 
 int Content::handler(Http& h)
@@ -45,5 +51,7 @@ int Content::handler(Http& h)
 	LocationCtx* lc = h.getLocationCtx();
 	if (lc->name == "html") // && method == GET ???
 		return htmlContentHandler(h, lc);
+	else if (lc->name == "cgi")
+		return cgiContentHandler(h, lc);
 	return OK;
 }

@@ -148,7 +148,7 @@ void Epoll::processEvents(Webserv& ws)
 			}
 			else if (eventResult[i].events & EPOLLOUT)
 			{
-				if (!p->requestDone)
+				if (!p->wevReady) // or if (statusLine == "")
 					continue;
 				int rv = p->invokeRevHandler();
 				if (rv == OK)

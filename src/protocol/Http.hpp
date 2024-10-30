@@ -36,21 +36,7 @@ namespace Wbsv
 	class Http : public Protocol
 	{
 	public:
-		Http()
-			: clientHeaderSize(1024)
-			, largeClientHeaderSize(8192)
-			, requestLineLen(0)
-			, pos(0)
-			, start(0)
-			, state(0)
-			, method(0)
-			, major(0)
-			, minor()
-			, alreadyRead(false)
-			, alreadyWrite(false)
-			, ready(false)
-			, responseState(0)
-			, fd_(-1){};
+		Http();
 		~Http(){};
 
 		/* Core handlers */
@@ -100,6 +86,7 @@ namespace Wbsv
 		string statusLine;
 		string headerOut;
 		string messageBodyOut;
+		map<string, string> defaultErrorPages;
 
 	private:
 		/* Request variables */
@@ -128,7 +115,6 @@ namespace Wbsv
 		// pipe or regular file fd to send to the client as message body
 		int fd_;
 	};
-
 } // namespace Wbsv
 
 #include "Access.hpp"
