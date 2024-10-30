@@ -8,7 +8,6 @@ namespace Wbsv
 	class Rewrite : public PhaseHandler
 	{
 	public:
-		int checker(Http&);
 		int handler(Http&);
 	};
 } // namespace Wbsv

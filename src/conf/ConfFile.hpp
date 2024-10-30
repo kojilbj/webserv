@@ -13,9 +13,11 @@ namespace Wbsv
 	class LocationCtx
 	{
 	public:
+		std::string name;
 		std::string path;
 		std::string root;
 		std::string index;
+		std::vector<std::string> redirect;
 		int limitExcept;
 		bool autoindex;
 	};

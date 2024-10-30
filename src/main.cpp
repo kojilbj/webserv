@@ -4,17 +4,24 @@ extern Wbsv::Event* ev;
 
 /* ---- substitution for test ---- */
 
-/* http { */
-/* 	server { */
-/* 		listen localhost:80; */
-/* 		server_name localhost; */
+// http {
+// 	server {
+// 		listen localhost:80;
+// 		server_name localhost;
 
-/* 		location / { */
-/* 			root /root/webserv/test/html; */
-/* 			index index.html; */
-/* 		} */
-/* 	} */
-/* } */
+// 		location / {
+// 			root /root/webserv/test/html;
+// 			index index.html;
+// 		}
+//		location /return {
+//			return 301 http://www.google.com;
+//		}
+//		location /cgi {
+//			cgi_param PATH_INFO ../test/cgi;
+//			cgi_index upload.php;
+//		}
+// 	}
+// }
 
 #include "HttpConfFile.hpp"
 #include <iostream>
@@ -29,10 +36,17 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	vsc.defaultServer = true;
 	vsc.serverName = "localhost";
 	LocationCtx lc;
+	lc.name = "html";
 	lc.path = "/";
 	lc.root = "/root/webserv/test/html";
 	lc.index = "index.html";
 	vsc.addLocationCtx(lc);
+	LocationCtx lc2;
+	lc2.name = "redirect";
+	lc2.path = "/redirect";
+	lc2.redirect.push_back("399");
+	lc2.redirect.push_back("http://www.google.com");
+	vsc.addLocationCtx(lc2);
 	sc.addVServerCtx(vsc);
 	httpConfCtx->addServerCtx(sc);
 	confCtxs->push_back(httpConfCtx);
@@ -69,8 +83,14 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 					 lit++)
 				{
 					std::cout << "\t\tpath: " << lit->path << std::endl;
-					std::cout << "\t\troot: " << lit->root << std::endl;
-					std::cout << "\t\tindex: " << lit->index << std::endl;
+					if (lit->name == "html")
+					{
+						std::cout << "\t\troot: " << lit->root << std::endl;
+						std::cout << "\t\tindex: " << lit->index << std::endl;
+					}
+					else if (lit->name == "redirect")
+						std::cout << "\t\tredirect: " << lit->redirect[0] << " " << lit->redirect[1]
+								  << std::endl;
 				}
 			}
 		}

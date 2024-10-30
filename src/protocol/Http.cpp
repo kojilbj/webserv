@@ -7,7 +7,6 @@ void Http::initPhaseHandler()
 	ph.push_back(new FindConfig);
 	ph.push_back(new Rewrite);
 	ph.push_back(new Access);
-	ph.push_back(new CgiContent);
 	ph.push_back(new Content);
 }
 
@@ -623,7 +622,7 @@ int Http::coreRunPhase()
 	std::vector<PhaseHandler*>::iterator it;
 	for (it = ph.begin(); it != ph.end(); it++)
 	{
-		if ((*it)->checker(*this) == DONE)
+		if ((*it)->handler(*this) == DONE)
 			break;
 	}
 	return finalizeRequest();
@@ -633,6 +632,10 @@ int Http::finalizeRequest()
 {
 #ifdef DEBUG
 	std::cout << "finalizeRequest" << std::endl;
+	std::cout << "-----------------------------------------" << std::endl;
+	std::cout << "Response:" << std::endl << headerOut << std::endl;
+	std::cout << "-----------------------------------------" << std::endl;
 #endif
+	write(c.cfd, headerOut.c_str(), headerOut.size());
 	return OK;
 }

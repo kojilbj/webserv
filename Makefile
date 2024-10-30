@@ -10,7 +10,6 @@ SRCS = main.cpp\
 	   FindConfig.cpp\
 	   Rewrite.cpp\
 	   Access.cpp\
-	   CgiContent.cpp\
 	   Content.cpp\
 
 OBJDIR = objs

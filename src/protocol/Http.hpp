@@ -89,6 +89,9 @@ namespace Wbsv
 		int coreRunPhase();
 		int finalizeRequest();
 
+		/* Response variables */
+		string headerOut;
+
 	private:
 		/* Request variables */
 		string headerIn;
@@ -111,15 +114,11 @@ namespace Wbsv
 		int minor;
 		bool alreadyRead;
 		bool ready;
-
-		/* Response variables */
-		string headerOut;
 	};
 
 } // namespace Wbsv
 
 #include "Access.hpp"
-#include "CgiContent.hpp"
 #include "ConfFile.hpp"
 #include "Connection.hpp"
 #include "Content.hpp"

@@ -2,14 +2,11 @@
 
 using namespace Wbsv;
 
-int FindConfig::checker(Http& h)
-{
-	std::cout << "FindConfig checker" << std::endl;
-	return handler(h);
-}
-
 int FindConfig::handler(Http& h)
 {
+#ifdef DEBUG
+	std::cout << "FindConfig handler" << std::endl;
+#endif
 	VServerCtx* vs = h.getVServerCtx();
 	std::vector<LocationCtx>* lv = vs->getLocationCtxs();
 	std::vector<LocationCtx>::iterator it;
