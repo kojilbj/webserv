@@ -596,20 +596,20 @@ int Http::parseRequestHeaderLine()
 int Http::processRequest()
 {
 	std::cout << "processRequest" << std::endl;
-	/* int fd = open("/root/webserv/test/html/index.html", O_RDONLY); */
-	/* if (fd < 0) */
+	/* int fd_ = open("/root/webserv/test/html/index.html", O_RDONLY); */
+	/* if (fd_ < 0) */
 	/* 	return; */
 	/* string responseHeader("HTTP/1.1 200 OK\r\n\r\n"); */
-	/* write(c.cfd, responseHeader.c_str(), responseHeader.size()); */
+	/* write(c.cfd_, responseHeader.c_str(), responseHeader.size()); */
 	/* int bufSize = 1024; */
 	/* char buf[bufSize]; */
 	/* for (;;) */
 	/* { */
 	/* 	std::memset(buf, 0, bufSize); */
-	/* 	ssize_t readnum = read(fd, buf, bufSize); */
+	/* 	ssize_t readnum = read(fd_, buf, bufSize); */
 	/* 	if (readnum <= 0) */
 	/* 		break; */
-	/* 	write(c.cfd, buf, readnum); */
+	/* 	write(c.cfd_, buf, readnum); */
 	/* } */
 	return coreRunPhase();
 	/* finalizeRequest(); */
@@ -632,6 +632,9 @@ int Http::coreRunPhase()
 
 int Http::finalizeRequest()
 {
+#ifdef DEBUG
+	std::cout << "finalizeRequest" << std::endl;
+#endif
 	// it may be not needed
 	if (!alreadyWrite)
 	{
@@ -640,12 +643,6 @@ int Http::finalizeRequest()
 		return AGAIN;
 	}
 
-#ifdef DEBUG
-	std::cout << "finalizeRequest" << std::endl;
-	std::cout << "-----------------------------------------" << std::endl;
-	std::cout << "Response:" << std::endl << statusLine << headerOut << messageBodyOut << std::endl;
-	std::cout << "-----------------------------------------" << std::endl;
-#endif
 	enum state
 	{
 		start = 0,
@@ -662,6 +659,12 @@ int Http::finalizeRequest()
 	{
 	case start:
 		writenum = write(c.cfd, statusLine.c_str(), statusLine.size());
+#ifdef DEBUG
+		std::cout << "-----------------------------------------" << std::endl;
+		std::cout << "sending to client (state: start):" << std::endl;
+		std::cout << statusLine << std::endl;
+		std::cout << "-----------------------------------------" << std::endl;
+#endif
 		if (writenum == -1)
 			return ERROR;
 		if (writenum < statusLine.size())
@@ -674,6 +677,12 @@ int Http::finalizeRequest()
 		return AGAIN;
 	case statusLineDoing:
 		writenum = write(c.cfd, statusLine.c_str() + pos, statusLine.size() - pos);
+#ifdef DEBUG
+		std::cout << "-----------------------------------------" << std::endl;
+		std::cout << "sending to client (state: statusLineDoing):" << std::endl;
+		std::cout << statusLine << std::endl;
+		std::cout << "-----------------------------------------" << std::endl;
+#endif
 		if (writenum == -1)
 			return ERROR;
 		if (writenum < statusLine.size() - pos)
@@ -683,9 +692,15 @@ int Http::finalizeRequest()
 		}
 		pos = 0;
 		responseState = statusLineDone;
-		break;
+		return AGAIN;
 	case statusLineDone:
 		writenum = write(c.cfd, headerOut.c_str(), headerOut.size());
+#ifdef DEBUG
+		std::cout << "-----------------------------------------" << std::endl;
+		std::cout << "sending to client (state: statusLineDone):" << std::endl;
+		std::cout << headerOut << std::endl;
+		std::cout << "-----------------------------------------" << std::endl;
+#endif
 		if (writenum == -1)
 			return ERROR;
 		if (writenum < headerOut.size())
@@ -695,9 +710,15 @@ int Http::finalizeRequest()
 			return AGAIN;
 		}
 		responseState = headerOutDone;
-		break;
+		return AGAIN;
 	case headerOutDoing:
 		writenum = write(c.cfd, headerOut.c_str() + pos, headerOut.size() - pos);
+#ifdef DEBUG
+		std::cout << "-----------------------------------------" << std::endl;
+		std::cout << "sending to client (state: headerOutDoing):" << std::endl;
+		std::cout << headerOut << std::endl;
+		std::cout << "-----------------------------------------" << std::endl;
+#endif
 		if (writenum == -1)
 			return ERROR;
 		if (writenum < headerOut.size() - pos)
@@ -707,22 +728,33 @@ int Http::finalizeRequest()
 		}
 		pos = 0;
 		responseState = headerOutDone;
-		break;
+		return AGAIN;
 	case headerOutDone:
 		if (messageBodyOut.size() == 0)
 		{
-			if (fd != -1)
+			if (fd_ != -1)
 			{
 				size_t bufSize = 1024;
-				char buf[bufSize];
-				ssize_t readnum = read(fd, buf, bufSize);
+				char buf[bufSize + 1];
+				std::memset(buf, 0, bufSize + 1);
+				ssize_t readnum = read(fd_, buf, bufSize);
 				if (readnum == -1)
-					std::cout << "Server Internal Error" << std::endl;				
+				{
+					std::cout << "Server Internal Error" << std::endl;
+					return ERROR;
+				}
+				messageBodyOut = buf;
 			}
 			else
 				return OK;
 		}
 		writenum = write(c.cfd, messageBodyOut.c_str(), messageBodyOut.size());
+#ifdef DEBUG
+		std::cout << "-----------------------------------------" << std::endl;
+		std::cout << "sending to client (state: headerOutDone):" << std::endl;
+		std::cout << messageBodyOut << std::endl;
+		std::cout << "-----------------------------------------" << std::endl;
+#endif
 		if (writenum == -1)
 			return ERROR;
 		if (writenum < messageBodyOut.size())
@@ -731,6 +763,50 @@ int Http::finalizeRequest()
 			pos = writenum;
 			return AGAIN;
 		}
+		if (fd_ != -1 && writenum == 1024)
+		{
+			responseState = messageBodyDoing;
+			pos = writenum;
+			return AGAIN;
+		}
+		responseState = responseDone;
+		break;
+	case messageBodyDoing:
+		if (fd_ != -1 && pos == 1024)
+		{
+			pos = 0;
+			size_t bufSize = 1024;
+			char buf[bufSize + 1];
+			std::memset(buf, 0, bufSize + 1);
+			ssize_t readnum = read(fd_, buf, bufSize);
+			if (readnum == -1)
+			{
+				std::cout << "Server Internal Error" << std::endl;
+				return ERROR;
+			}
+			messageBodyOut = buf;
+		}
+		writenum = write(c.cfd, messageBodyOut.c_str() + pos, messageBodyOut.size() - pos);
+#ifdef DEBUG
+		std::cout << "-----------------------------------------" << std::endl;
+		std::cout << "sending to client (state: messageBodyDoing):" << std::endl;
+		std::cout << messageBodyOut << std::endl;
+		std::cout << "-----------------------------------------" << std::endl;
+#endif
+		if (writenum == -1)
+			return ERROR;
+		if (writenum < messageBodyOut.size() - pos)
+		{
+			pos += writenum;
+			return AGAIN;
+		}
+		if (fd_ != -1 && writenum == 1024)
+		{
+			pos = writenum;
+			return AGAIN;
+		}
+		if (fd_ != -1)
+			close(fd_);
 		responseState = responseDone;
 		break;
 	}

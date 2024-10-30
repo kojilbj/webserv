@@ -17,17 +17,21 @@ int htmlContentHandler(Http& h, LocationCtx* lc)
 			std::cout << "we will display directory list" << std::endl;
 			return DONE;
 		}
+		h.statusLine = "HTTP/1.1 200 OK\r\n";
+		h.headerOut = "\r\n";
 		h.setFd(fd);
 	}
 	else
 	{
-		int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
+		int fd = open(fullPath.c_str(), O_RDONLY);
 		if (fd == -1)
 		{
 			h.statusLine = "HTTP/1.1 404 Not Found\r\n";
 			h.headerOut = "\r\n";
 			return DONE;
 		}
+		h.statusLine = "HTTP/1.1 200 OK\r\n";
+		h.headerOut = "\r\n";
 		h.setFd(fd);
 	}
 	return DONE;

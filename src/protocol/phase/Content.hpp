@@ -2,7 +2,6 @@
 #define CONTENT_HPP
 
 #include "PhaseHandler.hpp"
-#include <fstream>
 
 namespace Wbsv
 {
