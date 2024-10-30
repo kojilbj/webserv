@@ -50,7 +50,6 @@ general-header:
 request-header:
          Host
 entity-header:
-         Content-Encoding
          Content-Length
 
 ___________________________________________________________________________________________________________________________
@@ -66,6 +65,7 @@ Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
 ___________________________________________________________________________________________________________________________
 Available response headers:
 
+general-header:
 response-header:
          Location
 entity-header
