@@ -10,12 +10,12 @@ int Rewrite::handler(Http& h)
 	LocationCtx* lc = h.getLocationCtx();
 	if (lc->name != "redirect")
 		return OK;
-	h.headerOut += "HTTP/1.1 " + lc->redirect[0] + " Moved Parmanently\r\n";
+	h.statusLine += "HTTP/1.1 " + lc->redirect[0] + " Moved Parmanently\r\n";
 	if (lc->redirect[0] == "301" || lc->redirect[0] == "302" || lc->redirect[0] == "303" ||
 		lc->redirect[0] == "307")
 		h.headerOut += "Location: " + lc->redirect[1] + "\r\n";
 	h.headerOut += "\r\n";
-	h.headerOut += lc->redirect[1];
+	h.messageBodyOut += lc->redirect[1];
 	/* if ( rewrite destination is like "http://www.google.com" ) */
 	/* redirect response */
 	/* if ( rewrite destination is like "localhost:80/something" ) */

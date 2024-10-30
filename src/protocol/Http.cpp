@@ -269,6 +269,8 @@ int Http::processRequestHeader()
 				std::cout << "{ " << it->first << " : " << it->second << " }" << std::endl;
 			}
 #endif
+			pos = 0;
+			requestDone = true;
 			return processRequest();
 		}
 		else if (rv != AGAIN)
@@ -630,12 +632,107 @@ int Http::coreRunPhase()
 
 int Http::finalizeRequest()
 {
+	// it may be not needed
+	if (!alreadyWrite)
+	{
+		revHandler = &Http::finalizeRequest;
+		alreadyWrite = true;
+		return AGAIN;
+	}
+
 #ifdef DEBUG
 	std::cout << "finalizeRequest" << std::endl;
 	std::cout << "-----------------------------------------" << std::endl;
-	std::cout << "Response:" << std::endl << headerOut << std::endl;
+	std::cout << "Response:" << std::endl << statusLine << headerOut << messageBodyOut << std::endl;
 	std::cout << "-----------------------------------------" << std::endl;
 #endif
-	write(c.cfd, headerOut.c_str(), headerOut.size());
+	enum state
+	{
+		start = 0,
+		statusLineDoing,
+		statusLineDone,
+		headerOutDoing,
+		headerOutDone,
+		messageBodyDoing,
+		responseDone
+	};
+
+	ssize_t writenum = 0;
+	switch (responseState)
+	{
+	case start:
+		writenum = write(c.cfd, statusLine.c_str(), statusLine.size());
+		if (writenum == -1)
+			return ERROR;
+		if (writenum < statusLine.size())
+		{
+			responseState = statusLineDoing;
+			pos = writenum;
+			return AGAIN;
+		}
+		responseState = statusLineDone;
+		return AGAIN;
+	case statusLineDoing:
+		writenum = write(c.cfd, statusLine.c_str() + pos, statusLine.size() - pos);
+		if (writenum == -1)
+			return ERROR;
+		if (writenum < statusLine.size() - pos)
+		{
+			pos += writenum;
+			return AGAIN;
+		}
+		pos = 0;
+		responseState = statusLineDone;
+		break;
+	case statusLineDone:
+		writenum = write(c.cfd, headerOut.c_str(), headerOut.size());
+		if (writenum == -1)
+			return ERROR;
+		if (writenum < headerOut.size())
+		{
+			responseState = headerOutDoing;
+			pos = writenum;
+			return AGAIN;
+		}
+		responseState = headerOutDone;
+		break;
+	case headerOutDoing:
+		writenum = write(c.cfd, headerOut.c_str() + pos, headerOut.size() - pos);
+		if (writenum == -1)
+			return ERROR;
+		if (writenum < headerOut.size() - pos)
+		{
+			pos += writenum;
+			return AGAIN;
+		}
+		pos = 0;
+		responseState = headerOutDone;
+		break;
+	case headerOutDone:
+		if (messageBodyOut.size() == 0)
+		{
+			if (fd != -1)
+			{
+				size_t bufSize = 1024;
+				char buf[bufSize];
+				ssize_t readnum = read(fd, buf, bufSize);
+				if (readnum == -1)
+					std::cout << "Server Internal Error" << std::endl;				
+			}
+			else
+				return OK;
+		}
+		writenum = write(c.cfd, messageBodyOut.c_str(), messageBodyOut.size());
+		if (writenum == -1)
+			return ERROR;
+		if (writenum < messageBodyOut.size())
+		{
+			responseState = messageBodyDoing;
+			pos = writenum;
+			return AGAIN;
+		}
+		responseState = responseDone;
+		break;
+	}
 	return OK;
 }

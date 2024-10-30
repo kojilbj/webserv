@@ -44,8 +44,8 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	LocationCtx lc2;
 	lc2.name = "redirect";
 	lc2.path = "/redirect";
-	lc2.redirect.push_back("399");
-	lc2.redirect.push_back("http://www.google.com");
+	lc2.redirect.push_back("301");
+	lc2.redirect.push_back("http://nginx.org");
 	vsc.addLocationCtx(lc2);
 	sc.addVServerCtx(vsc);
 	httpConfCtx->addServerCtx(sc);

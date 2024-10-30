@@ -47,7 +47,10 @@ namespace Wbsv
 			, major(0)
 			, minor()
 			, alreadyRead(false)
-			, ready(false){};
+			, alreadyWrite(false)
+			, ready(false)
+			, responseState(0)
+			, fd_(-1){};
 		~Http(){};
 
 		/* Core handlers */
@@ -76,6 +79,10 @@ namespace Wbsv
 		{
 			return method;
 		};
+		void setFd(int fd)
+		{
+			fd_ = fd;
+		}
 
 		/* Request handlers */
 		int waitRequestHandler();
@@ -90,7 +97,9 @@ namespace Wbsv
 		int finalizeRequest();
 
 		/* Response variables */
+		string statusLine;
 		string headerOut;
+		string messageBodyOut;
 
 	private:
 		/* Request variables */
@@ -113,7 +122,11 @@ namespace Wbsv
 		int major;
 		int minor;
 		bool alreadyRead;
+		bool alreadyWrite;
 		bool ready;
+		int responseState;
+		// pipe or regular file fd to send to the client as message body
+		int fd_;
 	};
 
 } // namespace Wbsv

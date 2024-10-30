@@ -123,8 +123,33 @@ void Epoll::processEvents(Webserv& ws)
 				std::cout << "event: EPOLLERR" << std::endl;
 			std::cout << std::endl;
 #endif
-			if ((eventResult[i].events & EPOLLIN) && (eventResult[i].events & EPOLLOUT))
+			if (eventResult[i].events & EPOLLIN) // && (eventResult[i].events & EPOLLOUT))
 			{
+				int rv = p->invokeRevHandler();
+				if (rv == OK)
+				{
+					std::cout << "RevHandler finished, close connection" << std::endl;
+					close(p->c.cfd);
+				}
+				else if (rv == AGAIN)
+				{
+#ifdef DEBUG
+					std::cout << "RevHandler return AGAIN, addEvent(MOD)" << std::endl;
+#endif
+					ev->addEvent(p->c.cfd, p, MOD);
+				}
+				else
+				{
+					std::cout << "Error occured while revHandler, close connection" << std::endl;
+					close(p->c.cfd);
+				}
+				freeList.remove(ed);
+				delete ed;
+			}
+			else if (eventResult[i].events & EPOLLOUT)
+			{
+				if (!p->requestDone)
+					continue;
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
