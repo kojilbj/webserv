@@ -1,5 +1,5 @@
 NAME = webserv
-SRCS = main.cpp Webserv.cpp ConfFile.cpp confParse.cpp HttpConfCtx.cpp ConfCtx.cpp VServerCtx.cpp Location.cpp
+SRCS = main.cpp Webserv.cpp ConfFile.cpp confParse.cpp HttpConfCtx.cpp ConfCtx.cpp VServerCtx.cpp Location.cpp setLocationDirective.cpp setVServerDirective.cpp
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++

@@ -1,4 +1,5 @@
 #include "HttpConfCtx.hpp"
+#include "setDirective.hpp"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -6,13 +7,15 @@
 #include <string>
 #include <vector>
 
-std::vector<std::string> confTokenizer(std::ifstream& confFile)
+std::vector<std::string> split(const std::string& str)
 {
 	std::string lineBuff;
 	std::string tokenBuff;
+	std::stringstream sstr;
 	std::vector<std::string> tokens;
 
-	while (std::getline(confFile, lineBuff, '\n'))
+	sstr = std::stringstream(str);
+	while (std::getline(sstr, lineBuff, '\n'))
 	{
 		std::istringstream lineStream(lineBuff);
 		//Here error handle for case that the character at end of line isn't '{', '}' or ';'
@@ -31,6 +34,36 @@ std::vector<std::string> confTokenizer(std::ifstream& confFile)
 	return tokens;
 }
 
+std::vector<std::string> split(std::ifstream& file)
+{
+	std::string lineBuff;
+	std::string tokenBuff;
+	std::vector<std::string> tokens;
+
+	while (std::getline(file, lineBuff, '\n'))
+	{
+		std::istringstream lineStream(lineBuff);
+		//Here error handle for case that the character at end of line isn't '{', '}' or ';'
+		//Need refactaring this stupid proccess for spit
+		while (std::getline(lineStream, tokenBuff, ' '))
+		{
+			std::istringstream tokenStream(tokenBuff);
+			while (std::getline(tokenStream, tokenBuff, '\t'))
+			{
+				//I don't know but tokenBuff stores void-string sometime relatively proccess for \t
+				if (!tokenBuff.empty())
+					tokens.push_back(tokenBuff);
+			}
+		}
+	}
+	return tokens;
+}
+
+std::vector<std::string> confTokenizer(std::ifstream& confFile)
+{
+	return split(confFile);
+}
+
 std::map<std::string, std::vector<std::string> > mapConfRelative(void)
 {
 	size_t i;
@@ -43,7 +76,6 @@ std::map<std::string, std::vector<std::string> > mapConfRelative(void)
 
 	i = 0;
 	confRelatives["_"];
-	while (blocks[i] != nullptr)
 	{
 		confRelatives["_"].push_back(blocks[i]);
 		i++;
@@ -74,14 +106,8 @@ std::map<std::string, std::vector<std::string> > mapConfRelative(void)
 
 void printStack(const std::vector<std::string>& stack)
 {
-	std::vector<std::string>::const_iterator it;
-
-	it = stack.begin();
-	while (it != stack.end())
-	{
+	for (std::vector<std::string>::const_iterator it = stack.begin(); it != stack.end(); it++)
 		std::cout << *it << std::endl;
-		it++;
-	}
 }
 
 bool inspectStructure(const std::string& name,
@@ -98,10 +124,10 @@ bool inspectStructure(const std::string& name,
 	while (childIt != childs.end())
 	{
 		if (*childIt == name)
-
 			return true;
 		childIt++;
 	}
+	throw std::logic_error("Unavailable Block: " + name);
 	return false;
 }
 
@@ -123,6 +149,7 @@ std::string keyValue(std::vector<std::string>::const_iterator it,
 			break;
 		it++;
 	}
+	line = line.substr(0, line.find(';'));
 	return line;
 }
 
@@ -153,96 +180,6 @@ ConfCtx* createCtx(const std::string& ctxName)
 	return ctx;
 }
 
-void parseListen(VServerCtx& vsCtx, const std::string& value)
-{
-	std::vector<std::string> str;
-	std::string listenPort;
-	std::string listenIP;
-
-	if (countSpace(value) != 0)
-		throw std::exception();
-	if (value.find(':') != std::string::npos)
-	{
-		listenIP = value.substr(0, value.find(":"));
-		listenPort = value.substr(value.find(":") + 1);
-		vsCtx.setListenIP(listenIP);
-		vsCtx.setListenPort(std::atoi(listenPort.c_str()));
-	}
-	else
-	{
-		listenPort = value.substr(value.find(' ') + 1);
-		vsCtx.setListenPort(std::atoi(listenPort.c_str()));
-	}
-}
-
-void parseServerName(VServerCtx& vsCtx, const std::string& value)
-{
-	std::stringstream sstr(value);
-	std::string buff;
-
-	while (std::getline(sstr, buff, ' '))
-		vsCtx.addServerName(buff);
-}
-
-void parseClientMaxBodySize(VServerCtx& vsCtx, const std::string& value)
-{
-	if (countSpace(value) != 0)
-		throw std::exception();
-	vsCtx.setClientMaxBodySize(std::atoi(value.substr(value.find(' ') + 1).c_str()));
-}
-
-void	parseErrorPage(VServerCtx& vsCtx, const std::string & value)
-{
-	std::string errorNum;
-	std::string path;
-
-	if (countSpace(value) != 1)
-		throw std::exception();
-	errorNum = value.substr(0, value.find(" "));
-	path = value.substr(value.find(" ") + 1);
-	vsCtx.addErrorPage(std::atoi(errorNum.c_str()), path);
-}
-
-void setServerDirective(VServerCtx& vsCtx, const std::string& directiveValue)
-{
-	std::string key;
-	std::string value;
-
-	key = directiveValue.substr(0, directiveValue.find(" "));
-	value = directiveValue.substr(directiveValue.find(" ") + 1);
-	if (key == "listen")
-		parseListen(vsCtx, value);
-	if (key == "server_name")
-		parseServerName(vsCtx, value);
-	if (key == "client_max_body_size")
-		parseClientMaxBodySize(vsCtx, value);
-	if (key == "error_page")
-		parseErrorPage(vsCtx, value);
-}
-
-void	parsePath(Location &location, const std::string &value)
-{
-	if (countSpace(value) != 1)
-		throw std::exception();
-
-}
-
-void setLocationDirective(Location& location, std::string directiveValue)
-{
-	std::string key;
-	std::string value;
-
-	key = directiveValue.substr(0, directiveValue.find(" "));
-	value = directiveValue.substr(directiveValue.find(" ") + 1);
-	std::cout << key << std::endl;
-	if (key == "path")
-		parsePath(location, value);
-	if (key == "root")
-		;
-	if (key == "root")
-		;
-}
-
 void parser(const std::vector<std::string>& tokens,
 			const std::map<std::string, std::vector<std::string> > confRelatives)
 {
@@ -252,11 +189,9 @@ void parser(const std::vector<std::string>& tokens,
 	std::vector<ConfCtx*> ctxs;
 	HttpConfCtx* httpCtx;
 	VServerCtx vsCtx;
-	bool inspector;
 	bool isPushed;
 
 	it = tokens.begin();
-	inspector = true;
 	blockStack.push("_");
 	//ブロックはblockStackに積んでいって、構造解析を行う。
 	//スタックにする理由は構造の解析を行うため、セマンティック解析はクラスに情報を入れる前/後に行うことにする
@@ -272,10 +207,7 @@ void parser(const std::vector<std::string>& tokens,
 			blockStack.pop();
 		//;があると値なので構造は検査しなくてい(;がない時に構造検査をする)
 		else if ((*it).find(";") == std::string::npos)
-			inspector = inspectStructure(*it, blockStack.top(), confRelatives);
-		//inspectStructureで例外送出にしてもいいかも
-		if (inspector == false)
-			throw std::exception();
+			inspectStructure(*it, blockStack.top(), confRelatives);
 		if (blockStack.size() == 2 && isPushed)
 			ctxs.push_back(createCtx(blockStack.top()));
 		if (blockStack.top() == "server" && isPushed)
@@ -315,6 +247,8 @@ void confParse(std::string& confFileName)
 	try
 	{
 		confFile.open(confFileName, std::ios::in);
+		if (!confFile.is_open())
+			throw std::invalid_argument("No Such File: " + confFileName);
 		tokens = confTokenizer(confFile);
 		confRelatives = mapConfRelative();
 		parser(tokens, confRelatives);
@@ -322,6 +256,5 @@ void confParse(std::string& confFileName)
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		std::cerr << "parser error" << '\n';
 	}
 }
