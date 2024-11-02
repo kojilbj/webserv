@@ -1,4 +1,4 @@
-#include "HttpConfFile.hpp"
+#include "HttpConfCtx.hpp"
 
 using namespace Wbsv;
 
@@ -13,11 +13,11 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 		std::string port = (it->getListen()).second;
 		if (host == "unix")
 		{
-			/* handle unix domain socket */
+			/* add unix domain socket code if you want */
 		}
 		else if (host[0] == '[')
 		{
-			/* handle inet_6 domain socket */
+			/* add inet_6 domain socket code if you want */
 		}
 		else
 		{

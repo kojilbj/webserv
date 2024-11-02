@@ -23,7 +23,13 @@ extern Wbsv::Event* ev;
 // 	}
 // }
 
-#include "HttpConfFile.hpp"
+#include "CgiLocationCtx.hpp"
+#include "HtmlLocationCtx.hpp"
+#include "HttpConfCtx.hpp"
+#include "LocationCtx.hpp"
+#include "ReturnLocationCtx.hpp"
+#include "ServerCtx.hpp"
+#include "VServerCtx.hpp"
 #include <iostream>
 
 void Wbsv::confParse(Wbsv::Webserv& ws)
@@ -35,22 +41,29 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	VServerCtx vsc;
 	vsc.defaultServer = true;
 	vsc.serverName = "localhost";
-	LocationCtx lc;
-	lc.name = "html";
-	lc.path = "/";
-	lc.root = "/root/webserv/test/html";
-	lc.index = "index.html";
-	vsc.addLocationCtx(lc);
-	LocationCtx lc2;
-	lc2.name = "redirect";
-	lc2.path = "/redirect";
-	lc2.redirect.push_back("301");
-	lc2.redirect.push_back("http://nginx.org");
-	vsc.addLocationCtx(lc2);
+	// this must be dynamicaly allocated
+	HtmlLocationCtx* hlc = new HtmlLocationCtx;
+	hlc->path = "/";
+	hlc->root = "/root/webserv/test/html";
+	hlc->index = "index.html";
+	vsc.addLocationCtx((LocationCtx*)hlc);
+	// this must be dynamicaly allocated
+	ReturnLocationCtx* rlc = new ReturnLocationCtx;
+	rlc->path = "/redirect";
+	rlc->redirect.first = "301";
+	rlc->redirect.second = "http://nginx.org";
+	vsc.addLocationCtx((LocationCtx*)rlc);
+	// this must be dynamicaly allocated
+	CgiLocationCtx* clc = new CgiLocationCtx;
+	clc->path = "/php/";
+	clc->root = "/root/webserv/test/cgi";
+	clc->index = "upload.php";
+	vsc.addLocationCtx((LocationCtx*)clc);
 	sc.addVServerCtx(vsc);
 	httpConfCtx->addServerCtx(sc);
 	confCtxs->push_back(httpConfCtx);
 	ws.setConfCtxs(confCtxs);
+	std::vector<LocationCtx*>* v = vsc.getLocationCtxs();
 }
 
 void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
@@ -78,19 +91,31 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 				std::cout << "\tserver_name: " << vsit->serverName << std::endl;
 				std::cout << "\tlocationConf size: " << vsit->getLocationCtxs()->size()
 						  << std::endl;
-				std::vector<LocationCtx>::const_iterator lit;
+				std::vector<LocationCtx*>::const_iterator lit;
 				for (lit = vsit->getLocationCtxs()->begin(); lit != vsit->getLocationCtxs()->end();
 					 lit++)
 				{
-					std::cout << "\t\tpath: " << lit->path << std::endl;
-					if (lit->name == "html")
+					HtmlLocationCtx* hlc;
+					CgiLocationCtx* clc;
+					ReturnLocationCtx* rlc;
+					if ((hlc = dynamic_cast<HtmlLocationCtx*>(*lit)))
 					{
-						std::cout << "\t\troot: " << lit->root << std::endl;
-						std::cout << "\t\tindex: " << lit->index << std::endl;
+						std::cout << "\t\tpath: " << hlc->path << std::endl;
+						std::cout << "\t\troot: " << hlc->root << std::endl;
+						std::cout << "\t\tindex: " << hlc->index << std::endl;
 					}
-					else if (lit->name == "redirect")
-						std::cout << "\t\tredirect: " << lit->redirect[0] << " " << lit->redirect[1]
-								  << std::endl;
+					else if ((clc = dynamic_cast<CgiLocationCtx*>(*lit)))
+					{
+						std::cout << "\t\tpath: " << clc->path << std::endl;
+						std::cout << "\t\troot: " << clc->root << std::endl;
+						std::cout << "\t\tindex: " << clc->index << std::endl;
+					}
+					else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*lit)))
+					{
+						std::cout << "\t\tpath: " << rlc->path << std::endl;
+						std::cout << "\t\tredirect: " << rlc->redirect.first << " "
+								  << rlc->redirect.second << std::endl;
+					}
 				}
 			}
 		}
