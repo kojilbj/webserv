@@ -40,6 +40,9 @@ int htmlContentHandler(Http& h, LocationCtx* lc)
 
 int cgiContentHandler(Http& h, LocationCtx* lc)
 {
+	std::string headerIn = h.getHeaderIn();
+	std::cout << "pos: " << h.getPos() << std::endl;
+	std::cout << "body: " << std::string(headerIn, h.getPos()) << std::endl;
 	return OK;
 }
 

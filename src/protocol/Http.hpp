@@ -65,10 +65,18 @@ namespace Wbsv
 		{
 			return method;
 		};
+		int getPos()
+		{
+			return pos;
+		};
 		void setFd(int fd)
 		{
 			fd_ = fd;
 		}
+		std::string& getHeaderIn()
+		{
+			return headerIn;
+		};
 
 		/* Request handlers */
 		int waitRequestHandler();

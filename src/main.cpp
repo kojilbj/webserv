@@ -13,12 +13,13 @@ extern Wbsv::Event* ev;
 // 			root /root/webserv/test/html;
 // 			index index.html;
 // 		}
-//		location /return {
+//		location /redirect {
 //			return 301 http://www.google.com;
 //		}
-//		location /cgi {
-//			cgi_param PATH_INFO ../test/cgi;
+//		location /php/ {
 //			cgi_index upload.php;
+//			cgi_param SCRIPT_FILENAME /root/webserv/test/cgi$cgi_path_info;
+//			cgi_store /root/webserv/test/cgi/upload;
 //		}
 // 	}
 // }
@@ -47,6 +48,12 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	lc2.redirect.push_back("301");
 	lc2.redirect.push_back("http://nginx.org");
 	vsc.addLocationCtx(lc2);
+	LocationCtx lc3;
+	lc3.name = "cgi";
+	lc3.path = "/php/";
+	lc3.root = "/root/webserv/test/cgi";
+	lc3.index = "upload.php";
+	vsc.addLocationCtx(lc3);
 	sc.addVServerCtx(vsc);
 	httpConfCtx->addServerCtx(sc);
 	confCtxs->push_back(httpConfCtx);
@@ -87,6 +94,11 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 					{
 						std::cout << "\t\troot: " << lit->root << std::endl;
 						std::cout << "\t\tindex: " << lit->index << std::endl;
+					}
+					else if (lit->name == "cgi")
+					{
+						std::cout << "\t\tcgi_root: " << lit->root << std::endl;
+						std::cout << "\t\tcgi_index: " << lit->index << std::endl;
 					}
 					else if (lit->name == "redirect")
 						std::cout << "\t\tredirect: " << lit->redirect[0] << " " << lit->redirect[1]
