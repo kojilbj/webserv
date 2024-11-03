@@ -2,7 +2,9 @@
 #define CGILOCATIONCTX_HPP
 
 #include "LocationCtx.hpp"
+#include <cstring>
 #include <map>
+#include <unistd.h>
 
 namespace Wbsv
 {
@@ -15,20 +17,19 @@ namespace Wbsv
 			: LocationCtx()
 		{ }
 		CgiLocationCtx(const CgiLocationCtx& other)
-			: LocationCtx(other), index(other.index), root(other.root)
+			: LocationCtx(other), index(other.index), param(other.param)
 		{ }
 		CgiLocationCtx& operator=(const CgiLocationCtx& other)
 		{
 			LocationCtx::operator=(other);
 			index = other.index;
-			root = other.root;
+			param = other.param;
 			return *this;
 		}
 		~CgiLocationCtx(){};
 		int contentHandler(Http& h);
 		std::string index;
-		std::string root;
-		// std::map<std::string, std::string> param;
+		std::map<std::string, std::string> param;
 	};
 } // namespace Wbsv
 

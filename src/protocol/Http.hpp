@@ -78,6 +78,10 @@ namespace Wbsv
 		{
 			return headerIn;
 		};
+		std::map<std::string, std::string>& getHeadersIn()
+		{
+			return headersIn;
+		};
 
 		/* Request handlers */
 		int waitRequestHandler();

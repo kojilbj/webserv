@@ -57,8 +57,8 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	// this must be dynamicaly allocated
 	CgiLocationCtx* clc = new CgiLocationCtx;
 	clc->path = "/php/";
-	clc->root = "/root/webserv/test/cgi";
 	clc->index = "upload.php";
+	clc->param["SCRIPT_FILENAME"] = "/root/webserv/test/cgi$cgi_path_info";
 	vsc.addLocationCtx((LocationCtx*)clc);
 	sc.addVServerCtx(vsc);
 	httpConfCtx->addServerCtx(sc);
@@ -108,7 +108,8 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 					else if ((clc = dynamic_cast<CgiLocationCtx*>(*lit)))
 					{
 						std::cout << "\t\tpath: " << clc->path << std::endl;
-						std::cout << "\t\troot: " << clc->root << std::endl;
+						std::cout << "\t\tSCRIPT_FILENAME: " << clc->param["SCRIPT_FILENAME"]
+								  << std::endl;
 						std::cout << "\t\tindex: " << clc->index << std::endl;
 					}
 					else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*lit)))
