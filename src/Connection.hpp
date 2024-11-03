@@ -2,6 +2,7 @@
 #define CONNECTION_HPP
 
 #include <cstring>
+#include <ctime>
 #include <netdb.h>
 #include <sys/socket.h>
 
@@ -22,6 +23,7 @@ namespace Wbsv
 		socklen_t remoteSocklen;
 		Listening* ls;
 		ServerCtx* serverCtx;
+		std::time_t lastReadTime;
 	};
 } // namespace Wbsv
 

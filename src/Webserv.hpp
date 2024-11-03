@@ -44,6 +44,7 @@ namespace Wbsv
 
 		std::vector<ConfCtx*>* getConfCtxs();
 		std::vector<Listening>* getListenings();
+		std::list<Protocol*>* getFreeList();
 		void setConfCtxs(std::vector<ConfCtx*>* confCtxs);
 		void init();
 		void openListeningSocket();

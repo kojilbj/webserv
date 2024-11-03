@@ -17,7 +17,7 @@ namespace Wbsv
 {
 	typedef enum
 	{
-		ConnectionFd,
+		ConnectionFd = 0,
 		ListeningFd
 	} type_t;
 
@@ -42,6 +42,7 @@ namespace Wbsv
 		void processEventsLoop(Webserv& ws);
 		void processEvents(Webserv& ws);
 		void addEvent(int fd, Protocol* p, int option);
+		void timeOutHandler(Webserv& ws);
 
 	private:
 		int ep;

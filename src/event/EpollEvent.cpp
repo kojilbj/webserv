@@ -45,6 +45,36 @@ void Epoll::init(Webserv& ws)
 	}
 }
 
+void Epoll::timeOutHandler(Webserv& ws)
+{
+#ifdef DEBUG
+	std::cout << "timeOutHandler" << std::endl;
+#endif
+	std::list<struct eventData*>::iterator it = freeList.begin();
+	for (; it != freeList.end(); it++)
+	{
+		if ((*it)->type == ConnectionFd)
+		{
+			Protocol* p = (*it)->data.p;
+			// default client_request_timeout is 60s
+			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime > 60)
+			{
+				close(p->c.cfd);
+				ws.getFreeList()->remove(p);
+				delete p;
+				freeList.remove(*it);
+				delete *it;
+			}
+#ifdef DEBUG
+			std::cout << "connection fd: " << p->c.cfd << std::endl;
+			std::cout << "last read time: " << p->c.lastReadTime << std::endl;
+			std::cout << "current time: " << std::time(NULL) << std::endl;
+			std::cout << "diff: " << std::time(NULL) - p->c.lastReadTime << std::endl;
+#endif
+		}
+	}
+}
+
 void Epoll::processEventsLoop(Webserv& ws)
 {
 	for (;;)
@@ -60,6 +90,7 @@ void Epoll::processEventsLoop(Webserv& ws)
 			std::cout << "Program is successfully closed" << std::endl;
 			break;
 		}
+		timeOutHandler(ws);
 	}
 }
 
@@ -70,7 +101,8 @@ void Epoll::processEvents(Webserv& ws)
 #ifdef DEBUG
 	std::cout << "Waiting for next events ..." << std::endl;
 #endif
-	int events = epoll_wait(ep, eventResult, maxEvents, -1);
+	// timeout is 10s
+	int events = epoll_wait(ep, eventResult, maxEvents, 10000);
 #ifdef DEBUG
 	std::cout << events << " events occured" << std::endl;
 #endif
@@ -130,6 +162,8 @@ void Epoll::processEvents(Webserv& ws)
 				{
 					std::cout << "RevHandler finished, close connection" << std::endl;
 					close(p->c.cfd);
+					ws.getFreeList()->remove(p);
+					delete p;
 				}
 				else if (rv == AGAIN)
 				{
@@ -142,6 +176,8 @@ void Epoll::processEvents(Webserv& ws)
 				{
 					std::cout << "Error occured while revHandler, close connection" << std::endl;
 					close(p->c.cfd);
+					ws.getFreeList()->remove(p);
+					delete p;
 				}
 				freeList.remove(ed);
 				delete ed;
@@ -155,6 +191,8 @@ void Epoll::processEvents(Webserv& ws)
 				{
 					std::cout << "RevHandler finished, close connection" << std::endl;
 					close(p->c.cfd);
+					ws.getFreeList()->remove(p);
+					delete p;
 				}
 				else if (rv == AGAIN)
 				{
@@ -167,6 +205,8 @@ void Epoll::processEvents(Webserv& ws)
 				{
 					std::cout << "Error occured while revHandler, close connection" << std::endl;
 					close(p->c.cfd);
+					ws.getFreeList()->remove(p);
+					delete p;
 				}
 				freeList.remove(ed);
 				delete ed;

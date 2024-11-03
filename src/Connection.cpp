@@ -3,7 +3,7 @@
 using namespace Wbsv;
 
 Connection::Connection()
-	: cfd(-1), remoteSocklen(0), ls(NULL)
+	: cfd(-1), remoteSocklen(0), ls(NULL), lastReadTime(-1)
 {
 	std::memset(&remoteSockaddrIn, 0, sizeof(struct sockaddr_in));
 };

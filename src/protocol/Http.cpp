@@ -157,8 +157,14 @@ int Http::waitRequestHandler()
 	if (readnum < 0)
 	{
 		// 500 (Internal Server Error) error
-		return ERROR;
+		return finalizeRequest();
 	}
+	else if (readnum == 0)
+	{
+		// 400 (Bad Request) error
+		return finalizeRequest();
+	}
+	c.lastReadTime = std::time(NULL);
 	alreadyRead = true;
 	if (readnum >= clientHeaderSize)
 		ready = true;
@@ -193,13 +199,17 @@ int Http::processRequestLine()
 				std::cout << "\treadnum: " << readnum << std::endl;
 #endif
 				if (readnum < 0)
-					return ERROR;
-				/* if (readnum >= bufSize) */
-				/* { */
-				/* 	std::cout << "Request-URI Too Large" << std::endl; */
-				/* 	return ERROR; */
-				/* } */
-				if (readnum >= bufSize)
+				{
+					// 500 (Internal Server Error) error
+					return finalizeRequest();
+				}
+				else if (readnum == 0)
+				{
+					// 400 (Bad Request) error
+					return finalizeRequest();
+				}
+				c.lastReadTime = std::time(NULL);
+				if (readnum == bufSize)
 					ready = true;
 				alreadyRead = true;
 				headerIn += buf;
@@ -283,13 +293,22 @@ int Http::processRequestHeader()
 				std::cout << "\treadnum: " << readnum << std::endl;
 #endif
 				if (readnum < 0)
-					return ERROR;
+				{
+					// 500 (Internal Server Error) error
+					return finalizeRequest();
+				}
+				else if (readnum == 0)
+				{
+					// 400 (Bad Request) error
+					return finalizeRequest();
+				}
 				/* if (readnum >= leftAvailableHeaderSize) */
 				/* { */
 				/* 	std::cout << "Request-Header Too Large (Bad Request)" << std::endl; */
 				/* 	return ERROR; */
 				/* } */
-				if (readnum >= leftAvailableHeaderSize)
+				c.lastReadTime = std::time(NULL);
+				if (readnum == leftAvailableHeaderSize)
 					ready = true;
 				alreadyRead = true;
 				headerIn += buf;
@@ -662,24 +681,16 @@ int Http::parseRequestHeaderLine()
 int Http::processRequest()
 {
 	std::cout << "processRequest" << std::endl;
-	/* int fd_ = open("/root/webserv/test/html/index.html", O_RDONLY); */
-	/* if (fd_ < 0) */
-	/* 	return; */
-	/* string responseHeader("HTTP/1.1 200 OK\r\n\r\n"); */
-	/* write(c.cfd_, responseHeader.c_str(), responseHeader.size()); */
-	/* int bufSize = 1024; */
-	/* char buf[bufSize]; */
-	/* for (;;) */
-	/* { */
-	/* 	std::memset(buf, 0, bufSize); */
-	/* 	ssize_t readnum = read(fd_, buf, bufSize); */
-	/* 	if (readnum <= 0) */
-	/* 		break; */
-	/* 	write(c.cfd_, buf, readnum); */
-	/* } */
+
+	if (headersIn.find("Content-Length") != headersIn.end()) // || "Transfer-Encoding"
+	{
+	}
+	// char tmp[clientHeaderSize + 1];
+	// std::memset(tmp, 0, clientHeaderSize + 1);
+	// ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
+	// std::cout << "readnum: " << readnum << std::endl;
+
 	return coreRunPhase();
-	/* finalizeRequest(); */
-	/* finalizeConnection(); */
 }
 
 int Http::coreRunPhase()

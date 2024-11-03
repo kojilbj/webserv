@@ -34,6 +34,11 @@ std::vector<Listening>* Webserv::getListenings()
 	return listenings_;
 }
 
+std::list<Protocol*>* Webserv::getFreeList()
+{
+	return &freeList;
+}
+
 void Webserv::setConfCtxs(std::vector<ConfCtx*>* confCtxs)
 {
 	confCtxs_ = confCtxs;
