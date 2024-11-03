@@ -2,8 +2,11 @@
 #define HTTP_HPP
 
 #include "Protocol.hpp"
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <map>
+#include <sys/stat.h>
 #include <unistd.h>
 
 using std::map;
@@ -82,6 +85,10 @@ namespace Wbsv
 		{
 			return headersIn;
 		};
+		std::string& getRequestBodyFileName()
+		{
+			return requestBodyFileName_;
+		}
 
 		/* Request handlers */
 		int waitRequestHandler();
@@ -127,6 +134,9 @@ namespace Wbsv
 		int responseState;
 		// pipe or regular file fd to send to the client as message body
 		int fd_;
+		std::string requestBodyFileName_;
+		int requestBodyFileFd_;
+		int bodyLen_;
 	};
 } // namespace Wbsv
 

@@ -184,6 +184,7 @@ void Epoll::processEvents(Webserv& ws)
 			}
 			else if (eventResult[i].events & EPOLLOUT)
 			{
+				// this area does not work, when "curl -X POST -H "Content-Length: 100" --data "aaa" localhost:8080/upload.php"
 				if (!p->wevReady) // or if (statusLine == "")
 					continue;
 				int rv = p->invokeRevHandler();

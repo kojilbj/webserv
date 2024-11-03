@@ -2,6 +2,7 @@
 #define CGILOCATIONCTX_HPP
 
 #include "LocationCtx.hpp"
+#include <cstdio>
 #include <cstring>
 #include <map>
 #include <unistd.h>

@@ -97,53 +97,58 @@ int CgiLocationCtx::contentHandler(Http& h)
 		std::string value = it->first + "=" + it->second;
 		std::strncpy(environ[i], value.c_str(), value.size());
 	}
-	// std::string pathname;
-	// std::string arg1;
-	// // if (param["PATH_INFO"].find(".php") != string::npos)
-	// // {
-	// pathname = "/usr/bin/php-cgi";
-	// arg1 = param["PATH_INFO"];
-	// // }
-	// char* argv[3];
-	// argv[0] = pathname.c_str();
-	// argv[1] = arg1.c_str();
-	// argv[2] = NULL;
-	// int pfd[2];
-	// if (pipe(pfd) < 0)
+	std::string pathname;
+	std::string arg1;
+	// if (param["PATH_INFO"].find(".php") != string::npos)
 	// {
-	// 	// Internal Server Error;
-	// 	return DONE;
+	pathname = "/usr/bin/php-cgi";
+	arg1 = param["PATH_INFO"];
 	// }
-	// int pid = fork();
-	// if (pid < 0)
-	// {
-	// 	// Internal Server Error;
-	// 	return DONE;
-	// }
-	// if (pid == 0)
-	// {
-	// 	// child process
-	// 	close(pfd[1]);
-	// 	dup2(pfd[0], STDIN_FILENO);
-	// 	execve(argv[0], argv, environ);
-	// 	std::cerr << strerror(errno) << std::endl;
-	// }
-	// else
-	// {
-	// 	close(pfd[0]);
-	// 	h.setFd(dup(STDOUT_FILENO));
-	// 	std::string headerIn = h.getHeaderIn();
-	// 	int pos = h.getPos();
-	// 	ssize_t writenum = write(pfd[1], headerIn.c_str() + pos, headerIn.size() - pos);
-	// 	if (not all of request message read)
-	// 		return h.readEventHandler();
-	// 	// for (;;)
-	// 	// {
-	// 	// 	char buf[];
-	// 	// 	read(h.c.fd, );
-	// 	// 	ssize_t writenum = write(pfd[1], headerIn.c_str() + pos, headerIn.size() - pos);
-	// 	// }
-	// 	close(pfd[1]);
-	// }
+	char* argv[3];
+	argv[0] = const_cast<char*>(pathname.c_str());
+	argv[1] = const_cast<char*>(arg1.c_str());
+	argv[2] = NULL;
+	int pfd[2];
+	if (pipe(pfd) < 0)
+	{
+		// Internal Server Error;
+		return DONE;
+	}
+	int pid = fork();
+	if (pid < 0)
+	{
+		// Internal Server Error;
+		return DONE;
+	}
+	if (pid == 0)
+	{
+		// child process
+		close(pfd[1]);
+		dup2(pfd[0], STDIN_FILENO);
+		execve(argv[0], argv, environ);
+		std::cerr << strerror(errno) << std::endl;
+	}
+	else
+	{
+		close(pfd[0]);
+		h.setFd(dup(STDOUT_FILENO));
+		int fd = open(h.getRequestBodyFileName().c_str(), O_RDONLY);
+		for (;;)
+		{
+			size_t bufSize = 1024;
+			char buf[bufSize + 1];
+			std::memset(buf, 0, bufSize + 1);
+			ssize_t readnum = read(fd, buf, bufSize);
+			if (readnum <= 0)
+				break;
+			// maybe block
+			ssize_t writenum = write(pfd[1], buf, readnum);
+			if (writenum < 0)
+				return ERROR;
+		}
+		close(fd);
+		close(pfd[1]);
+		std::remove(h.getRequestBodyFileName);
+	}
 	return DONE;
 }

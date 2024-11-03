@@ -684,12 +684,67 @@ int Http::processRequest()
 
 	if (headersIn.find("Content-Length") != headersIn.end()) // || "Transfer-Encoding"
 	{
+		if (alreadyRead)
+		{
+			bodyLen_ = atoi(headersIn["Content-Length"].c_str());
+			std::string tmpDir("/tmp/");
+			std::time_t now = std::time(NULL);
+			requestBodyFileName_ = tmpDir + std::asctime(std::localtime(&now));
+			requestBodyFileFd_ = open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT);
+			if (requestBodyFileFd_ == -1)
+			{
+				// Server Internal Error
+				return finalizeRequest();
+			}
+			ssize_t writenum =
+				write(requestBodyFileFd_, headerIn.c_str() + pos, headerIn.size() - pos);
+			std::cout << "writenum: " << writenum << std::endl;
+			std::cout << "body: " << std::endl << headerIn.c_str() + pos << std::endl;
+			if (writenum == -1)
+			{
+				// Server Internal Error
+				close(requestBodyFileFd_);
+				return finalizeRequest();
+			}
+			if (writenum < bodyLen_)
+			{
+				revHandler = &Http::processRequest;
+				alreadyRead = false;
+				return AGAIN;
+			}
+		}
+		else
+		{
+			struct stat st;
+			if (stat(requestBodyFileName_.c_str(), &st) == -1)
+			{
+				// Server Internal Error
+				close(requestBodyFileFd_);
+				return finalizeRequest();
+			}
+			// maybe too much ?
+			int leftRequestBodyLen = bodyLen_ - static_cast<int>(st.st_size);
+			char buf[leftRequestBodyLen + 1];
+			std::memset(buf, 0, leftRequestBodyLen + 1);
+			ssize_t readnum = recv(c.cfd, buf, leftRequestBodyLen, 0);
+			std::cout << "readnum: " << readnum << std::endl;
+			if (readnum == -1)
+			{
+				// Server Internal Error
+				close(requestBodyFileFd_);
+				return finalizeRequest();
+			}
+			if (write(requestBodyFileFd_, buf, readnum) < 0)
+			{
+				// Server Internal Error
+				close(requestBodyFileFd_);
+				return finalizeRequest();
+			}
+			if (readnum < leftRequestBodyLen)
+				return AGAIN;
+		}
+		close(requestBodyFileFd_);
 	}
-	// char tmp[clientHeaderSize + 1];
-	// std::memset(tmp, 0, clientHeaderSize + 1);
-	// ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
-	// std::cout << "readnum: " << readnum << std::endl;
-
 	return coreRunPhase();
 }
 
