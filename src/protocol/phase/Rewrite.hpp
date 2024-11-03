@@ -12,4 +12,6 @@ namespace Wbsv
 	};
 } // namespace Wbsv
 
+#include "ReturnLocationCtx.hpp"
+
 #endif

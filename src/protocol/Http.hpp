@@ -12,6 +12,7 @@ using std::string;
 namespace Wbsv
 {
 	class HttpConfCtx;
+	class LocationCtx;
 	class ServerCtx;
 	class Protocol;
 	class Connection;
@@ -126,12 +127,13 @@ namespace Wbsv
 } // namespace Wbsv
 
 #include "Access.hpp"
-#include "ConfFile.hpp"
+#include "ConfCtx.hpp"
 #include "Connection.hpp"
 #include "Content.hpp"
 #include "FindConfig.hpp"
-#include "HttpConfFile.hpp"
+#include "HttpConfCtx.hpp"
 #include "Listening.hpp"
+#include "LocationCtx.hpp"
 #include "PhaseHandler.hpp"
 #include "Rewrite.hpp"
 

@@ -1,8 +1,7 @@
-#ifndef HTTPCONFFILE_HPP
-#define HTTPCONFFILE_HPP
+#ifndef HTTPCONFCTX_HPP
+#define HTTPCONFCTX_HPP
 
-#include "ConfFile.hpp"
-#include "Listening.hpp"
+#include "ConfCtx.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -15,6 +14,7 @@
 namespace Wbsv
 {
 	class ConfCtx;
+	class ServerCtx;
 
 	class HttpConfCtx : public ConfCtx
 	{
@@ -45,5 +45,8 @@ namespace Wbsv
 		std::vector<ServerCtx> serverCtxs_;
 	};
 } // namespace Wbsv
+
+#include "Listening.hpp"
+#include "ServerCtx.hpp"
 
 #endif

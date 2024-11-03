@@ -1,7 +1,10 @@
 NAME = webserv
 SRCS = main.cpp\
 	   Webserv.cpp\
-	   HttpConfFile.cpp\
+	   HttpConfCtx.cpp\
+	   HtmlLocationCtx.cpp\
+	   CgiLocationCtx.cpp\
+	   ReturnLocationCtx.cpp\
 	   Listening.cpp\
 	   Connection.cpp\
 	   EpollEvent.cpp\
