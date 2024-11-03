@@ -324,7 +324,7 @@ int Http::processRequestHeader()
 				std::cout << "{ " << it->first << " : " << it->second << " }" << std::endl;
 			}
 #endif
-			pos = 0;
+			// pos = 0;
 			return processRequest();
 		}
 		else if (rv != AGAIN)
@@ -701,10 +701,10 @@ int Http::finalizeRequest()
 #ifdef DEBUG
 	std::cout << "finalizeRequest" << std::endl;
 #endif
+	revHandler = &Http::finalizeRequest;
 	// it may be not needed
 	if (!alreadyWrite)
 	{
-		revHandler = &Http::finalizeRequest;
 		alreadyWrite = true;
 		return AGAIN;
 	}

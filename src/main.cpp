@@ -13,12 +13,13 @@ extern Wbsv::Event* ev;
 // 			root /root/webserv/test/html;
 // 			index index.html;
 // 		}
-//		location /return {
+//		location /redirect {
 //			return 301 http://www.google.com;
 //		}
-//		location /cgi {
-//			cgi_param PATH_INFO ../test/cgi;
+//		location /php/ {
 //			cgi_index upload.php;
+//			cgi_param SCRIPT_FILENAME /root/webserv/test/cgi$cgi_path_info;
+//			cgi_store /root/webserv/test/cgi/upload;
 //		}
 // 	}
 // }
