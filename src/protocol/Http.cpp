@@ -870,11 +870,15 @@ int Http::finalizeRequest()
 				char buf[bufSize + 1];
 				std::memset(buf, 0, bufSize + 1);
 				ssize_t readnum = read(fd_, buf, bufSize);
+				std::cout << "readnum: " << readnum << std::endl;
+				std::cout << "body: " << buf << std::endl;
 				if (readnum == -1)
 				{
 					std::cout << "Server Internal Error" << std::endl;
 					return ERROR;
 				}
+				std::cout << "buf: " << buf << std::endl;
+				std::cout << "buf: " << buf << std::endl;
 				messageBodyOut = buf;
 			}
 			else
@@ -884,7 +888,8 @@ int Http::finalizeRequest()
 #ifdef DEBUG
 		std::cout << "-----------------------------------------" << std::endl;
 		std::cout << "sending to client (state: headerOutDone):" << std::endl;
-		std::cout << messageBodyOut << std::endl;
+		std::cout << "writenum: " << writenum << std::endl;
+		std::cout << "body: " << messageBodyOut << std::endl;
 		std::cout << "-----------------------------------------" << std::endl;
 #endif
 		if (writenum == -1)

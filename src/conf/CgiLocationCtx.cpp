@@ -21,7 +21,7 @@ static void parseUri(Http& h, std::map<std::string, std::string>& param, std::st
 	std::string phpExt = ".php";
 	std::string pathInfo;
 	pos = path.find(phpExt);
-	if (pos != string::npos && path[pos + phpExt.size()] != '\0')
+	if (pos != string::npos && pos + phpExt.size() < path.size())
 	{
 		// it conflict with PATH_INFO of RFC3875(CGI), but subject's requirement.
 		pathInfo = path.substr(0, pos + phpExt.size());
@@ -37,7 +37,7 @@ static void parseUri(Http& h, std::map<std::string, std::string>& param, std::st
 	pos = scriptFilename.find(pathInfoVar);
 	if (pos != string::npos)
 	{
-		scriptFilename.replace(pos, pathInfoVar.size(), pathInfo);
+		scriptFilename.replace(pos, pathInfoVar.size(), param["PATH_INFO"]);
 		param["SCRIPT_FILENAME"] = scriptFilename;
 	}
 }
@@ -70,7 +70,7 @@ static size_t maxParamLen(std::map<std::string, std::string>& param)
 	std::map<std::string, std::string>::iterator it = param.begin();
 	for (; it != param.end(); it++)
 	{
-		size_t len = it->first.size() + it->second.size();
+		size_t len = it->first.size() + it->second.size() + 1; // 1 means "=".
 		if (max < len)
 			max = len;
 	}
@@ -89,14 +89,22 @@ int CgiLocationCtx::contentHandler(Http& h)
 		std::cout << "{ " << itDebug->first << " : " << itDebug->second << " }" << std::endl;
 	}
 #endif
-	char environ[param.size() + 1][maxParamLen(param) + 1];
-	std::memset(environ, 0, sizeof(environ));
+	char environData[param.size()][maxParamLen(param) + 1];
+	std::memset(environData, 0, sizeof(environData));
 	std::map<std::string, std::string>::iterator it = param.begin();
 	for (int i = 0; i != param.size(); i++, it++)
 	{
 		std::string value = it->first + "=" + it->second;
-		std::strncpy(environ[i], value.c_str(), value.size());
+		std::strncpy(environData[i], value.c_str(), value.size());
 	}
+	char* environPtrs[param.size()];
+	int i = 0;
+	for (; i != param.size(); i++)
+	{
+		environPtrs[i] = environData[i];
+	}
+	environPtrs[i] = NULL;
+	char** environ = environPtrs;
 	std::string pathname;
 	std::string arg1;
 	// if (param["PATH_INFO"].find(".php") != string::npos)
@@ -108,10 +116,19 @@ int CgiLocationCtx::contentHandler(Http& h)
 	argv[0] = const_cast<char*>(pathname.c_str());
 	argv[1] = const_cast<char*>(arg1.c_str());
 	argv[2] = NULL;
-	int pfd[2];
-	if (pipe(pfd) < 0)
+	// fd to send from parent to child.
+	int p2cFd[2];
+	if (pipe(p2cFd) < 0)
 	{
 		// Internal Server Error;
+		return DONE;
+	}
+	int c2pFd[2];
+	if (pipe(c2pFd) < 0)
+	{
+		// Internal Server Error;
+		close(p2cFd[0]);
+		close(p2cFd[1]);
 		return DONE;
 	}
 	int pid = fork();
@@ -122,16 +139,23 @@ int CgiLocationCtx::contentHandler(Http& h)
 	}
 	if (pid == 0)
 	{
+		std::cout << "argv[0]: " << argv[0] << std::endl;
+		std::cout << "argv[1]: " << argv[1] << std::endl;
 		// child process
-		close(pfd[1]);
-		dup2(pfd[0], STDIN_FILENO);
-		execve(argv[0], argv, environ);
-		std::cerr << strerror(errno) << std::endl;
+		close(p2cFd[1]);
+		dup2(p2cFd[0], STDIN_FILENO);
+		close(c2pFd[0]);
+		dup2(c2pFd[1], STDOUT_FILENO);
+		char** pEnvrion = environ;
+		execve(argv[0], argv, pEnvrion);
+		std::cerr << "execve: " << strerror(errno) << std::endl;
+		exit(EXIT_FAILURE);
 	}
 	else
 	{
-		close(pfd[0]);
-		h.setFd(dup(STDOUT_FILENO));
+		close(p2cFd[0]);
+		close(c2pFd[1]);
+		h.setFd(c2pFd[0]);
 		int fd = open(h.getRequestBodyFileName().c_str(), O_RDONLY);
 		for (;;)
 		{
@@ -142,13 +166,26 @@ int CgiLocationCtx::contentHandler(Http& h)
 			if (readnum <= 0)
 				break;
 			// maybe block
-			ssize_t writenum = write(pfd[1], buf, readnum);
+			ssize_t writenum = write(p2cFd[1], buf, readnum);
 			if (writenum < 0)
 				return ERROR;
 		}
 		close(fd);
-		close(pfd[1]);
-		std::remove(h.getRequestBodyFileName);
+		close(p2cFd[1]);
+		std::remove(h.getRequestBodyFileName().c_str());
+		h.statusLine = "HTTP/1.1 200 OK\r\n";
+
+		// #ifdef DEBUG
+		// 		std::cout << "-----------------------" << std::endl;
+		// 		std::cout << "Cgi executed" << std::endl << "result:" << std::endl;
+		// 		size_t bufSize = 1024;
+		// 		char cgiBuf[bufSize + 1];
+		// 		std::memset(cgiBuf, 0, bufSize + 1);
+		// 		ssize_t cgiReadnum = read(c2pFd[0], cgiBuf, bufSize);
+		// 		std::cout << "readnum: " << cgiReadnum << std::endl;
+		// 		std::cout << "buf: " << cgiBuf << std::endl;
+		// 		std::cout << "-----------------------" << std::endl;
+		// #endif
 	}
 	return DONE;
 }

@@ -13,6 +13,9 @@ extern Wbsv::Event* ev;
 // 			root /root/webserv/test/html;
 // 			index index.html;
 // 		}
+// 		location /images/ {
+// 			root /root/webserv/test;
+// 		}
 //		location /redirect {
 //			return 301 http://www.google.com;
 //		}
@@ -48,6 +51,11 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	hlc->root = "/root/webserv/test/html";
 	hlc->index = "index.html";
 	vsc.addLocationCtx((LocationCtx*)hlc);
+	// this must be dynamicaly allocated
+	HtmlLocationCtx* hlc2 = new HtmlLocationCtx;
+	hlc2->path = "/images/";
+	hlc2->root = "/root/webserv/test";
+	vsc.addLocationCtx((LocationCtx*)hlc2);
 	// this must be dynamicaly allocated
 	ReturnLocationCtx* rlc = new ReturnLocationCtx;
 	rlc->path = "/redirect";
