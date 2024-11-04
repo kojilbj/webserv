@@ -36,7 +36,7 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 			/* because all socket must be passive (AI_PASSIVE) */
 			if (getaddrinfo(host.c_str(), port.c_str(), &hints, &result) != 0)
 			{
-				std::cerr << strerror(errno) << std::endl;
+				std::cerr << "getaddrinfo: " << strerror(errno) << std::endl;
 				exit(1);
 			}
 			ls.family = result->ai_family;

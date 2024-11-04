@@ -89,6 +89,10 @@ namespace Wbsv
 		{
 			return requestBodyFileName_;
 		}
+		void setUpstreamFd(int fd)
+		{
+			c.upstreamFd = fd;
+		}
 
 		/* Request handlers */
 		int waitRequestHandler();
@@ -97,6 +101,9 @@ namespace Wbsv
 		int parseRequestLine();
 		int parseRequestHeaderLine();
 		int processRequest();
+
+		// Upstream handlers
+		int processUpstream();
 
 		/* Response handlers */
 		int coreRunPhase();
@@ -132,10 +139,12 @@ namespace Wbsv
 		bool alreadyWrite;
 		bool ready;
 		int responseState;
-		// pipe or regular file fd to send to the client as message body
+		// regular file fd to send to the client as message body
 		int fd_;
 		std::string requestBodyFileName_;
 		int requestBodyFileFd_;
+		std::string responseBodyFileName_;
+		int responseBodyFileFd_;
 		int bodyLen_;
 		char responseBodyBuf_[1024];
 	};

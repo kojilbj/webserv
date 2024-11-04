@@ -19,6 +19,7 @@ namespace Wbsv
 		void setAcceptRev(int fd, struct sockaddr_in* sockaddrIn, socklen_t socklen);
 
 		int cfd;
+		int upstreamFd;
 		struct sockaddr_in remoteSockaddrIn;
 		socklen_t remoteSocklen;
 		Listening* ls;

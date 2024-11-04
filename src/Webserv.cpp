@@ -64,24 +64,24 @@ void Webserv::openListeningSocket()
 		s = socket(it->family, it->socktype, 0);
 		if (s == -1)
 		{
-			std::cerr << strerror(errno) << std::endl;
+			std::cerr << "socket: " << strerror(errno) << std::endl;
 			exit(1);
 		}
 		fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
 		int optval = 1;
 		if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1)
 		{
-			std::cerr << strerror(errno) << std::endl;
+			std::cerr << "setsockopt: " << strerror(errno) << std::endl;
 			exit(1);
 		}
 		if (bind(s, (struct sockaddr*)&it->sockaddrIn, it->socklen) != 0)
 		{
-			std::cerr << strerror(errno) << std::endl;
+			std::cerr << "bind: " << strerror(errno) << std::endl;
 			exit(1);
 		}
 		if (listen(s, it->backlog) == -1)
 		{
-			std::cerr << strerror(errno) << std::endl;
+			std::cerr << "listen: " << strerror(errno) << std::endl;
 			exit(1);
 		}
 		it->sfd = s;
@@ -96,7 +96,7 @@ void Webserv::acceptEvent(Listening* ls)
 	int cfd = accept(ls->sfd, (struct sockaddr*)&sockaddrIn, &socklen);
 	if (cfd == -1)
 	{
-		std::cerr << strerror(errno) << std::endl;
+		std::cerr << "accept: " << strerror(errno) << std::endl;
 		exit(1);
 	}
 	fcntl(cfd, F_SETFL, fcntl(cfd, F_GETFL) | O_NONBLOCK);

@@ -159,7 +159,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 	{
 		close(p2cFd[0]);
 		close(c2pFd[1]);
-		h.setFd(c2pFd[0]);
+		h.setUpstreamFd(c2pFd[0]);
 		int fd = open(h.getRequestBodyFileName().c_str(), O_RDONLY);
 		for (;;)
 		{
@@ -177,7 +177,6 @@ int CgiLocationCtx::contentHandler(Http& h)
 		close(fd);
 		close(p2cFd[1]);
 		std::remove(h.getRequestBodyFileName().c_str());
-		h.statusLine = "HTTP/1.1 200 OK\r\n";
 
 		// #ifdef DEBUG
 		// 		std::cout << "-----------------------" << std::endl;

@@ -18,7 +18,7 @@ void Epoll::init(Webserv& ws)
 	ep = epoll_create(ws.getListenings()->size());
 	if (ep == -1)
 	{
-		std::cerr << strerror(errno) << std::endl;
+		std::cerr << "epoll_create: " << strerror(errno) << std::endl;
 		exit(1);
 	}
 	std::vector<Listening>::iterator it;
@@ -39,7 +39,7 @@ void Epoll::init(Webserv& ws)
 		freeList.push_back(ed);
 		if (epoll_ctl(ep, EPOLL_CTL_ADD, it->sfd, &eventList) == -1)
 		{
-			std::cerr << strerror(errno) << std::endl;
+			std::cerr << "epoll_ctl: " << strerror(errno) << std::endl;
 			exit(1);
 		}
 	}
@@ -149,6 +149,7 @@ void Epoll::processEvents(Webserv& ws)
 #ifdef DEBUG
 			std::cout << "Connection socket event occured" << std::endl;
 			std::cout << "fd: " << p->c.cfd << std::endl;
+			std::cout << "upstream fd: " << p->c.upstreamFd << std::endl;
 			if (eventResult[i].events & EPOLLIN)
 				std::cout << "event: EPOLLIN" << std::endl;
 			if (eventResult[i].events & EPOLLOUT)
@@ -173,6 +174,24 @@ void Epoll::processEvents(Webserv& ws)
 					std::cout << "RevHandler return AGAIN, addEvent(MOD)" << std::endl;
 #endif
 					ev->addEvent(p->c.cfd, p, MOD);
+				}
+				else if (rv == UPSTREAM_AGAIN_FIRST || rv == UPSTREAM_AGAIN)
+				{
+					if (rv == UPSTREAM_AGAIN_FIRST)
+					{
+#ifdef DEBUG
+						std::cout << "RevHandler return UPSTREAM_AGAIN, addEvent(ADD)" << std::endl;
+#endif
+						ev->addEvent(p->c.upstreamFd, p, ADD);
+					}
+					else // (rv == UPSTREAM_AGAIN)
+					{
+#ifdef DEBUG
+						std::cout << "RevHandler return UPSTREAM_AGAIN, addEvent(MOD)" << std::endl;
+#endif
+						ev->addEvent(p->c.upstreamFd, p, MOD);
+					}
+					break;
 				}
 				else
 				{
@@ -241,7 +260,8 @@ void Epoll::addEvent(int fd, Protocol* p, int option)
 	freeList.push_back(ed);
 	if (epoll_ctl(ep, op, fd, &eventList) == -1)
 	{
-		std::cerr << strerror(errno) << std::endl;
+		std::cout << fd << std::endl;
+		std::cerr << "epoll_ctl: " << strerror(errno) << std::endl;
 		exit(1);
 	}
 }

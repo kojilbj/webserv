@@ -17,6 +17,8 @@ Http::Http()
 	, ready(false)
 	, responseState(0)
 	, fd_(-1)
+	, requestBodyFileFd_(-1)
+	, responseBodyFileFd_(-1)
 {
 	std::memset(responseBodyBuf_, 0, 1024);
 	defaultErrorPages["400"] =
@@ -93,7 +95,7 @@ void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 				std::pair<string, string> listen = sit->getListen();
 				if (getaddrinfo(listen.first.c_str(), listen.second.c_str(), &hints, &result) != 0)
 				{
-					std::cerr << strerror(errno) << std::endl;
+					std::cerr << "getaddrinfo: " << strerror(errno) << std::endl;
 					exit(1);
 				}
 				struct sockaddr_in* addrIn = (struct sockaddr_in*)result->ai_addr;
@@ -689,8 +691,9 @@ int Http::processRequest()
 		{
 			bodyLen_ = atoi(headersIn["Content-Length"].c_str());
 			std::string tmpDir("/tmp/");
+			std::string tmpExt(".reqBody");
 			std::time_t now = std::time(NULL);
-			requestBodyFileName_ = tmpDir + std::asctime(std::localtime(&now));
+			requestBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
 			requestBodyFileFd_ = open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT);
 			if (requestBodyFileFd_ == -1)
 			{
@@ -746,6 +749,7 @@ int Http::processRequest()
 		}
 		close(requestBodyFileFd_);
 	}
+	alreadyRead = true;
 	return coreRunPhase();
 }
 
@@ -759,6 +763,86 @@ int Http::coreRunPhase()
 	{
 		if ((*it)->handler(*this) == DONE)
 			break;
+	}
+	return processUpstream();
+}
+
+int Http::processUpstream()
+{
+	revHandler = &Http::processUpstream;
+	if (c.upstreamFd != -1)
+	{
+#ifdef DEBUG
+		std::cout << "processUpstream" << std::endl;
+#endif
+		if (alreadyRead)
+		{
+			pos = 1024;
+			std::string tmpDir("/tmp/");
+			std::string tmpExt(".resBody");
+			std::time_t now = std::time(NULL);
+			responseBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
+			responseBodyFileFd_ = open(responseBodyFileName_.c_str(), O_WRONLY | O_CREAT);
+			if (responseBodyFileFd_ == -1)
+			{
+				// Server Internal Error
+				return finalizeRequest();
+			}
+			alreadyRead = false;
+			return UPSTREAM_AGAIN_FIRST;
+		}
+		else
+		{
+			if (pos == 1024)
+			{
+				pos = 0;
+				std::memset(responseBodyBuf_, 0, sizeof(responseBodyBuf_));
+				ssize_t readnum = read(c.upstreamFd, responseBodyBuf_, sizeof(responseBodyBuf_));
+				std::cout << "readnum: " << readnum << std::endl;
+				if (readnum < 0)
+					return ERROR;
+				if (readnum == 0)
+				{
+					close(c.upstreamFd);
+					close(responseBodyFileFd_);
+					fd_ = open(responseBodyFileName_.c_str(), O_RDONLY);
+					if (fd_ == -1)
+					{
+						// Server Internal Error
+						return finalizeRequest();
+					}
+					// waitpid();
+					statusLine = "HTTP/1.1 200 OK\r\n";
+					return finalizeRequest();
+				}
+				ssize_t writenum = write(responseBodyFileFd_, responseBodyBuf_, readnum);
+				if (writenum == -1)
+				{
+					// Server Internal Error
+					return finalizeRequest();
+				}
+				if (writenum < readnum)
+					pos += writenum;
+				else
+					pos = 1024;
+				return UPSTREAM_AGAIN;
+			}
+			else
+			{
+				ssize_t writenum = write(
+					responseBodyFileFd_, responseBodyBuf_ + pos, sizeof(responseBodyBuf_) - pos);
+				if (writenum == -1)
+				{
+					// Server Internal Error
+					return finalizeRequest();
+				}
+				if (writenum < sizeof(responseBodyBuf_) - pos)
+					pos += writenum;
+				else
+					pos = 1024;
+				return UPSTREAM_AGAIN;
+			}
+		}
 	}
 	return finalizeRequest();
 }
@@ -874,6 +958,17 @@ int Http::finalizeRequest()
 					std::cout << "Server Internal Error" << std::endl;
 					return ERROR;
 				}
+				if (readnum == 0)
+				{
+#ifdef DEBUG
+					std::cout << "regular file completely read" << std::endl;
+#endif
+					close(fd_);
+					if (!responseBodyFileName_.empty())
+						std::remove(responseBodyFileName_.c_str());
+					responseState = responseDone;
+					break;
+				}
 				writenum = write(c.cfd, responseBodyBuf_, readnum);
 #ifdef DEBUG
 				std::cout << "-----------------------------------------" << std::endl;
@@ -886,12 +981,15 @@ int Http::finalizeRequest()
 #endif
 				if (writenum == -1)
 					return ERROR;
-				if (writenum < readnum || writenum == 1024)
-				{
-					responseState = messageBodyDoing;
+				// if (writenum < readnum || writenum == 1024)
+				// {
+				responseState = messageBodyDoing;
+				if (writenum < readnum)
 					pos = writenum;
-					return AGAIN;
-				}
+				else
+					pos = 1024;
+				return AGAIN;
+				// }
 			}
 			else
 				return OK;
@@ -930,6 +1028,17 @@ int Http::finalizeRequest()
 					std::cout << "Server Internal Error" << std::endl;
 					return ERROR;
 				}
+				if (readnum == 0)
+				{
+#ifdef DEBUG
+					std::cout << "regular file completely read" << std::endl;
+#endif
+					close(fd_);
+					if (!responseBodyFileName_.empty())
+						std::remove(responseBodyFileName_.c_str());
+					responseState = responseDone;
+					break;
+				}
 				writenum = write(c.cfd, responseBodyBuf_, readnum);
 #ifdef DEBUG
 				std::cout << "-----------------------------------------" << std::endl;
@@ -941,11 +1050,14 @@ int Http::finalizeRequest()
 #endif
 				if (writenum == -1)
 					return ERROR;
-				if (writenum < readnum || writenum == 1024)
-				{
+				// if (writenum < readnum || writenum == 1024)
+				// {
+				if (writenum < readnum)
 					pos = writenum;
-					return AGAIN;
-				}
+				else
+					pos = 1024;
+				return AGAIN;
+				// }
 			}
 			else
 			{
@@ -959,13 +1071,13 @@ int Http::finalizeRequest()
 #endif
 				if (writenum == -1)
 					return ERROR;
-				if (writenum < sizeof(responseBodyBuf_) - pos || pos + writenum == 1024)
-				{
-					pos += writenum;
-					return AGAIN;
-				}
+				// if (writenum < sizeof(responseBodyBuf_) - pos || pos + writenum == 1024)
+				// {
+				pos += writenum;
+				return AGAIN;
+				// }
 			}
-			close(fd_);
+			// close(fd_);
 		}
 		else
 		{
