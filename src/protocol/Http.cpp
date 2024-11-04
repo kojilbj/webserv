@@ -18,6 +18,7 @@ Http::Http()
 	, responseState(0)
 	, fd_(-1)
 {
+	std::memset(responseBodyBuf_, 0, 1024);
 	defaultErrorPages["400"] =
 		"<html>\r\n<head><title>400 Bad "
 		"Request</title></head>\r\n<body>\r\n<center><h1>400 Bad Request</h1></center>\r\n";
@@ -145,7 +146,7 @@ int Http::waitRequestHandler()
 #ifdef DEBUG
 	std::cout << "Http::waitRequestHandler" << std::endl;
 #endif
-	wevReady = true;
+	// wevReady = true;
 	char tmp[clientHeaderSize + 1];
 	std::memset(tmp, 0, clientHeaderSize + 1);
 	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
@@ -767,6 +768,7 @@ int Http::finalizeRequest()
 #ifdef DEBUG
 	std::cout << "finalizeRequest" << std::endl;
 #endif
+	wevReady = true;
 	revHandler = &Http::finalizeRequest;
 	// it may be not needed
 	if (!alreadyWrite)
@@ -866,84 +868,121 @@ int Http::finalizeRequest()
 		{
 			if (fd_ != -1)
 			{
-				size_t bufSize = 1024;
-				char buf[bufSize];
-				std::memset(buf, 0, bufSize);
-				ssize_t readnum = read(fd_, buf, bufSize);
-				std::cout << "readnum: " << readnum << std::endl;
-				std::cout << "body: " << buf << std::endl;
+				ssize_t readnum = read(fd_, responseBodyBuf_, sizeof(responseBodyBuf_));
 				if (readnum == -1)
 				{
 					std::cout << "Server Internal Error" << std::endl;
 					return ERROR;
 				}
-				writenum = write(c.cfd, buf, readnum);
+				writenum = write(c.cfd, responseBodyBuf_, readnum);
+#ifdef DEBUG
+				std::cout << "-----------------------------------------" << std::endl;
+				std::cout << "sending to client from regular file (state: headerOutDone):"
+						  << std::endl;
+				std::cout << "readnum from regular file: " << readnum << std::endl;
+				std::cout << "writenum to client: " << writenum << std::endl;
+				std::cout << "-----------------------------------------" << std::endl;
+#endif
+				if (writenum == -1)
+					return ERROR;
+				if (writenum < readnum || writenum == 1024)
+				{
+					responseState = messageBodyDoing;
+					pos = writenum;
+					return AGAIN;
+				}
 			}
 			else
 				return OK;
 		}
 		else
+		{
 			writenum = write(c.cfd, messageBodyOut.c_str(), messageBodyOut.size());
 #ifdef DEBUG
-		std::cout << "-----------------------------------------" << std::endl;
-		std::cout << "sending to client (state: headerOutDone):" << std::endl;
-		std::cout << "writenum: " << writenum << std::endl;
-		std::cout << "body: " << messageBodyOut << std::endl;
-		std::cout << "-----------------------------------------" << std::endl;
+			std::cout << "-----------------------------------------" << std::endl;
+			std::cout << "sending to client (state: headerOutDone):" << std::endl;
+			std::cout << "writenum: " << writenum << std::endl;
+			std::cout << "body: " << messageBodyOut << std::endl;
+			std::cout << "-----------------------------------------" << std::endl;
 #endif
-		if (writenum == -1)
-			return ERROR;
-		if (messageBodyOut.size() != 0 && writenum < messageBodyOut.size())
-		{
-			responseState = messageBodyDoing;
-			pos = writenum;
-			return AGAIN;
-		}
-		if (fd_ != -1 && writenum == 1024)
-		{
-			responseState = messageBodyDoing;
-			pos = writenum;
-			return AGAIN;
+			if (writenum == -1)
+				return ERROR;
+			if (writenum < messageBodyOut.size())
+			{
+				responseState = messageBodyDoing;
+				pos = writenum;
+				return AGAIN;
+			}
 		}
 		responseState = responseDone;
 		break;
 	case messageBodyDoing:
-		if (fd_ != -1 && pos == 1024)
+		if (fd_ != -1)
 		{
-			pos = 0;
-			size_t bufSize = 1024;
-			char buf[bufSize + 1];
-			std::memset(buf, 0, bufSize + 1);
-			ssize_t readnum = read(fd_, buf, bufSize);
-			if (readnum == -1)
+			if (pos == 1024)
 			{
-				std::cout << "Server Internal Error" << std::endl;
-				return ERROR;
+				pos = 0;
+				std::memset(responseBodyBuf_, 0, sizeof(responseBodyBuf_));
+				ssize_t readnum = read(fd_, responseBodyBuf_, sizeof(responseBodyBuf_));
+				if (readnum == -1)
+				{
+					std::cout << "Server Internal Error" << std::endl;
+					return ERROR;
+				}
+				writenum = write(c.cfd, responseBodyBuf_, readnum);
+#ifdef DEBUG
+				std::cout << "-----------------------------------------" << std::endl;
+				std::cout << "sending to client from regular file (state: headerOutDone):"
+						  << std::endl;
+				std::cout << "readnum from regular file: " << readnum << std::endl;
+				std::cout << "writenum to client: " << writenum << std::endl;
+				std::cout << "-----------------------------------------" << std::endl;
+#endif
+				if (writenum == -1)
+					return ERROR;
+				if (writenum < readnum || writenum == 1024)
+				{
+					pos = writenum;
+					return AGAIN;
+				}
 			}
-			writenum = write(c.cfd, buf, readnum);
+			else
+			{
+				writenum = write(c.cfd, responseBodyBuf_ + pos, sizeof(responseBodyBuf_) - pos);
+#ifdef DEBUG
+				std::cout << "-----------------------------------------" << std::endl;
+				std::cout << "sending to client from regular file (state: headerOutDone):"
+						  << std::endl;
+				std::cout << "writenum to client: " << writenum << std::endl;
+				std::cout << "-----------------------------------------" << std::endl;
+#endif
+				if (writenum == -1)
+					return ERROR;
+				if (writenum < sizeof(responseBodyBuf_) - pos || pos + writenum == 1024)
+				{
+					pos += writenum;
+					return AGAIN;
+				}
+			}
+			close(fd_);
 		}
 		else
+		{
 			writenum = write(c.cfd, messageBodyOut.c_str() + pos, messageBodyOut.size() - pos);
 #ifdef DEBUG
-		std::cout << "-----------------------------------------" << std::endl;
-		std::cout << "sending to client (state: messageBodyDoing):" << std::endl;
-		std::cout << messageBodyOut << std::endl;
-		std::cout << "-----------------------------------------" << std::endl;
+			std::cout << "-----------------------------------------" << std::endl;
+			std::cout << "sending to client (state: messageBodyDoing):" << std::endl;
+			std::cout << messageBodyOut << std::endl;
+			std::cout << "-----------------------------------------" << std::endl;
 #endif
-		if (writenum == -1)
-			return ERROR;
-		if (writenum < messageBodyOut.size() - pos)
-		{
-			pos += writenum;
-			return AGAIN;
+			if (writenum == -1)
+				return ERROR;
+			if (writenum < messageBodyOut.size() - pos)
+			{
+				pos += writenum;
+				return AGAIN;
+			}
 		}
-		if (fd_ != -1 && writenum == 1024)
-		{
-			pos = writenum;
-			return AGAIN;
-		}
-		if (fd_ != -1)
-			close(fd_);
 		responseState = responseDone;
 		break;
 	}

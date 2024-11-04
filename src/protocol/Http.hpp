@@ -137,6 +137,7 @@ namespace Wbsv
 		std::string requestBodyFileName_;
 		int requestBodyFileFd_;
 		int bodyLen_;
+		char responseBodyBuf_[1024];
 	};
 } // namespace Wbsv
 

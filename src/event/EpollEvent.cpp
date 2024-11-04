@@ -50,27 +50,29 @@ void Epoll::timeOutHandler(Webserv& ws)
 #ifdef DEBUG
 	std::cout << "timeOutHandler" << std::endl;
 #endif
+	bool timout = false;
 	std::list<struct eventData*>::iterator it = freeList.begin();
 	for (; it != freeList.end(); it++)
 	{
 		if ((*it)->type == ConnectionFd)
 		{
 			Protocol* p = (*it)->data.p;
-			// default client_request_timeout is 60s
-			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime > 60)
-			{
-				close(p->c.cfd);
-				ws.getFreeList()->remove(p);
-				delete p;
-				freeList.remove(*it);
-				delete *it;
-			}
 #ifdef DEBUG
 			std::cout << "connection fd: " << p->c.cfd << std::endl;
 			std::cout << "last read time: " << p->c.lastReadTime << std::endl;
 			std::cout << "current time: " << std::time(NULL) << std::endl;
 			std::cout << "diff: " << std::time(NULL) - p->c.lastReadTime << std::endl;
 #endif
+			// default client_request_timeout is 60s
+			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 10)
+			{
+				close(p->c.cfd);
+				ws.getFreeList()->remove(p);
+				delete p;
+				freeList.remove(*it);
+				delete *it;
+				it = freeList.begin();
+			}
 		}
 	}
 }
