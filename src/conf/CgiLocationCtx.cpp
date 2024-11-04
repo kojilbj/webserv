@@ -2,7 +2,8 @@
 
 using namespace Wbsv;
 
-static void parseUri(Http& h, std::map<std::string, std::string>& param, std::string index)
+static void
+parseUri(Http& h, std::map<std::string, std::string>& param, std::string index, std::string store)
 {
 	int pos = 0;
 	std::string uri = h.getUri();
@@ -40,6 +41,9 @@ static void parseUri(Http& h, std::map<std::string, std::string>& param, std::st
 		scriptFilename.replace(pos, pathInfoVar.size(), param["PATH_INFO"]);
 		param["SCRIPT_FILENAME"] = scriptFilename;
 	}
+	// if (store[store.size() - 1] != '/')
+	// 	store += "/";
+	// param["UPLOAD_DIR"] = store;
 }
 
 static void headerIn2Param(Http& h, std::map<std::string, std::string>& param)
@@ -79,7 +83,7 @@ static size_t maxParamLen(std::map<std::string, std::string>& param)
 
 int CgiLocationCtx::contentHandler(Http& h)
 {
-	parseUri(h, param, index);
+	parseUri(h, param, index, store);
 	headerIn2Param(h, param);
 #ifdef DEBUG
 	std::cout << "Cgi contentHandler" << std::endl;

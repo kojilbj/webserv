@@ -881,6 +881,7 @@ int Http::finalizeRequest()
 						  << std::endl;
 				std::cout << "readnum from regular file: " << readnum << std::endl;
 				std::cout << "writenum to client: " << writenum << std::endl;
+				std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)

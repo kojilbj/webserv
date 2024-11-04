@@ -67,6 +67,7 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	clc->path = "/php/";
 	clc->index = "upload.php";
 	clc->param["SCRIPT_FILENAME"] = "/root/webserv/test/cgi$cgi_path_info";
+	clc->store = "/root/webserv/test/images/";
 	vsc.addLocationCtx((LocationCtx*)clc);
 	sc.addVServerCtx(vsc);
 	httpConfCtx->addServerCtx(sc);
