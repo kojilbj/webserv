@@ -867,8 +867,8 @@ int Http::finalizeRequest()
 			if (fd_ != -1)
 			{
 				size_t bufSize = 1024;
-				char buf[bufSize + 1];
-				std::memset(buf, 0, bufSize + 1);
+				char buf[bufSize];
+				std::memset(buf, 0, bufSize);
 				ssize_t readnum = read(fd_, buf, bufSize);
 				std::cout << "readnum: " << readnum << std::endl;
 				std::cout << "body: " << buf << std::endl;
@@ -877,14 +877,13 @@ int Http::finalizeRequest()
 					std::cout << "Server Internal Error" << std::endl;
 					return ERROR;
 				}
-				std::cout << "buf: " << buf << std::endl;
-				std::cout << "buf: " << buf << std::endl;
-				messageBodyOut = buf;
+				writenum = write(c.cfd, buf, readnum);
 			}
 			else
 				return OK;
 		}
-		writenum = write(c.cfd, messageBodyOut.c_str(), messageBodyOut.size());
+		else
+			writenum = write(c.cfd, messageBodyOut.c_str(), messageBodyOut.size());
 #ifdef DEBUG
 		std::cout << "-----------------------------------------" << std::endl;
 		std::cout << "sending to client (state: headerOutDone):" << std::endl;
@@ -894,7 +893,7 @@ int Http::finalizeRequest()
 #endif
 		if (writenum == -1)
 			return ERROR;
-		if (writenum < messageBodyOut.size())
+		if (messageBodyOut.size() != 0 && writenum < messageBodyOut.size())
 		{
 			responseState = messageBodyDoing;
 			pos = writenum;
@@ -921,9 +920,10 @@ int Http::finalizeRequest()
 				std::cout << "Server Internal Error" << std::endl;
 				return ERROR;
 			}
-			messageBodyOut = buf;
+			writenum = write(c.cfd, buf, readnum);
 		}
-		writenum = write(c.cfd, messageBodyOut.c_str() + pos, messageBodyOut.size() - pos);
+		else
+			writenum = write(c.cfd, messageBodyOut.c_str() + pos, messageBodyOut.size() - pos);
 #ifdef DEBUG
 		std::cout << "-----------------------------------------" << std::endl;
 		std::cout << "sending to client (state: messageBodyDoing):" << std::endl;
