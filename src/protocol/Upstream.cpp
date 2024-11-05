@@ -40,6 +40,7 @@ int Upstream::sendRequestBody()
 		return OK;
 	}
 	ssize_t writenum = write(writeFd, buf, readnum);
+	lastReadTime = std::time(NULL);
 	if (writenum == -1)
 	{
 		h->revHandler = &Http::finalizeRequest;
@@ -82,6 +83,7 @@ int Upstream::recvResponseBody()
 	char buf[1024];
 	std::memset(buf, 0, bufSize);
 	ssize_t readnum = read(readFd, buf, bufSize);
+	lastReadTime = std::time(NULL);
 	if (readnum == -1)
 	{
 		h->revHandler = &Http::finalizeRequest;

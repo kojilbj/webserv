@@ -152,6 +152,7 @@ int Http::waitRequestHandler()
 	char tmp[clientHeaderSize + 1];
 	std::memset(tmp, 0, clientHeaderSize + 1);
 	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
+	c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 	std::cout << "after recv:" << std::endl;
 	std::cout << "\tmaxsize of recv: " << clientHeaderSize << std::endl;
@@ -167,7 +168,6 @@ int Http::waitRequestHandler()
 		// 400 (Bad Request) error
 		return finalizeRequest();
 	}
-	c.lastReadTime = std::time(NULL);
 	alreadyRead = true;
 	if (readnum >= clientHeaderSize)
 		ready = true;
@@ -196,6 +196,7 @@ int Http::processRequestLine()
 				char buf[bufSize + 1];
 				std::memset(buf, 0, bufSize + 1);
 				ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
+				c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 				std::cout << "after recv:" << std::endl;
 				std::cout << "\tmaxsize of recv: " << bufSize << std::endl;
@@ -211,7 +212,6 @@ int Http::processRequestLine()
 					// 400 (Bad Request) error
 					return finalizeRequest();
 				}
-				c.lastReadTime = std::time(NULL);
 				if (readnum == bufSize)
 					ready = true;
 				alreadyRead = true;
@@ -290,6 +290,7 @@ int Http::processRequestHeader()
 				char buf[leftAvailableHeaderSize + 1];
 				std::memset(buf, 0, leftAvailableHeaderSize + 1);
 				ssize_t readnum = recv(c.cfd, buf, leftAvailableHeaderSize, 0);
+				c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 				std::cout << "after recv:" << std::endl;
 				std::cout << "\tmaxsize of recv: " << leftAvailableHeaderSize << std::endl;
@@ -310,7 +311,6 @@ int Http::processRequestHeader()
 				/* 	std::cout << "Request-Header Too Large (Bad Request)" << std::endl; */
 				/* 	return ERROR; */
 				/* } */
-				c.lastReadTime = std::time(NULL);
 				if (readnum == leftAvailableHeaderSize)
 					ready = true;
 				alreadyRead = true;
@@ -731,7 +731,7 @@ int Http::processRequest()
 			char buf[leftRequestBodyLen + 1];
 			std::memset(buf, 0, leftRequestBodyLen + 1);
 			ssize_t readnum = recv(c.cfd, buf, leftRequestBodyLen, 0);
-			std::cout << "readnum: " << readnum << std::endl;
+			c.lastReadTime = std::time(NULL);
 			if (readnum == -1)
 			{
 				// Server Internal Error
@@ -818,6 +818,7 @@ int Http::finalizeRequest()
 	{
 	case start:
 		writenum = write(c.cfd, statusLine.c_str(), statusLine.size());
+		c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 		std::cout << "-----------------------------------------" << std::endl;
 		std::cout << "sending to client (state: start):" << std::endl;
@@ -836,6 +837,7 @@ int Http::finalizeRequest()
 		return AGAIN;
 	case statusLineDoing:
 		writenum = write(c.cfd, statusLine.c_str() + pos, statusLine.size() - pos);
+		c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 		std::cout << "-----------------------------------------" << std::endl;
 		std::cout << "sending to client (state: statusLineDoing):" << std::endl;
@@ -854,6 +856,7 @@ int Http::finalizeRequest()
 		return AGAIN;
 	case statusLineDone:
 		writenum = write(c.cfd, headerOut.c_str(), headerOut.size());
+		c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 		std::cout << "-----------------------------------------" << std::endl;
 		std::cout << "sending to client (state: statusLineDone):" << std::endl;
@@ -872,6 +875,7 @@ int Http::finalizeRequest()
 		return AGAIN;
 	case headerOutDoing:
 		writenum = write(c.cfd, headerOut.c_str() + pos, headerOut.size() - pos);
+		c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 		std::cout << "-----------------------------------------" << std::endl;
 		std::cout << "sending to client (state: headerOutDoing):" << std::endl;
@@ -911,6 +915,7 @@ int Http::finalizeRequest()
 					break;
 				}
 				writenum = write(c.cfd, responseBodyBuf_, readnum);
+				c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 				std::cout << "-----------------------------------------" << std::endl;
 				std::cout << "sending to client from regular file (state: headerOutDone):"
@@ -938,6 +943,7 @@ int Http::finalizeRequest()
 		else
 		{
 			writenum = write(c.cfd, messageBodyOut.c_str(), messageBodyOut.size());
+			c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 			std::cout << "-----------------------------------------" << std::endl;
 			std::cout << "sending to client (state: headerOutDone):" << std::endl;
@@ -981,6 +987,7 @@ int Http::finalizeRequest()
 					break;
 				}
 				writenum = write(c.cfd, responseBodyBuf_, readnum);
+				c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 				std::cout << "-----------------------------------------" << std::endl;
 				std::cout << "sending to client from regular file (state: headerOutDone):"
@@ -1003,6 +1010,7 @@ int Http::finalizeRequest()
 			else
 			{
 				writenum = write(c.cfd, responseBodyBuf_ + pos, sizeof(responseBodyBuf_) - pos);
+				c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 				std::cout << "-----------------------------------------" << std::endl;
 				std::cout << "sending to client from regular file (state: headerOutDone):"
@@ -1023,6 +1031,7 @@ int Http::finalizeRequest()
 		else
 		{
 			writenum = write(c.cfd, messageBodyOut.c_str() + pos, messageBodyOut.size() - pos);
+			c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
 			std::cout << "-----------------------------------------" << std::endl;
 			std::cout << "sending to client (state: messageBodyDoing):" << std::endl;

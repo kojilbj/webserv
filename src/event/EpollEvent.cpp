@@ -52,8 +52,17 @@ void Epoll::timeOutHandler(Webserv& ws)
 #endif
 	bool timout = false;
 	std::list<struct eventData*>::iterator it = freeList.begin();
+	int alignIndex = -1;
+	bool timeout = false;
 	for (; it != freeList.end(); it++)
 	{
+		if (!timout)
+			alignIndex++;
+		else
+		{
+			if (alignIndex-- != 0)
+				continue;
+		}
 		if ((*it)->type == ConnectionFd)
 		{
 			Protocol* p = (*it)->data.p;
@@ -64,13 +73,46 @@ void Epoll::timeOutHandler(Webserv& ws)
 			std::cout << "diff: " << std::time(NULL) - p->c.lastReadTime << std::endl;
 #endif
 			// default client_request_timeout is 60s
-			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 10)
+			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 60)
 			{
+				timout = true;
 				close(p->c.cfd);
 				ws.getFreeList()->remove(p);
 				delete p;
 				freeList.remove(*it);
 				delete *it;
+				it = freeList.begin();
+			}
+		}
+		else if ((*it)->type == UpstreamFd)
+		{
+			Upstream* upstream = (*it)->data.upstream;
+#ifdef DEBUG
+			std::cout << "upstream fd (write/read): " << upstream->writeFd << "/"
+					  << upstream->readFd << std::endl;
+			std::cout << "last read time: " << upstream->lastReadTime << std::endl;
+			std::cout << "current time: " << std::time(NULL) << std::endl;
+			std::cout << "diff: " << std::time(NULL) - upstream->lastReadTime << std::endl;
+#endif
+			// default client_request_timeout is 60s
+			if (upstream->lastReadTime != -1 && std::time(NULL) - upstream->lastReadTime >= 60)
+			{
+				timout = true;
+				if (upstream->writeFd != -1)
+					close(upstream->writeFd);
+				close(upstream->readFd);
+				freeList.remove(*it);
+				delete *it;
+				Http* h = reinterpret_cast<Http*>(upstream->p);
+				h->wevReady = true;
+				h->statusLine = "HTTP/1.1 502 Bad Gateway\r\n";
+				h->headerOut = "\r\n";
+				h->messageBodyOut = h->defaultErrorPages["502"];
+				h->revHandler = &Http::finalizeRequest;
+				h->c.lastReadTime = std::time(NULL);
+				data_t data;
+				data.p = upstream->p;
+				ev->addEvent(h->c.cfd, data, ConnectionFd, MOD);
 				it = freeList.begin();
 			}
 		}
@@ -260,6 +302,7 @@ void Epoll::processEvents(Webserv& ws)
 				{
 					std::cout << "Upstream revHandler finished, close connection" << std::endl;
 					close(upstream->writeFd);
+					upstream->writeFd = -1;
 					data_t data;
 					data.upstream = upstream;
 					ev->addEvent(upstream->readFd, data, UpstreamFd, ADD);

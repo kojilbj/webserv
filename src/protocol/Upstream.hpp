@@ -23,12 +23,14 @@ namespace Wbsv
 			, requestBodyFd_(-1)
 			, responseBodyFd_(-1)
 			, peerClosed(false)
+			, lastReadTime(-1)
 		{ }
 		int invokeRevHandler();
 		int writeFd;
 		int readFd;
 		bool peerClosed;
 		Protocol* p;
+		time_t lastReadTime;
 
 	private:
 		uRevHandler_pt revHandler_;
