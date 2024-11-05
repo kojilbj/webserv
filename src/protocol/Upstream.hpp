@@ -14,17 +14,30 @@ namespace Wbsv
 	{
 	public:
 		Upstream()
-			: writeFd(0), readFd(0), p(NULL), revHandler_(&Upstream::sendRequestBody)
+			: writeFd(0)
+			, readFd(0)
+			, p(NULL)
+			, revHandler_(&Upstream::sendRequestBody)
+			, alreadyRead_(false)
+			, alreadyWrite_(false)
+			, requestBodyFd_(-1)
+			, responseBodyFd_(-1)
+			, peerClosed(false)
 		{ }
 		int invokeRevHandler();
 		int writeFd;
 		int readFd;
+		bool peerClosed;
 		Protocol* p;
 
 	private:
 		uRevHandler_pt revHandler_;
 		int sendRequestBody();
 		int recvResponseBody();
+		bool alreadyRead_;
+		bool alreadyWrite_;
+		int requestBodyFd_;
+		int responseBodyFd_;
 	};
 } // namespace Wbsv
 

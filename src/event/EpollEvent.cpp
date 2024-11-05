@@ -122,7 +122,7 @@ void Epoll::processEvents(Webserv& ws)
 #ifdef DEBUG
 		std::cout << "After epoll_wait:" << std::endl;
 		std::cout << "\teventData: " << ed << std::endl;
-		std::cout << "\teventData->data.ls: " << ed->data.ls << std::endl;
+		std::cout << "\teventData->data: " << ed->data.ls << std::endl;
 #endif
 		if (ed->type == ListeningFd)
 		{
@@ -149,7 +149,6 @@ void Epoll::processEvents(Webserv& ws)
 #ifdef DEBUG
 			std::cout << "Connection socket event occured" << std::endl;
 			std::cout << "fd: " << p->c.cfd << std::endl;
-			std::cout << "upstream fd: " << p->c.upstreamFd << std::endl;
 			if (eventResult[i].events & EPOLLIN)
 				std::cout << "event: EPOLLIN" << std::endl;
 			if (eventResult[i].events & EPOLLOUT)
@@ -185,9 +184,9 @@ void Epoll::processEvents(Webserv& ws)
 					data_t data;
 					data.upstream = p->upstream;
 					ev->addEvent(p->upstream->writeFd, data, UpstreamFd, ADD);
-					data_t data2;
-					data2.p = p;
-					ev->addEvent(p->c.cfd, data2, ConnectionFd, MOD);
+					// data_t data2;
+					// data2.p = p;
+					// ev->addEvent(p->c.cfd, data2, ConnectionFd, MOD);
 				}
 				else
 				{
@@ -239,6 +238,20 @@ void Epoll::processEvents(Webserv& ws)
 		}
 		else if (ed->type == UpstreamFd)
 		{
+#ifdef DEBUG
+			std::cout << "Upstream socket event occured" << std::endl;
+			if (eventResult[i].events & EPOLLIN)
+				std::cout << "event: EPOLLIN" << std::endl;
+			if (eventResult[i].events & EPOLLOUT)
+				std::cout << "event: EPOLLOUT" << std::endl;
+			if (eventResult[i].events & EPOLLRDHUP)
+				std::cout << "event: EPOLLRDHUP" << std::endl;
+			if (eventResult[i].events & EPOLLHUP)
+				std::cout << "event: EPOLLHUP" << std::endl;
+			if (eventResult[i].events & EPOLLERR)
+				std::cout << "event: EPOLLERR" << std::endl;
+			std::cout << std::endl;
+#endif
 			Upstream* upstream = ed->data.upstream;
 			if (eventResult[i].events & EPOLLOUT)
 			{
@@ -273,14 +286,18 @@ void Epoll::processEvents(Webserv& ws)
 				freeList.remove(ed);
 				delete ed;
 			}
-			else if (eventResult[i].events & EPOLLIN)
+			else if (eventResult[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR))
 			{
+				if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
+					upstream->peerClosed = true;
 				int rv = upstream->invokeRevHandler();
 				if (rv == OK)
 				{
 					std::cout << "Upstream revHandler finished, close connection" << std::endl;
 					close(upstream->readFd);
-					// upstream->p->revHandler = &Http::finalizeRequest;
+					data_t data;
+					data.p = upstream->p;
+					ev->addEvent(upstream->p->c.cfd, data, ConnectionFd, MOD);
 				}
 				else if (rv == AGAIN)
 				{
