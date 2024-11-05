@@ -9,4 +9,5 @@ Protocol::~Protocol()
 	{
 		delete *it;
 	}
+	delete upstream;
 }

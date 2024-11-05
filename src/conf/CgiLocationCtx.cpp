@@ -159,24 +159,27 @@ int CgiLocationCtx::contentHandler(Http& h)
 	{
 		close(p2cFd[0]);
 		close(c2pFd[1]);
-		h.setUpstreamFd(c2pFd[0]);
-		int fd = open(h.getRequestBodyFileName().c_str(), O_RDONLY);
-		for (;;)
-		{
-			size_t bufSize = 1024;
-			char buf[bufSize + 1];
-			std::memset(buf, 0, bufSize + 1);
-			ssize_t readnum = read(fd, buf, bufSize);
-			if (readnum <= 0)
-				break;
-			// maybe block
-			ssize_t writenum = write(p2cFd[1], buf, readnum);
-			if (writenum < 0)
-				return ERROR;
-		}
-		close(fd);
-		close(p2cFd[1]);
-		std::remove(h.getRequestBodyFileName().c_str());
+		h.upstream = new Upstream;
+		h.upstream->writeFd = p2cFd[1];
+		h.upstream->readFd = c2pFd[0];
+		h.upstream->p = reinterpret_cast<Protocol*>(&h);
+		// int fd = open(h.getRequestBodyFileName().c_str(), O_RDONLY);
+		// for (;;)
+		// {
+		// 	size_t bufSize = 1024;
+		// 	char buf[bufSize + 1];
+		// 	std::memset(buf, 0, bufSize + 1);
+		// 	ssize_t readnum = read(fd, buf, bufSize);
+		// 	if (readnum <= 0)
+		// 		break;
+		// 	// maybe block
+		// 	ssize_t writenum = write(p2cFd[1], buf, readnum);
+		// 	if (writenum < 0)
+		// 		return ERROR;
+		// }
+		// close(fd);
+		// close(p2cFd[1]);
+		// std::remove(h.getRequestBodyFileName().c_str());
 
 		// #ifdef DEBUG
 		// 		std::cout << "-----------------------" << std::endl;

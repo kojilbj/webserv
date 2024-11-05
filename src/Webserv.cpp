@@ -112,7 +112,9 @@ void Webserv::acceptEvent(Listening* ls)
 		Connection* c = &p->c;
 		c->ls = ls;
 		c->setAcceptRev(cfd, &sockaddrIn, socklen);
-		ev->addEvent(cfd, p, ADD);
+		data_t data;
+		data.p = p;
+		ev->addEvent(cfd, data, ConnectionFd, ADD);
 	}
 	else
 	{

@@ -10,6 +10,7 @@ SRCS = main.cpp\
 	   EpollEvent.cpp\
 	   Protocol.cpp\
 	   Http.cpp\
+	   Upstream.cpp\
 	   FindConfig.cpp\
 	   Rewrite.cpp\
 	   Access.cpp\

@@ -158,7 +158,7 @@ void Epoll::processEvents(Webserv& ws)
 				std::cout << "event: EPOLLERR" << std::endl;
 			std::cout << std::endl;
 #endif
-			if (eventResult[i].events & EPOLLIN) // && (eventResult[i].events & EPOLLOUT))
+			if ((eventResult[i].events & EPOLLIN))
 			{
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
@@ -173,25 +173,21 @@ void Epoll::processEvents(Webserv& ws)
 #ifdef DEBUG
 					std::cout << "RevHandler return AGAIN, addEvent(MOD)" << std::endl;
 #endif
-					ev->addEvent(p->c.cfd, p, MOD);
+					data_t data;
+					data.p = p;
+					ev->addEvent(p->c.cfd, data, ConnectionFd, MOD);
 				}
-				else if (rv == UPSTREAM_AGAIN_FIRST || rv == UPSTREAM_AGAIN)
+				else if (rv == UPSTREAM_AGAIN)
 				{
-					if (rv == UPSTREAM_AGAIN_FIRST)
-					{
 #ifdef DEBUG
-						std::cout << "RevHandler return UPSTREAM_AGAIN, addEvent(ADD)" << std::endl;
+					std::cout << "RevHandler return UPSTREAM_AGAIN, addEvent(ADD)" << std::endl;
 #endif
-						ev->addEvent(p->c.upstreamFd, p, ADD);
-					}
-					else // (rv == UPSTREAM_AGAIN)
-					{
-#ifdef DEBUG
-						std::cout << "RevHandler return UPSTREAM_AGAIN, addEvent(MOD)" << std::endl;
-#endif
-						ev->addEvent(p->c.upstreamFd, p, MOD);
-					}
-					break;
+					data_t data;
+					data.upstream = p->upstream;
+					ev->addEvent(p->upstream->writeFd, data, UpstreamFd, ADD);
+					data_t data2;
+					data2.p = p;
+					ev->addEvent(p->c.cfd, data2, ConnectionFd, MOD);
 				}
 				else
 				{
@@ -200,8 +196,6 @@ void Epoll::processEvents(Webserv& ws)
 					ws.getFreeList()->remove(p);
 					delete p;
 				}
-				freeList.remove(ed);
-				delete ed;
 			}
 			else if (eventResult[i].events & EPOLLOUT)
 			{
@@ -221,7 +215,9 @@ void Epoll::processEvents(Webserv& ws)
 #ifdef DEBUG
 					std::cout << "RevHandler return AGAIN, addEvent(MOD)" << std::endl;
 #endif
-					ev->addEvent(p->c.cfd, p, MOD);
+					data_t data;
+					data.p = p;
+					ev->addEvent(p->c.cfd, data, ConnectionFd, MOD);
 				}
 				else
 				{
@@ -230,11 +226,80 @@ void Epoll::processEvents(Webserv& ws)
 					ws.getFreeList()->remove(p);
 					delete p;
 				}
+			}
+			else if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+			{
+				std::cout << "EPOLLERR returned, close connection" << std::endl;
+				close(p->c.cfd);
+				ws.getFreeList()->remove(p);
+				delete p;
+			}
+			freeList.remove(ed);
+			delete ed;
+		}
+		else if (ed->type == UpstreamFd)
+		{
+			Upstream* upstream = ed->data.upstream;
+			if (eventResult[i].events & EPOLLOUT)
+			{
+				int rv = upstream->invokeRevHandler();
+				if (rv == OK)
+				{
+					std::cout << "Upstream revHandler finished, close connection" << std::endl;
+					close(upstream->writeFd);
+					data_t data;
+					data.upstream = upstream;
+					ev->addEvent(upstream->readFd, data, UpstreamFd, ADD);
+					// ws.getFreeList()->remove(p);
+					// delete p;
+				}
+				else if (rv == AGAIN)
+				{
+#ifdef DEBUG
+					std::cout << "Upstream RevHandler return AGAIN, addEvent(MOD)" << std::endl;
+#endif
+					data_t data;
+					data.upstream = upstream;
+					ev->addEvent(upstream->writeFd, data, UpstreamFd, MOD);
+				}
+				else
+				{
+					std::cout << "Error occured while Upstream revHandler, close connection"
+							  << std::endl;
+					close(upstream->writeFd);
+					close(upstream->readFd);
+					// finalizeRequest
+				}
 				freeList.remove(ed);
 				delete ed;
 			}
-			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-				break;
+			else if (eventResult[i].events & EPOLLIN)
+			{
+				int rv = upstream->invokeRevHandler();
+				if (rv == OK)
+				{
+					std::cout << "Upstream revHandler finished, close connection" << std::endl;
+					close(upstream->readFd);
+					// upstream->p->revHandler = &Http::finalizeRequest;
+				}
+				else if (rv == AGAIN)
+				{
+#ifdef DEBUG
+					std::cout << "Upstream RevHandler return AGAIN, addEvent(MOD)" << std::endl;
+#endif
+					data_t data;
+					data.upstream = upstream;
+					ev->addEvent(upstream->readFd, data, UpstreamFd, MOD);
+				}
+				else
+				{
+					std::cout << "Error occured while Upstream revHandler, close connection"
+							  << std::endl;
+					close(upstream->readFd);
+				}
+				freeList.remove(ed);
+				delete ed;
+			}
 		}
 		else
 		{
@@ -244,7 +309,7 @@ void Epoll::processEvents(Webserv& ws)
 	}
 }
 
-void Epoll::addEvent(int fd, Protocol* p, int option)
+void Epoll::addEvent(int fd, data_t& data, int type, int option)
 {
 	struct epoll_event eventList;
 	eventList.events = EPOLLIN | EPOLLOUT | EPOLLET;
@@ -254,8 +319,11 @@ void Epoll::addEvent(int fd, Protocol* p, int option)
 	else // MOD
 		op = EPOLL_CTL_MOD;
 	struct eventData* ed = new struct eventData;
-	ed->type = ConnectionFd;
-	ed->data.p = p;
+	ed->type = type;
+	if (type == ConnectionFd)
+		ed->data.p = data.p;
+	else // UpstreamFd
+		ed->data.upstream = data.upstream;
 	eventList.data.ptr = reinterpret_cast<void*>(ed);
 	freeList.push_back(ed);
 	if (epoll_ctl(ep, op, fd, &eventList) == -1)

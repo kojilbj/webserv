@@ -15,24 +15,6 @@
 
 namespace Wbsv
 {
-	typedef enum
-	{
-		ConnectionFd = 0,
-		ListeningFd
-	} type_t;
-
-	typedef union
-	{
-		Protocol* p;
-		Listening* ls;
-	} data_t;
-
-	struct eventData
-	{
-		type_t type;
-		data_t data;
-	};
-
 	class Epoll : public Event
 	{
 	public:
@@ -41,7 +23,7 @@ namespace Wbsv
 		void init(Webserv& ws);
 		void processEventsLoop(Webserv& ws);
 		void processEvents(Webserv& ws);
-		void addEvent(int fd, Protocol* p, int option);
+		void addEvent(int fd, data_t& data, int type, int option);
 		void timeOutHandler(Webserv& ws);
 
 	private:

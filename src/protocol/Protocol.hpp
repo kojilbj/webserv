@@ -13,17 +13,19 @@ namespace Wbsv
 	class Protocol;
 	class Http;
 	class PhaseHandler;
+	class Upstream;
 
 	class Protocol
 	{
 	public:
 		Protocol()
-			: wevReady(false){};
+			: wevReady(false), upstream(NULL){};
 		virtual ~Protocol();
 		virtual void selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls) = 0;
 		virtual int invokeRevHandler() = 0;
 		virtual void initPhaseHandler() = 0;
 		Connection c;
+		Upstream* upstream;
 		bool wevReady;
 
 	protected:
@@ -37,5 +39,6 @@ namespace Wbsv
 #include "ConfCtx.hpp"
 #include "Listening.hpp"
 #include "PhaseHandler.hpp"
+#include "Upstream.hpp"
 
 #endif

@@ -9,6 +9,26 @@ namespace Wbsv
 	class Protocol;
 	class Webserv;
 
+	typedef enum
+	{
+		ListeningFd = 0,
+		ConnectionFd,
+		UpstreamFd,
+	} type_t;
+
+	typedef union
+	{
+		Listening* ls;
+		Protocol* p;
+		Upstream* upstream;
+	} data_t;
+
+	struct eventData
+	{
+		int type;
+		data_t data;
+	};
+
 	class Event
 	{
 	public:
@@ -16,7 +36,7 @@ namespace Wbsv
 		virtual void init(Webserv& ws) = 0;
 		virtual void processEventsLoop(Webserv& ws) = 0;
 		virtual void processEvents(Webserv& ws) = 0;
-		virtual void addEvent(int fd, Protocol* p, int option) = 0;
+		virtual void addEvent(int fd, data_t& data, int type, int option) = 0;
 	};
 } // namespace Wbsv
 

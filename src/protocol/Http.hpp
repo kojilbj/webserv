@@ -104,6 +104,7 @@ namespace Wbsv
 
 		// Upstream handlers
 		int processUpstream();
+		int emptyHandler();
 
 		/* Response handlers */
 		int coreRunPhase();
@@ -114,6 +115,8 @@ namespace Wbsv
 		string headerOut;
 		string messageBodyOut;
 		map<string, string> defaultErrorPages;
+		std::string requestBodyFileName_;
+		std::string responseBodyFileName_;
 
 	private:
 		/* Request variables */
@@ -141,9 +144,7 @@ namespace Wbsv
 		int responseState;
 		// regular file fd to send to the client as message body
 		int fd_;
-		std::string requestBodyFileName_;
 		int requestBodyFileFd_;
-		std::string responseBodyFileName_;
 		int responseBodyFileFd_;
 		int bodyLen_;
 		char responseBodyBuf_[1024];
