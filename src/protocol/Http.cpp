@@ -21,36 +21,36 @@ Http::Http()
 	, responseBodyFileFd_(-1)
 {
 	std::memset(responseBodyBuf_, 0, 1024);
-	defaultErrorPages["400"] =
-		"<html>\r\n<head><title>400 Bad "
-		"Request</title></head>\r\n<body>\r\n<center><h1>400 Bad Request</h1></center>\r\n";
-	defaultErrorPages["404"] =
-		"<html>\r\n<head><title>404 Not "
-		"Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n";
-	defaultErrorPages["405"] =
-		"<html>\r\n<head><title>405 Not "
-		"Allowed</title></head>\r\n<body>\r\n<center><h1>405 Not Allowed</h1></center>\r\n";
-	defaultErrorPages["406"] =
-		"<html>\r\n<head><title>406 Not "
-		"Acceptable</title></head>\r\n<body>\r\n<center><h1>406 Not Acceptable</h1></center>\r\n";
+	defaultErrorPages["400"] = "<html>\r\n<head><title>400 Bad "
+							   "Request</title></head>\r\n<body>\r\n<center><h1>400 Bad "
+							   "Request</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["404"] = "<html>\r\n<head><title>404 Not "
+							   "Found</title></head>\r\n<body>\r\n<center><h1>404 Not "
+							   "Found</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["405"] = "<html>\r\n<head><title>405 Not "
+							   "Allowed</title></head>\r\n<body>\r\n<center><h1>405 Not "
+							   "Allowed</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["406"] = "<html>\r\n<head><title>406 Not "
+							   "Acceptable</title></head>\r\n<body>\r\n<center><h1>406 Not "
+							   "Acceptable</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["413"] = "<html>\r\n<head><title>413 Request "
 							   "Entity Too Large</title></head>\r\n<body>\r\n<center><h1>413 "
-							   "Request Entity Too Large</h1></center>\r\n";
+							   "Request Entity Too Large</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["414"] = "<html>\r\n<head><title>414 Request-"
 							   "Line Too Long</title></head>\r\n<body>\r\n<center><h1>414 "
-							   "Request-Line Too Long</h1></center>\r\n";
+							   "Request-Line Too Long</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["415"] = "<html>\r\n<head><title>415 Unsupported "
 							   "Media Type</title></head>\r\n<body>\r\n<center><h1>415 Unsupported "
-							   "Media Type</h1></center>\r\n";
+							   "Media Type</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["500"] = "<html>\r\n<head><title>500 Internal "
 							   "Server Error</title></head>\r\n<body>\r\n<center><h1>500 Internal "
-							   "Server Error</h1></center>\r\n";
-	defaultErrorPages["502"] =
-		"<html>\r\n<head><title>502 Bad "
-		"Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n";
+							   "Server Error</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["502"] = "<html>\r\n<head><title>502 Bad "
+							   "Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad "
+							   "Gateway</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["505"] = "<html>\r\n<head><title>505 HTTP "
 							   "Version Not Supported</title></head>\r\n<body>\r\n<center><h1>505 "
-							   "HTTP Version Not Supported</h1></center>\r\n";
+							   "HTTP Version Not Supported</h1></center>\r\n</body>\r\n</html>\r\n";
 }
 
 void Http::initPhaseHandler()

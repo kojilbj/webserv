@@ -2,9 +2,18 @@
 
 using namespace Wbsv;
 
+ReturnLocationCtx::ReturnLocationCtx()
+	: LocationCtx()
+{
+	redirectCodeDict["301"] = "Moved Parmanently";
+	redirectCodeDict["302"] = "Moved Temporarily";
+	redirectCodeDict["303"] = "See Other";
+	redirectCodeDict["307"] = "Temporary Redirect";
+}
+
 int ReturnLocationCtx::contentHandler(Http& h)
 {
-	h.statusLine += "HTTP/1.1 " + redirect.first + " Moved Parmanently\r\n";
+	h.statusLine += "HTTP/1.1 " + redirect.first + " " + redirectCodeDict[redirect.first] + "\r\n";
 	if (redirect.first == "301" || redirect.first == "302" || redirect.first == "303" ||
 		redirect.first == "307")
 		h.headerOut += "Location: " + redirect.second + "\r\n";

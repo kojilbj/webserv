@@ -57,7 +57,7 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	hlc->path = "/";
 	hlc->root = "/root/webserv/test/html";
 	hlc->index = "index.html";
-	// hlc->autoindex = false;
+	hlc->autoindex = true;
 	vsc.addLocationCtx((LocationCtx*)hlc);
 	// this must be dynamicaly allocated
 	HtmlLocationCtx* hlc2 = new HtmlLocationCtx;
