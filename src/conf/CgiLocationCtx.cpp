@@ -34,6 +34,7 @@ parseUri(Http& h, std::map<std::string, std::string>& param, std::string index, 
 	else
 		param["PATH_INFO"] = uri;
 	std::string scriptFilename = param["SCRIPT_FILENAME"];
+	std::cout << "first scriptFilename" << scriptFilename << std::endl;
 	std::string pathInfoVar = "$cgi_path_info";
 	pos = scriptFilename.find(pathInfoVar);
 	if (pos != string::npos)
@@ -83,6 +84,7 @@ static size_t maxParamLen(std::map<std::string, std::string>& param)
 
 int CgiLocationCtx::contentHandler(Http& h)
 {
+	std::string scriptFileNameTmp = param["SCRIPT_FILENAME"];
 	parseUri(h, param, index, store);
 	headerIn2Param(h, param);
 #ifdef DEBUG
@@ -159,6 +161,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 	{
 		close(p2cFd[0]);
 		close(c2pFd[1]);
+		param["SCRIPT_FILENAME"] = scriptFileNameTmp;
 		h.upstream = new Upstream;
 		h.upstream->writeFd = p2cFd[1];
 		h.upstream->readFd = c2pFd[0];

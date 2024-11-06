@@ -19,8 +19,8 @@ int Upstream::sendRequestBody()
 		requestBodyFd_ = open(h->requestBodyFileName_.c_str(), O_RDONLY);
 		if (requestBodyFd_ == -1)
 		{
-			h->revHandler = &Http::finalizeRequest;
-			return ERROR;
+			revHandler_ = &Upstream::recvResponseBody;
+			return OK;
 		}
 	}
 	int bufSize = 1024;
@@ -63,7 +63,7 @@ int Upstream::recvResponseBody()
 		std::time_t now = std::time(NULL);
 		h->responseBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
 		responseBodyFd_ = open(h->responseBodyFileName_.c_str(), O_WRONLY | O_CREAT);
-		if (requestBodyFd_ == -1)
+		if (responseBodyFd_ == -1)
 		{
 			h->revHandler = &Http::finalizeRequest;
 			return ERROR;
