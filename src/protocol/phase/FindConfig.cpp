@@ -23,8 +23,18 @@ int FindConfig::handler(Http& h)
 	}
 	if (!found)
 	{
-		std::cout << "404 Not Found" << std::endl;
-		return ERROR;
+		std::map<std::string, std::string>::iterator errit;
+		if ((errit = vs->errorPages.find("404")) != vs->errorPages.end())
+		{
+			std::cout << "404 has default error page" << std::endl;
+			h.setUri(errit->second);
+			return AGAIN;
+		}
+		std::cout << "404 has \"not\" default error page" << std::endl;
+		h.statusLine = "HTTP/1.1 404 Not Found\r\n";
+		h.headerOut = "\r\n";
+		h.messageBodyOut = h.defaultErrorPages["404"];
+		return DONE;
 	}
 #ifdef DEBUG
 	std::cout << "LocationCtx found" << std::endl;

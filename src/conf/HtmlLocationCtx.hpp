@@ -2,6 +2,9 @@
 #define HTMLLOCATIONCTX_HPP
 
 #include "LocationCtx.hpp"
+#include <dirent.h>
+#include <sstream>
+#include <sys/types.h>
 
 namespace Wbsv
 {

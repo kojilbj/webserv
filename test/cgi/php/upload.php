@@ -1,20 +1,19 @@
 <?php
-for(;;)
-{
+$uploaddir = '/root/webserv/test/images/';
+// var_dump($_ENV);
+// var_dump($_POST);
+// var_dump($_FILES);
+$uploadfile = $uploaddir . basename($_FILES['image']['name']);
+
+echo '<pre>';
+if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadfile)) {
+    echo "File is valid, and was successfully uploaded.\n";
+} else {
+    echo "Possible file upload attack!\n";
 }
-// $uploaddir = '/root/webserv/test/images/';
-// $uploadfile = $uploaddir . basename($_FILES['image']['name']);
 
-// echo '<pre>';
-// if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadfile)) {
-//     echo "File is valid, and was successfully uploaded.\n";
-// } else {
-//     echo "Possible file upload attack!\n";
-// }
+echo 'Here is some more debugging info:';
+print_r($_FILES);
 
-// echo 'Here is some more debugging info:';
-// print_r($_FILES);
-
-// print "</pre>";
-
+print "</pre>";
 ?>

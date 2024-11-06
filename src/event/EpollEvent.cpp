@@ -72,8 +72,8 @@ void Epoll::timeOutHandler(Webserv& ws)
 			std::cout << "current time: " << std::time(NULL) << std::endl;
 			std::cout << "diff: " << std::time(NULL) - p->c.lastReadTime << std::endl;
 #endif
-			// default client_request_timeout is 60s
-			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 60)
+			// default client_request_timeout is 10s
+			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 10)
 			{
 				timout = true;
 				close(p->c.cfd);
@@ -94,8 +94,8 @@ void Epoll::timeOutHandler(Webserv& ws)
 			std::cout << "current time: " << std::time(NULL) << std::endl;
 			std::cout << "diff: " << std::time(NULL) - upstream->lastReadTime << std::endl;
 #endif
-			// default client_request_timeout is 60s
-			if (upstream->lastReadTime != -1 && std::time(NULL) - upstream->lastReadTime >= 60)
+			// default client_request_timeout is 10s
+			if (upstream->lastReadTime != -1 && std::time(NULL) - upstream->lastReadTime >= 10)
 			{
 				timout = true;
 				if (upstream->writeFd != -1)

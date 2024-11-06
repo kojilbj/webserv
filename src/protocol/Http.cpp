@@ -114,6 +114,16 @@ void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 			}
 		}
 	}
+	std::vector<VServerCtx>* vserverCtxs = serverCtx->getVServerCtxs();
+	std::vector<VServerCtx>::iterator vsit = vserverCtxs->begin();
+	for (; vsit != vserverCtxs->end(); vsit++)
+	{
+		if (vsit->defaultServer)
+		{
+			vserverCtx_ = &(*vsit);
+			break;
+		}
+	}
 }
 
 void Http::selectVServerCtx(ServerCtx* serverCtx, string host)
@@ -272,6 +282,14 @@ int Http::processRequestLine()
 	}
 }
 
+bool isLargerThanMaxBodySize(size_t max, std::string& bodySize)
+{
+	int body = std::atoi(bodySize.c_str());
+	if ((size_t)body > max)
+		return true;
+	return false;
+}
+
 int Http::processRequestHeader()
 {
 #ifdef DEBUG
@@ -338,6 +356,17 @@ int Http::processRequestHeader()
 		}
 		else if (rv == DONE)
 		{
+			std::map<std::string, std::string>::iterator result;
+			if ((result = headersIn.find("Content-Length")) != headersIn.end())
+			{
+				if (isLargerThanMaxBodySize(vserverCtx_->clientMaxBodySize, result->second))
+				{
+					statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
+					headerOut = "\r\n";
+					messageBodyOut = defaultErrorPages["413"];
+					return finalizeRequest();
+				}
+			}
 #ifdef DEBUG
 			map<string, string>::iterator it;
 			std::cout << "Request-header is parsed" << std::endl;
@@ -759,11 +788,15 @@ int Http::coreRunPhase()
 	std::cout << "coreRunPhase" << std::endl;
 #endif
 	std::vector<PhaseHandler*>::iterator it;
+	int rev;
 	for (it = ph.begin(); it != ph.end(); it++)
 	{
-		if ((*it)->handler(*this) == DONE)
+		rev = (*it)->handler(*this);
+		if (rev == DONE || rev == AGAIN)
 			break;
 	}
+	if (rev == AGAIN)
+		coreRunPhase();
 	return processUpstream();
 }
 

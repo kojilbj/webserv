@@ -65,6 +65,10 @@ namespace Wbsv
 		{
 			return uri;
 		};
+		void setUri(std::string& str)
+		{
+			uri = str;
+		};
 		int getMethod()
 		{
 			return method;
@@ -114,9 +118,11 @@ namespace Wbsv
 		string statusLine;
 		string headerOut;
 		string messageBodyOut;
-		map<string, string> defaultErrorPages;
 		std::string requestBodyFileName_;
 		std::string responseBodyFileName_;
+
+		// Error pages
+		map<string, string> defaultErrorPages;
 
 	private:
 		/* Request variables */

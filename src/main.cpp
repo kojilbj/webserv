@@ -12,6 +12,7 @@ extern Wbsv::Event* ev;
 // 		location / {
 // 			root /root/webserv/test/html;
 // 			index index.html;
+//			autoindex on;
 // 		}
 // 		location /images/ {
 // 			root /root/webserv/test;
@@ -23,6 +24,10 @@ extern Wbsv::Event* ev;
 //			cgi_index upload.php;
 //			cgi_param SCRIPT_FILENAME /root/webserv/test/cgi$cgi_path_info;
 //			cgi_store /root/webserv/test/cgi/upload;
+//		}
+//		error_page 404 /404.html;
+//		location /404.html {
+//			root /root/webserv/test/html;
 //		}
 // 	}
 // }
@@ -45,11 +50,14 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	VServerCtx vsc;
 	vsc.defaultServer = true;
 	vsc.serverName = "localhost";
+	vsc.clientMaxBodySize = 10000000;
+	vsc.errorPages["404"] = "/404.html";
 	// this must be dynamicaly allocated
 	HtmlLocationCtx* hlc = new HtmlLocationCtx;
 	hlc->path = "/";
 	hlc->root = "/root/webserv/test/html";
 	hlc->index = "index.html";
+	// hlc->autoindex = false;
 	vsc.addLocationCtx((LocationCtx*)hlc);
 	// this must be dynamicaly allocated
 	HtmlLocationCtx* hlc2 = new HtmlLocationCtx;
@@ -69,6 +77,10 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	clc->param["SCRIPT_FILENAME"] = "/root/webserv/test/cgi$cgi_path_info";
 	clc->store = "/root/webserv/test/images/";
 	vsc.addLocationCtx((LocationCtx*)clc);
+	HtmlLocationCtx* hlc3 = new HtmlLocationCtx;
+	hlc3->path = "/404.html";
+	hlc3->root = "/root/webserv/test/html";
+	vsc.addLocationCtx((LocationCtx*)hlc3);
 	sc.addVServerCtx(vsc);
 	httpConfCtx->addServerCtx(sc);
 	confCtxs->push_back(httpConfCtx);

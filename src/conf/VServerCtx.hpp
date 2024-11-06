@@ -18,9 +18,12 @@ namespace Wbsv
 	{
 	public:
 		VServerCtx()
-			: defaultServer(false){};
+			: defaultServer(false), clientMaxBodySize(0){};
 		VServerCtx(const VServerCtx& other)
-			: defaultServer(other.defaultServer), serverName(other.serverName)
+			: defaultServer(other.defaultServer)
+			, serverName(other.serverName)
+			, clientMaxBodySize(other.clientMaxBodySize)
+			, errorPages(other.errorPages)
 		{
 			std::vector<LocationCtx*>::const_iterator it = other.locationCtxs_.begin();
 			HtmlLocationCtx* hlc;
@@ -66,6 +69,8 @@ namespace Wbsv
 		}
 		bool defaultServer;
 		std::string serverName;
+		size_t clientMaxBodySize;
+		std::map<std::string, std::string> errorPages;
 
 	private:
 		std::vector<LocationCtx*> locationCtxs_;
