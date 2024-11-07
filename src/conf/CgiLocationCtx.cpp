@@ -42,9 +42,10 @@ parseUri(Http& h, std::map<std::string, std::string>& param, std::string index, 
 		scriptFilename.replace(pos, pathInfoVar.size(), param["PATH_INFO"]);
 		param["SCRIPT_FILENAME"] = scriptFilename;
 	}
-	// if (store[store.size() - 1] != '/')
-	// 	store += "/";
-	// param["UPLOAD_DIR"] = store;
+	if (store[store.size() - 1] != '/')
+		store += "/";
+	param["HTTP_UPLOADDIR"] = store;
+	param["SERVER_PROTOCOL"] = "HTTP/1.1";
 }
 
 static void headerIn2Param(Http& h, std::map<std::string, std::string>& param)
@@ -57,6 +58,9 @@ static void headerIn2Param(Http& h, std::map<std::string, std::string>& param)
 	it = headersIn.find("Content-Length");
 	if (it != headersIn.end())
 		param["CONTENT_LENGTH"] = headersIn["Content-Length"];
+	it = headersIn.find("Cookie");
+	if (it != headersIn.end())
+		param["HTTP_COOKIE"] = headersIn["Cookie"];
 	int method = h.getMethod();
 	switch (method)
 	{
@@ -162,6 +166,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 		close(p2cFd[0]);
 		close(c2pFd[1]);
 		param["SCRIPT_FILENAME"] = scriptFileNameTmp;
+		if (param.find("HTTP_COOKIE") != param.end())
+			param.erase("HTTP_COOKIE");
 		h.upstream = new Upstream;
 		h.upstream->writeFd = p2cFd[1];
 		h.upstream->readFd = c2pFd[0];

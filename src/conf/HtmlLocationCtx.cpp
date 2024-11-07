@@ -48,6 +48,7 @@ static int autoindexHandler(Http& h, std::string& dirname)
 			h.messageBodyOut += ref + spaces + buf + "     " + size.str() + "\n";
 		}
 	}
+	closedir(dirp);
 	h.messageBodyOut += "</pre><hr>\n</body>\n</html>";
 	return DONE;
 }

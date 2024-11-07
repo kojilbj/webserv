@@ -1,9 +1,5 @@
 <?php
-$uploaddir = '/root/webserv/test/images/';
-// var_dump($_ENV);
-// var_dump($_POST);
-// var_dump($_FILES);
-$uploadfile = $uploaddir . basename($_FILES['image']['name']);
+$uploadfile = $_SERVER['HTTP_UPLOADDIR'] . basename($_FILES['image']['name']);
 
 echo '<pre>';
 if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadfile)) {

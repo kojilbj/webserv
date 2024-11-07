@@ -712,7 +712,9 @@ int Http::parseRequestHeaderLine()
 
 int Http::processRequest()
 {
+#ifdef DEBUG
 	std::cout << "processRequest" << std::endl;
+#endif
 
 	if (headersIn.find("Content-Length") != headersIn.end()) // || "Transfer-Encoding"
 	{
@@ -731,8 +733,10 @@ int Http::processRequest()
 			}
 			ssize_t writenum =
 				write(requestBodyFileFd_, headerIn.c_str() + pos, headerIn.size() - pos);
+#ifdef DEBUG
 			std::cout << "writenum: " << writenum << std::endl;
 			std::cout << "body: " << std::endl << headerIn.c_str() + pos << std::endl;
+#endif
 			if (writenum == -1)
 			{
 				// Server Internal Error

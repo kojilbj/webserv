@@ -1,5 +1,4 @@
 <?php
-session_start();
 
 if (isset($_POST['submit'])) {
     $username = $_POST['username'];
@@ -10,9 +9,9 @@ if (isset($_POST['submit'])) {
     
     while (($userData = fgetcsv($file)) !== false) {
         if ($userData[0] === $username && password_verify($password, $userData[1])) {
+            session_start();
             $_SESSION['username'] = $username;
             setcookie("PHPSESSID", session_id(), time() + 3600, "/");
-            header("Location: private_index.html");
             $isUserFound = true;
             break;
         }
@@ -20,7 +19,7 @@ if (isset($_POST['submit'])) {
     fclose($file);
 
     if (!$isUserFound) {
-        echo "Invalid credentials! <a href='login.html'>Try again</a>";
+        echo "Invalid credentials! <a href='/login.html'>Try again</a>";
     }
 	else
 	{

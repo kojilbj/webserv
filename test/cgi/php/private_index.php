@@ -48,6 +48,13 @@
     </style>
 </head>
 <body>
+	<?php
+	session_start();
+	if (!isset($_SESSION['username'])) {
+        echo "Invalid credentials! <a href='/login.html'>Try again</a>";
+		exit();
+	}
+	?>
     <header>
         <h1>ImageShare - My Gallery</h1>
         <div class="user-info">
@@ -57,7 +64,6 @@
     </header>
 
     <section class="gallery">
-        <!-- User's private images will load here similar to index.html -->
     </section>
 </body>
 </html>
