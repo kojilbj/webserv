@@ -19,12 +19,13 @@ Http::Http()
 	, fd_(-1)
 	, requestBodyFileFd_(-1)
 	, responseBodyFileFd_(-1)
+	, completelyRead(true)
 {
 	std::memset(responseBodyBuf_, 0, 1024);
 	defaultErrorPages["400"] = "<html>\r\n<head><title>400 Bad "
 							   "Request</title></head>\r\n<body>\r\n<center><h1>400 Bad "
 							   "Request</h1></center>\r\n</body>\r\n</html>\r\n";
-	defaultErrorPages["404"] = "<html>\r\n<head><title>404 Not "
+	defaultErrorPages["404"] = "<html><html>\r\n<head><title>404 Not "
 							   "Found</title></head>\r\n<body>\r\n<center><h1>404 Not "
 							   "Found</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["405"] = "<html>\r\n<head><title>405 Not "
@@ -45,6 +46,9 @@ Http::Http()
 	defaultErrorPages["500"] = "<html>\r\n<head><title>500 Internal "
 							   "Server Error</title></head>\r\n<body>\r\n<center><h1>500 Internal "
 							   "Server Error</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["501"] =
+		"<html>\r\n<head><title>501 Not Implemented</title></head>\r\n<body>\r\n<center><h1>501 "
+		"Not Implemented</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["502"] = "<html>\r\n<head><title>502 Bad "
 							   "Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad "
 							   "Gateway</h1></center>\r\n</body>\r\n</html>\r\n";
@@ -174,12 +178,9 @@ int Http::waitRequestHandler()
 		return finalizeRequest();
 	}
 	else if (readnum == 0)
-	{
-		// 400 (Bad Request) error
-		return finalizeRequest();
-	}
+		return ERROR;
 	alreadyRead = true;
-	if (readnum >= clientHeaderSize)
+	if (readnum == clientHeaderSize)
 		ready = true;
 	string buf(tmp, readnum);
 	headerIn += buf;
@@ -218,10 +219,7 @@ int Http::processRequestLine()
 					return finalizeRequest();
 				}
 				else if (readnum == 0)
-				{
-					// 400 (Bad Request) error
-					return finalizeRequest();
-				}
+					return ERROR;
 				if (readnum == bufSize)
 					ready = true;
 				alreadyRead = true;
@@ -256,6 +254,7 @@ int Http::processRequestLine()
 			statusLine = "HTTP/1.1 400 Bad Requet\r\n";
 			headerOut = "\r\n";
 			messageBodyOut = defaultErrorPages["400"];
+			completelyRead = false;
 			return finalizeRequest();
 		}
 		else // AGAIN
@@ -320,10 +319,7 @@ int Http::processRequestHeader()
 					return finalizeRequest();
 				}
 				else if (readnum == 0)
-				{
-					// 400 (Bad Request) error
-					return finalizeRequest();
-				}
+					return ERROR;
 				/* if (readnum >= leftAvailableHeaderSize) */
 				/* { */
 				/* 	std::cout << "Request-Header Too Large (Bad Request)" << std::endl; */
@@ -350,6 +346,14 @@ int Http::processRequestHeader()
 			}
 			if (headerFieldNameTmp == "Host")
 				selectVServerCtx(c.serverCtx, headerFieldValueTmp);
+			if (headerFieldNameTmp == "Transfer-Encoding" && headerFieldValueTmp != "chunked")
+			{
+				// 501 (Unimplemented)
+				statusLine = "HTTP/1.1 501 Not Implemented\r\n";
+				headerOut = "\r\n";
+				messageBodyOut = defaultErrorPages["501"];
+				return finalizeRequest();
+			}
 			headerFieldNameTmp = "";
 			headerFieldValueTmp = "";
 			continue;
@@ -362,7 +366,10 @@ int Http::processRequestHeader()
 				if (isLargerThanMaxBodySize(vserverCtx_->clientMaxBodySize, result->second))
 				{
 					statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
-					headerOut = "\r\n";
+					std::stringstream size;
+					size << defaultErrorPages["413"].size();
+					headerOut += "Content-Length: " + size.str() + "\r\n";
+					headerOut += "Content-type: text/html\r\n\r\n";
 					messageBodyOut = defaultErrorPages["413"];
 					return finalizeRequest();
 				}
@@ -716,6 +723,9 @@ int Http::processRequest()
 	std::cout << "processRequest" << std::endl;
 #endif
 
+	if (headersIn.find("Transfer-Encoding") != headersIn.end())
+	{
+	}
 	if (headersIn.find("Content-Length") != headersIn.end()) // || "Transfer-Encoding"
 	{
 		if (alreadyRead)
@@ -771,14 +781,19 @@ int Http::processRequest()
 				close(requestBodyFileFd_);
 				return finalizeRequest();
 			}
+			if (readnum == 0)
+				return ERROR;
 			if (write(requestBodyFileFd_, buf, readnum) < 0)
 			{
-				// Server Internal Error
+				// Internal Server Error
 				close(requestBodyFileFd_);
 				return finalizeRequest();
 			}
 			if (readnum < leftRequestBodyLen)
+			{
+				ready = false;
 				return AGAIN;
+			}
 		}
 		close(requestBodyFileFd_);
 	}
@@ -1086,5 +1101,29 @@ int Http::finalizeRequest()
 		responseState = responseDone;
 		break;
 	}
+	if (ready)
+		return readDiscardedRequest();
 	return OK;
+}
+
+int Http::readDiscardedRequest()
+{
+#ifdef DEBUG
+	std::cout << "readDiscardedRequest" << std::endl;
+#endif
+	wevReady = false;
+	if (alreadyRead)
+	{
+		alreadyRead = false;
+		return AGAIN;
+	}
+	ssize_t bufSize = 1024;
+	char buf[bufSize];
+	std::memset(buf, 0, bufSize);
+	ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
+	std::cout << readnum << std::endl;
+	if (readnum == -1 || readnum == 0 || readnum < bufSize)
+		return OK;
+	revHandler = &Http::readDiscardedRequest;
+	return AGAIN;
 }

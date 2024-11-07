@@ -50,7 +50,7 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 	VServerCtx vsc;
 	vsc.defaultServer = true;
 	vsc.serverName = "localhost";
-	vsc.clientMaxBodySize = 10000000;
+	vsc.clientMaxBodySize = 1;
 	vsc.errorPages["404"] = "/404.html";
 	// this must be dynamicaly allocated
 	HtmlLocationCtx* hlc = new HtmlLocationCtx;

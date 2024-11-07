@@ -113,6 +113,7 @@ namespace Wbsv
 		/* Response handlers */
 		int coreRunPhase();
 		int finalizeRequest();
+		int readDiscardedRequest();
 
 		/* Response variables */
 		string statusLine;
@@ -121,8 +122,9 @@ namespace Wbsv
 		std::string requestBodyFileName_;
 		std::string responseBodyFileName_;
 
-		// Error pages
+		// Error
 		map<string, string> defaultErrorPages;
+		bool completelyRead;
 
 	private:
 		/* Request variables */

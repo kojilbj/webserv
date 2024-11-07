@@ -50,13 +50,12 @@ void Epoll::timeOutHandler(Webserv& ws)
 #ifdef DEBUG
 	std::cout << "timeOutHandler" << std::endl;
 #endif
-	bool timout = false;
 	std::list<struct eventData*>::iterator it = freeList.begin();
 	int alignIndex = -1;
 	bool timeout = false;
 	for (; it != freeList.end(); it++)
 	{
-		if (!timout)
+		if (!timeout)
 			alignIndex++;
 		else
 		{
@@ -75,7 +74,7 @@ void Epoll::timeOutHandler(Webserv& ws)
 			// default client_request_timeout is 10s
 			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 10)
 			{
-				timout = true;
+				timeout = true;
 				close(p->c.cfd);
 				ws.getFreeList()->remove(p);
 				delete p;
@@ -97,7 +96,7 @@ void Epoll::timeOutHandler(Webserv& ws)
 			// default client_request_timeout is 10s
 			if (upstream->lastReadTime != -1 && std::time(NULL) - upstream->lastReadTime >= 10)
 			{
-				timout = true;
+				timeout = true;
 				if (upstream->writeFd != -1)
 					close(upstream->writeFd);
 				close(upstream->readFd);
