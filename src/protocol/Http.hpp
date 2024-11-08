@@ -105,6 +105,7 @@ namespace Wbsv
 		int parseRequestLine();
 		int parseRequestHeaderLine();
 		int processRequest();
+		int parseChunkedRequest(const char* buf, size_t size);
 
 		// Upstream handlers
 		int processUpstream();
@@ -156,6 +157,12 @@ namespace Wbsv
 		int requestBodyFileFd_;
 		int responseBodyFileFd_;
 		int bodyLen_;
+		int otherThanChunkDataSize_;
+		size_t chunkSize_;
+		size_t countChunkData_;
+		char chunkedRequestBuf_[1024];
+		size_t unchunkedRequestSize_;
+		char unchunkedRequestBuf_[1024];
 		char responseBodyBuf_[1024];
 	};
 } // namespace Wbsv
