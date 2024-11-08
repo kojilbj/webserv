@@ -150,6 +150,7 @@ namespace Wbsv
 		bool alreadyWrite;
 		bool ready;
 		int responseState;
+		bool continueRequest_;
 		// regular file fd to send to the client as message body
 		int fd_;
 		int requestBodyFileFd_;

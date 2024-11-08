@@ -16,6 +16,7 @@ Http::Http()
 	, alreadyWrite(false)
 	, ready(false)
 	, responseState(0)
+	, continueRequest_(false)
 	, fd_(-1)
 	, requestBodyFileFd_(-1)
 	, responseBodyFileFd_(-1)
@@ -43,6 +44,9 @@ Http::Http()
 	defaultErrorPages["415"] = "<html>\r\n<head><title>415 Unsupported "
 							   "Media Type</title></head>\r\n<body>\r\n<center><h1>415 Unsupported "
 							   "Media Type</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["417"] = "<html>\r\n<head><title>417 Expectation "
+							   "Failed</title></head>\r\n<body>\r\n<center><h1>417 Expectation "
+							   "Failed</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["500"] = "<html>\r\n<head><title>500 Internal "
 							   "Server Error</title></head>\r\n<body>\r\n<center><h1>500 Internal "
 							   "Server Error</h1></center>\r\n</body>\r\n</html>\r\n";
@@ -371,6 +375,23 @@ int Http::processRequestHeader()
 					headerOut += "Content-Length: " + size.str() + "\r\n";
 					headerOut += "Content-type: text/html\r\n\r\n";
 					messageBodyOut = defaultErrorPages["413"];
+					return finalizeRequest();
+				}
+			}
+			if ((result = headersIn.find("Expect")) != headersIn.end())
+			{
+				if (result->second == "100-continue")
+				{
+					statusLine = "HTTP/1.1 100 Continue\r\n";
+					headerOut = "\r\n";
+					continueRequest_ = true;
+					return finalizeRequest();
+				}
+				else
+				{
+					statusLine = "HTTP/1.1 417 Expectation Failed\r\n";
+					headerOut = "\r\n";
+					messageBodyOut = defaultErrorPages["417"];
 					return finalizeRequest();
 				}
 			}
@@ -722,11 +743,29 @@ int Http::processRequest()
 #ifdef DEBUG
 	std::cout << "processRequest" << std::endl;
 #endif
-
-	if (headersIn.find("Transfer-Encoding") != headersIn.end())
+	if (headersIn.find("Transfer-Encoding") != headersIn.end()) // chunked Transfer-Encoding
 	{
+		int rv;
+		if (alreadyRead)
+		{
+			std::string tmpDir("/tmp/");
+			std::string tmpExt(".reqBody");
+			std::time_t now = std::time(NULL);
+			requestBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
+			requestBodyFileFd_ = open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT);
+			if (requestBodyFileFd_ == -1)
+			{
+				// Server Internal Error
+				return finalizeRequest();
+			}
+			rv = parseChunkedRequest();
+			if (rv == OK)
+			{
+				// write();
+			}
+		}
 	}
-	if (headersIn.find("Content-Length") != headersIn.end()) // || "Transfer-Encoding"
+	else if (headersIn.find("Content-Length") != headersIn.end())
 	{
 		if (alreadyRead)
 		{
@@ -989,8 +1028,8 @@ int Http::finalizeRequest()
 				return AGAIN;
 				// }
 			}
-			else
-				return OK;
+			else // continue ???
+				break;
 		}
 		else
 		{
@@ -1101,6 +1140,16 @@ int Http::finalizeRequest()
 		responseState = responseDone;
 		break;
 	}
+	if (continueRequest_)
+	{
+		continueRequest_ = false;
+		wevReady = false;
+		responseState = 0;
+		statusLine = "";
+		headerOut = "";
+		messageBodyOut = "";
+		return processRequest();
+	}
 	if (ready)
 		return readDiscardedRequest();
 	return OK;
@@ -1121,7 +1170,6 @@ int Http::readDiscardedRequest()
 	char buf[bufSize];
 	std::memset(buf, 0, bufSize);
 	ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
-	std::cout << readnum << std::endl;
 	if (readnum == -1 || readnum == 0 || readnum < bufSize)
 		return OK;
 	revHandler = &Http::readDiscardedRequest;
