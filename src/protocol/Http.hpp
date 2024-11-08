@@ -159,10 +159,11 @@ namespace Wbsv
 		int bodyLen_;
 		int otherThanChunkDataSize_;
 		size_t chunkSize_;
+		std::string chunkSizeStr_;
 		size_t countChunkData_;
-		char chunkedRequestBuf_[1024];
+		char chunkedRequestBuf_[1025];
 		size_t unchunkedRequestSize_;
-		char unchunkedRequestBuf_[1024];
+		char unchunkedRequestBuf_[1025];
 		char responseBodyBuf_[1024];
 	};
 } // namespace Wbsv

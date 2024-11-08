@@ -23,6 +23,16 @@ int Upstream::sendRequestBody()
 			return OK;
 		}
 	}
+	if (peerClosed)
+	{
+		close(requestBodyFd_);
+		h->wevReady = true;
+		h->statusLine = "HTTP/1.1 502 Bad Gateway\r\n";
+		h->headerOut = "\r\n";
+		h->messageBodyOut = h->defaultErrorPages["502"];
+		h->revHandler = &Http::finalizeRequest;
+		return ERROR;
+	}
 	int bufSize = 1024;
 	char buf[1024];
 	std::memset(buf, 0, bufSize);

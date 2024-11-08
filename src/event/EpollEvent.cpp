@@ -317,12 +317,15 @@ void Epoll::processEvents(Webserv& ws)
 					data.upstream = upstream;
 					ev->addEvent(upstream->writeFd, data, UpstreamFd, MOD);
 				}
-				else
+				else // ERROR
 				{
 					std::cout << "Error occured while Upstream revHandler, close connection"
 							  << std::endl;
 					close(upstream->writeFd);
 					close(upstream->readFd);
+					data_t data;
+					data.p = upstream->p;
+					ev->addEvent(upstream->p->c.cfd, data, ConnectionFd, MOD);
 					// finalizeRequest
 				}
 				freeList.remove(ed);
@@ -350,11 +353,16 @@ void Epoll::processEvents(Webserv& ws)
 					data.upstream = upstream;
 					ev->addEvent(upstream->readFd, data, UpstreamFd, MOD);
 				}
-				else
+				else // ERROR
 				{
 					std::cout << "Error occured while Upstream revHandler, close connection"
 							  << std::endl;
+					if (upstream->writeFd != -1)
+						close(upstream->writeFd);
 					close(upstream->readFd);
+					data_t data;
+					data.p = upstream->p;
+					ev->addEvent(upstream->p->c.cfd, data, ConnectionFd, MOD);
 				}
 				freeList.remove(ed);
 				delete ed;

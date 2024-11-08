@@ -27,8 +27,8 @@ Http::Http()
 	, countChunkData_(0)
 {
 	std::memset(responseBodyBuf_, 0, 1024);
-	std::memset(chunkedRequestBuf_, 0, 1024);
-	std::memset(unchunkedRequestBuf_, 0, 1024);
+	std::memset(chunkedRequestBuf_, 0, 1025);
+	std::memset(unchunkedRequestBuf_, 0, 1025);
 	defaultErrorPages["400"] = "<html>\r\n<head><title>400 Bad "
 							   "Request</title></head>\r\n<body>\r\n<center><h1>400 Bad "
 							   "Request</h1></center>\r\n</body>\r\n</html>\r\n";
@@ -778,7 +778,7 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			if (!std::isdigit(buf[i]) && !std::isxdigit(buf[i]))
 				return ERROR;
 			otherThanChunkDataSize_++;
-			start = 0;
+			chunkSizeStr_ = buf[i];
 			state = CHUNK_SIZE;
 			break;
 		case CHUNK_SIZE:
@@ -788,9 +788,9 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			otherThanChunkDataSize_++;
 			if (buf[i] == CR)
 			{
-				std::string tmp(buf, i - start);
+				chunkSizeStr_ += buf[i];
 				std::stringstream ss;
-				ss << std::hex << tmp;
+				ss << std::hex << chunkSizeStr_;
 				// ss << tmp;
 				ss >> chunkSize_;
 				// chunkSize_ += 100;
@@ -818,13 +818,14 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			}
 			if (!std::isxdigit(buf[i]))
 				return ERROR;
+			chunkSizeStr_ += buf[i];
 			break;
 		case CHUNK_EXTENSION: // does not support "chunk-extension".
 #ifdef DEBUG
 			std::cout << "CHUNK_EXTENSION" << std::endl;
 #endif
 			otherThanChunkDataSize_++;
-			if (buf[pos] == CR)
+			if (buf[i] == CR)
 			{
 				state = CHUNK_SIZE_ALMOST_DONE;
 				break;
@@ -841,10 +842,9 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			state = CHUNK_DATA;
 			break;
 		case CHUNK_DATA:
-#ifdef DEBUG
-			std::cout << countChunkData_ << std::endl;
-			std::cout << (int)buf[i] << std::endl;
-#endif
+			// #ifdef DEBUG
+			// 			std::cout << countChunkData_ << std::endl;
+			// #endif
 			if (countChunkData_ == chunkSize_)
 			{
 				if (buf[i] != CR)
@@ -853,8 +853,7 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 				state = CHUNK_DATA_ALMOST_DONE;
 				break;
 			}
-			unchunkedRequestBuf_[countChunkData_] = buf[i];
-			unchunkedRequestSize_++;
+			unchunkedRequestBuf_[unchunkedRequestSize_++] = buf[i];
 			countChunkData_++;
 			break;
 		case CHUNK_DATA_ALMOST_DONE:
@@ -871,7 +870,7 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			std::cout << "LAST_CHUNK_EXTENSION" << std::endl;
 #endif
 			otherThanChunkDataSize_++;
-			if (buf[pos] == CR)
+			if (buf[i] == CR)
 			{
 				state = LAST_CHUNK_ALMOST_DONE;
 				break;
@@ -905,6 +904,13 @@ int Http::processRequest()
 		int rv = DONE;
 		if (alreadyRead)
 		{
+			if (headerIn.size() - pos > vserverCtx_->clientMaxBodySize)
+			{
+				statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
+				headerOut = "\r\n";
+				messageBodyOut = defaultErrorPages["413"];
+				return finalizeRequest();
+			}
 			std::string tmpDir("/tmp/");
 			std::string tmpExt(".reqBody");
 			std::time_t now = std::time(NULL);
@@ -954,6 +960,11 @@ int Http::processRequest()
 					return finalizeRequest();
 				}
 				writenum = write(requestBodyFileFd_, unchunkedRequestBuf_, unchunkedRequestSize_);
+#ifdef DEBUG
+				std::cout << "writenum: " << writenum << std::endl;
+				std::cout << "unchunkedRequestSize_: " << unchunkedRequestSize_ << std::endl;
+				std::cout << "unchunkedRequestBuf_: " << unchunkedRequestBuf_ << std::endl;
+#endif
 				if (writenum < 0)
 				{
 					// Internal Server Error
@@ -1026,6 +1037,11 @@ int Http::processRequest()
 			}
 			ssize_t writenum =
 				write(requestBodyFileFd_, unchunkedRequestBuf_, unchunkedRequestSize_);
+#ifdef DEBUG
+			std::cout << "writenum: " << writenum << std::endl;
+			std::cout << "unchunkedRequestSize_: " << unchunkedRequestSize_ << std::endl;
+			std::cout << "unchunkedRequestBuf_: " << unchunkedRequestBuf_ << std::endl;
+#endif
 			if (writenum < 0)
 			{
 				// Internal Server Error
@@ -1035,12 +1051,24 @@ int Http::processRequest()
 			}
 			if (rv == OK || rv == AGAIN)
 			{
-				std::memset(unchunkedRequestBuf_, 0, 1024);
-				std::memset(chunkedRequestBuf_, 0, 1024);
+				std::memset(unchunkedRequestBuf_, 0, 1025);
+				std::memset(chunkedRequestBuf_, 0, 1025);
+				ready = false;
 				return AGAIN;
 			}
 		}
 		close(requestBodyFileFd_);
+		struct stat st;
+		if (stat(requestBodyFileName_.c_str(), &st) == -1)
+		{
+			// Server Internal Error
+			std::remove(requestBodyFileName_.c_str());
+			return finalizeRequest();
+		}
+		headersIn.erase("Transfer-Encoding");
+		std::stringstream ss;
+		ss << st.st_size;
+		headersIn["Content-Length"] = ss.str();
 	}
 	else if (headersIn.find("Content-Length") != headersIn.end())
 	{
@@ -1297,7 +1325,7 @@ int Http::finalizeRequest()
 						  << std::endl;
 				std::cout << "readnum from regular file: " << readnum << std::endl;
 				std::cout << "writenum to client: " << writenum << std::endl;
-				std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
+				// std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)
