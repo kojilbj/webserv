@@ -60,36 +60,76 @@ int HtmlLocationCtx::contentHandler(Http& h)
 	fullPath += uri;
 	if (uri[uri.size() - 1] == '/')
 	{
-		std::string fullPathWithIndex = fullPath + index;
-		int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
-		if (fd == -1)
+		switch (h.getMethod())
 		{
-			if (!autoindex)
+		case POST:
+			h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
+			h.headerOut = "\r\n";
+			h.messageBodyOut = h.defaultErrorPages["403"];
+			return DONE;
+		case DELETE:
+			if (std::remove(fullPath.c_str()) < 0)
 			{
 				h.statusLine = "HTTP/1.1 404 Not Found\r\n";
 				h.headerOut = "\r\n";
 				h.messageBodyOut = h.defaultErrorPages["404"];
 				return DONE;
 			}
-			return autoindexHandler(h, fullPath);
+			h.statusLine = "HTTP/1.1 204 No Content\r\n";
+			h.headerOut = "\r\n";
+			return DONE;
+		default: // GET
+			std::string fullPathWithIndex = fullPath + index;
+			int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
+			if (fd == -1)
+			{
+				if (!autoindex)
+				{
+					h.statusLine = "HTTP/1.1 404 Not Found\r\n";
+					h.headerOut = "\r\n";
+					h.messageBodyOut = h.defaultErrorPages["404"];
+					return DONE;
+				}
+				return autoindexHandler(h, fullPath);
+			}
+			h.statusLine = "HTTP/1.1 200 OK\r\n";
+			h.headerOut = "\r\n";
+			h.setFd(fd);
 		}
-		h.statusLine = "HTTP/1.1 200 OK\r\n";
-		h.headerOut = "\r\n";
-		h.setFd(fd);
 	}
 	else
 	{
-		int fd = open(fullPath.c_str(), O_RDONLY);
-		if (fd == -1)
+		switch (h.getMethod())
 		{
-			h.statusLine = "HTTP/1.1 404 Not Found\r\n";
+		case POST:
+			h.statusLine = "HTTP/1.1 405 Not Allowed\r\n";
 			h.headerOut = "\r\n";
-			h.messageBodyOut = h.defaultErrorPages["404"];
+			h.messageBodyOut = h.defaultErrorPages["405"];
 			return DONE;
+		case DELETE:
+			if (std::remove(fullPath.c_str()) < 0)
+			{
+				h.statusLine = "HTTP/1.1 404 Not Found\r\n";
+				h.headerOut = "\r\n";
+				h.messageBodyOut = h.defaultErrorPages["404"];
+				return DONE;
+			}
+			h.statusLine = "HTTP/1.1 204 No Content\r\n";
+			h.headerOut = "\r\n";
+			return DONE;
+		default:
+			int fd = open(fullPath.c_str(), O_RDONLY);
+			if (fd == -1)
+			{
+				h.statusLine = "HTTP/1.1 404 Not Found\r\n";
+				h.headerOut = "\r\n";
+				h.messageBodyOut = h.defaultErrorPages["404"];
+				return DONE;
+			}
+			h.statusLine = "HTTP/1.1 200 OK\r\n";
+			h.headerOut = "\r\n";
+			h.setFd(fd);
 		}
-		h.statusLine = "HTTP/1.1 200 OK\r\n";
-		h.headerOut = "\r\n";
-		h.setFd(fd);
 	}
 	return DONE;
 }
