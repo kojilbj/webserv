@@ -75,11 +75,21 @@ void Epoll::timeOutHandler(Webserv& ws)
 			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 10)
 			{
 				timeout = true;
-				close(p->c.cfd);
-				ws.getFreeList()->remove(p);
-				delete p;
+				// close(p->c.cfd);
+				// ws.getFreeList()->remove(p);
+				// delete p;
 				freeList.remove(*it);
 				delete *it;
+				Http* h = reinterpret_cast<Http*>(p);
+				h->wevReady = true;
+				h->statusLine = "HTTP/1.1 408 Request Timeout\r\n";
+				h->headerOut = "\r\n";
+				h->messageBodyOut = h->defaultErrorPages["408"];
+				h->revHandler = &Http::finalizeRequest;
+				data_t data;
+				data.p = p;
+				ev->addEvent(h->c.cfd, data, ConnectionFd, MOD);
+				h->c.lastReadTime = std::time(NULL);
 				it = freeList.begin();
 			}
 		}

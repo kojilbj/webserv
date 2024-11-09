@@ -41,6 +41,9 @@ Http::Http()
 	defaultErrorPages["406"] = "<html>\r\n<head><title>406 Not "
 							   "Acceptable</title></head>\r\n<body>\r\n<center><h1>406 Not "
 							   "Acceptable</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["408"] = "<html>\r\n<head><title>408 Request "
+							   "Timeout</title></head>\r\n<body>\r\n<center><h1>408 Request "
+							   "Timeout</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["413"] = "<html>\r\n<head><title>413 Request "
 							   "Entity Too Large</title></head>\r\n<body>\r\n<center><h1>413 "
 							   "Request Entity Too Large</h1></center>\r\n</body>\r\n</html>\r\n";
@@ -1119,9 +1122,9 @@ int Http::processRequest()
 			}
 			// maybe too much ?
 			int leftRequestBodyLen = bodyLen_ - static_cast<int>(st.st_size);
-			char buf[leftRequestBodyLen + 1];
-			std::memset(buf, 0, leftRequestBodyLen + 1);
-			ssize_t readnum = recv(c.cfd, buf, leftRequestBodyLen, 0);
+			char buf[leftRequestBodyLen + 2];
+			std::memset(buf, 0, leftRequestBodyLen + 2);
+			ssize_t readnum = recv(c.cfd, buf, leftRequestBodyLen + 1, 0);
 			c.lastReadTime = std::time(NULL);
 			if (readnum == -1)
 			{
@@ -1132,7 +1135,12 @@ int Http::processRequest()
 			}
 			if (readnum == 0)
 				return ERROR;
-			if (write(requestBodyFileFd_, buf, readnum) < 0)
+			ssize_t writenum = 0;
+			if (readnum == leftRequestBodyLen + 1)
+				writenum = write(requestBodyFileFd_, buf, readnum - 1);
+			else
+				writenum = write(requestBodyFileFd_, buf, readnum);
+			if (writenum == -1)
 			{
 				// Internal Server Error
 				close(requestBodyFileFd_);
@@ -1144,7 +1152,9 @@ int Http::processRequest()
 				ready = false;
 				return AGAIN;
 			}
-			ready = true;
+			// when "Content-Length: 1000" but real length is 999, ready must be true because 1 byte can be read.
+			if (readnum == leftRequestBodyLen + 1)
+				ready = true;
 		}
 		close(requestBodyFileFd_);
 	}
