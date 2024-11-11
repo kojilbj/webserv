@@ -213,7 +213,9 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
+#ifdef DEBUG
 					std::cout << "RevHandler finished, close connection" << std::endl;
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -241,7 +243,9 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else
 				{
+#ifdef DEBUG
 					std::cout << "Error occured while revHandler, close connection" << std::endl;
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -255,7 +259,9 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
+#ifdef DEBUG
 					std::cout << "RevHandler finished, close connection" << std::endl;
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -271,7 +277,9 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else
 				{
+#ifdef DEBUG
 					std::cout << "Error occured while revHandler, close connection" << std::endl;
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -279,7 +287,9 @@ void Epoll::processEvents(Webserv& ws)
 			}
 			else if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 			{
+#ifdef DEBUG
 				std::cout << "EPOLLERR returned, close connection" << std::endl;
+#endif
 				close(p->c.cfd);
 				ws.getFreeList()->remove(p);
 				delete p;
@@ -309,7 +319,9 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = upstream->invokeRevHandler();
 				if (rv == OK)
 				{
+#ifdef DEBUG
 					std::cout << "Upstream revHandler finished, close connection" << std::endl;
+#endif
 					close(upstream->writeFd);
 					upstream->writeFd = -1;
 					data_t data;
@@ -329,8 +341,10 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else // ERROR
 				{
+#ifdef DEBUG
 					std::cout << "Error occured while Upstream revHandler, close connection"
 							  << std::endl;
+#endif
 					close(upstream->writeFd);
 					close(upstream->readFd);
 					data_t data;
@@ -348,7 +362,9 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = upstream->invokeRevHandler();
 				if (rv == OK)
 				{
+#ifdef DEBUG
 					std::cout << "Upstream revHandler finished, close connection" << std::endl;
+#endif
 					close(upstream->readFd);
 					data_t data;
 					data.p = upstream->p;
@@ -365,8 +381,10 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else // ERROR
 				{
+#ifdef DEBUG
 					std::cout << "Error occured while Upstream revHandler, close connection"
 							  << std::endl;
+#endif
 					if (upstream->writeFd != -1)
 						close(upstream->writeFd);
 					close(upstream->readFd);
@@ -380,7 +398,9 @@ void Epoll::processEvents(Webserv& ws)
 		}
 		else
 		{
+#ifdef DEBUG
 			std::cerr << "unknown event: " << ed->type << std::endl;
+#endif
 			break;
 		}
 	}

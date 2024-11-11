@@ -240,7 +240,6 @@ int Http::processRequestLine()
 			}
 		}
 		rv = parseRequestLine();
-		std::cout << rv << std::endl;
 		if (rv == OK)
 		{
 #ifdef DEBUG
