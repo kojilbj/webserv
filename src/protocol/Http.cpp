@@ -185,12 +185,7 @@ int Http::waitRequestHandler()
 	std::cout << "\tmaxsize of recv: " << clientHeaderSize << std::endl;
 	std::cout << "\treadnum: " << readnum << std::endl;
 #endif
-	if (readnum < 0)
-	{
-		// 500 (Internal Server Error) error
-		return finalizeRequest();
-	}
-	else if (readnum == 0)
+	if (readnum <= 0)
 		return ERROR;
 	alreadyRead = true;
 	if (readnum == clientHeaderSize)
@@ -226,12 +221,7 @@ int Http::processRequestLine()
 				std::cout << "\tmaxsize of recv: " << bufSize << std::endl;
 				std::cout << "\treadnum: " << readnum << std::endl;
 #endif
-				if (readnum < 0)
-				{
-					// 500 (Internal Server Error) error
-					return finalizeRequest();
-				}
-				else if (readnum == 0)
+				if (readnum <= 0)
 					return ERROR;
 				if (readnum == bufSize)
 					ready = true;
@@ -325,12 +315,7 @@ int Http::processRequestHeader()
 				std::cout << "\tmaxsize of recv: " << leftAvailableHeaderSize << std::endl;
 				std::cout << "\treadnum: " << readnum << std::endl;
 #endif
-				if (readnum < 0)
-				{
-					// 500 (Internal Server Error) error
-					return finalizeRequest();
-				}
-				else if (readnum == 0)
+				if (readnum <= 0)
 					return ERROR;
 				/* if (readnum >= leftAvailableHeaderSize) */
 				/* { */
@@ -993,15 +978,12 @@ int Http::processRequest()
 				return finalizeRequest();
 			}
 			ssize_t readnum = recv(c.cfd, chunkedRequestBuf_, clientHeaderSize, 0); // 1024
-			if (readnum == -1)
+			if (readnum <= 0)
 			{
-				// Server Internal Error
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
-				return finalizeRequest();
-			}
-			if (readnum == 0)
 				return ERROR;
+			}
 			if (readnum == clientHeaderSize)
 				ready = true;
 			if (st.st_size + readnum > vserverCtx_->clientMaxBodySize)
@@ -1125,15 +1107,12 @@ int Http::processRequest()
 			std::memset(buf, 0, leftRequestBodyLen + 2);
 			ssize_t readnum = recv(c.cfd, buf, leftRequestBodyLen + 1, 0);
 			c.lastReadTime = std::time(NULL);
-			if (readnum == -1)
+			if (readnum <= 0)
 			{
-				// Server Internal Error
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
-				return finalizeRequest();
-			}
-			if (readnum == 0)
 				return ERROR;
+			}
 			ssize_t writenum = 0;
 			if (readnum == leftRequestBodyLen + 1)
 				writenum = write(requestBodyFileFd_, buf, readnum - 1);

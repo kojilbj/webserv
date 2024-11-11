@@ -211,7 +211,7 @@ void Epoll::processEvents(Webserv& ws)
 			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 			{
 #ifdef DEBUG
-				std::cout << "EPOLLERR returned, close connection" << std::endl;
+				std::cout << "EPOLLERR returned, close connection " << p->c.cfd << std::endl;
 #endif
 				close(p->c.cfd);
 				ws.getFreeList()->remove(p);
@@ -223,7 +223,7 @@ void Epoll::processEvents(Webserv& ws)
 				if (rv == OK)
 				{
 #ifdef DEBUG
-					std::cout << "RevHandler finished, close connection" << std::endl;
+					std::cout << "RevHandler finished, close connection " << p->c.cfd << std::endl;
 #endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
@@ -253,7 +253,8 @@ void Epoll::processEvents(Webserv& ws)
 				else
 				{
 #ifdef DEBUG
-					std::cout << "Error occured while revHandler, close connection" << std::endl;
+					std::cout << "Error occured while revHandler, close connection " << p->c.cfd
+							  << std::endl;
 #endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);

@@ -211,6 +211,7 @@ int main(int argc, char* argv[])
 		/* epoll_ctl(); */
 		ev->init(ws);
 		signal(SIGINT, sigintHandler);
+		signal(SIGPIPE, SIG_IGN);
 		ev->processEventsLoop(ws);
 	}
 	catch (std::exception& e)
