@@ -208,7 +208,16 @@ void Epoll::processEvents(Webserv& ws)
 				std::cout << "event: EPOLLERR" << std::endl;
 			std::cout << std::endl;
 #endif
-			if ((eventResult[i].events & EPOLLIN))
+			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+			{
+#ifdef DEBUG
+				std::cout << "EPOLLERR returned, close connection" << std::endl;
+#endif
+				close(p->c.cfd);
+				ws.getFreeList()->remove(p);
+				delete p;
+			}
+			else if ((eventResult[i].events & EPOLLIN))
 			{
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
@@ -284,15 +293,6 @@ void Epoll::processEvents(Webserv& ws)
 					ws.getFreeList()->remove(p);
 					delete p;
 				}
-			}
-			else if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-			{
-#ifdef DEBUG
-				std::cout << "EPOLLERR returned, close connection" << std::endl;
-#endif
-				close(p->c.cfd);
-				ws.getFreeList()->remove(p);
-				delete p;
 			}
 			freeList.remove(ed);
 			delete ed;

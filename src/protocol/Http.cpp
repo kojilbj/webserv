@@ -263,7 +263,7 @@ int Http::processRequestLine()
 #ifdef DEBUG
 			std::cout << "Error return after parseRequestLine" << std::endl;
 #endif
-			statusLine = "HTTP/1.1 400 Bad Requet\r\n";
+			statusLine = "HTTP/1.1 400 Bad Request\r\n";
 			headerOut = "\r\n";
 			messageBodyOut = defaultErrorPages["400"];
 			completelyRead = false;
