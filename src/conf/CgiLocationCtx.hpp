@@ -1,6 +1,7 @@
 #ifndef CGILOCATIONCTX_HPP
 #define CGILOCATIONCTX_HPP
 
+#include "../protocol/Http.hpp"
 #include "LocationCtx.hpp"
 #include <cstdio>
 #include <cstring>
@@ -18,17 +19,17 @@ namespace Wbsv
 			: LocationCtx()
 		{ }
 		CgiLocationCtx(const CgiLocationCtx& other)
-			: LocationCtx(other), index(other.index), param(other.param), store(other.store)
+			: LocationCtx(other), index_(other.index_), param_(other.param_), store_(other.store_)
 		{ }
 		CgiLocationCtx& operator=(const CgiLocationCtx& other)
 		{
 			LocationCtx::operator=(other);
-			index = other.index;
-			param = other.param;
-			store = other.store;
+			index_ = other.index_;
+			param_ = other.param_;
+			store_ = other.store_;
 			return *this;
 		}
-		~CgiLocationCtx(){};
+		~CgiLocationCtx() { };
 
 		void setCgiIndex(const std::string& cgiIndex);
 		void setCgiParam(void);
@@ -42,7 +43,5 @@ namespace Wbsv
 		std::string store_;
 	};
 } // namespace Wbsv
-
-#include "Http.hpp"
 
 #endif
