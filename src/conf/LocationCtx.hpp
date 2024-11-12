@@ -12,7 +12,7 @@ namespace Wbsv
 	{
 	public:
 		LocationCtx()
-			: limitExcept(1), autoindex(false) { };
+			: limitExcept(1), autoindex(false){};
 		LocationCtx(const LocationCtx& other)
 			: path(other.path), limitExcept(other.limitExcept), autoindex(other.autoindex)
 		{ }
@@ -23,7 +23,7 @@ namespace Wbsv
 			autoindex = other.autoindex;
 			return *this;
 		}
-		virtual ~LocationCtx() { };
+		virtual ~LocationCtx(){};
 		virtual int contentHandler(Http&) = 0;
 
 		void setPath(const std::string& path);

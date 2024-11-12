@@ -10,6 +10,7 @@ namespace Wbsv
 	class PhaseHandler
 	{
 	public:
+		virtual ~PhaseHandler() { }
 		virtual int handler(Http&) = 0;
 	};
 } // namespace Wbsv

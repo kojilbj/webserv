@@ -141,7 +141,7 @@ namespace Wbsv
 		/* default 8k byte */
 		const unsigned int largeClientHeaderSize;
 		unsigned int requestLineLen;
-		int pos;
+		size_t pos;
 		int start;
 		int state;
 		int method;

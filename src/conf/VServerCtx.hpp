@@ -49,6 +49,10 @@ namespace Wbsv
 		size_t getClientMaxBodySize(void) const;
 		const std::vector<LocationCtx*>& getLocations(void) const;
 		const std::vector<std::string>& getServerNames(void) const;
+		bool getDefaultServer(void) const
+		{
+			return defaultServer_;
+		}
 
 		VServerCtx(const VServerCtx& other);
 		~VServerCtx(void);

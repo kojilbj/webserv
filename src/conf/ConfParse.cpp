@@ -1,5 +1,7 @@
 #include "ConfParse.hpp"
 
+using namespace Wbsv;
+
 std::vector<std::string> ConfParse::confTokenizer(std::ifstream& confFile)
 {
 	std::vector<std::string> line;
@@ -27,10 +29,10 @@ std::map<std::string, std::vector<std::string> > ConfParse::mapConfRelative(void
 {
 	size_t i;
 	std::map<std::string, std::vector<std::string> > confRelatives;
-	const char* blocks[] = {"http", nullptr};
-	const char* httpBlocks[] = {"server", nullptr};
+	const char* blocks[] = {"http", NULL};
+	const char* httpBlocks[] = {"server", NULL};
 	const char* serverBlocks[] = {
-		"listen", "location", "error_page", "client_max_body_size", "server_name", nullptr};
+		"listen", "location", "error_page", "client_max_body_size", "server_name", NULL};
 	const char* locationBlocks[] = {"path",
 									"root",
 									"index",
@@ -40,7 +42,7 @@ std::map<std::string, std::vector<std::string> > ConfParse::mapConfRelative(void
 									"cgi_param",
 									"cgi_index",
 									"cgi_store",
-									nullptr};
+									NULL};
 
 	i = 0;
 	confRelatives["_"];
@@ -50,21 +52,21 @@ std::map<std::string, std::vector<std::string> > ConfParse::mapConfRelative(void
 	}
 	confRelatives["http"];
 	i = 0;
-	while (httpBlocks[i] != nullptr)
+	while (httpBlocks[i] != NULL)
 	{
 		confRelatives["http"].push_back(httpBlocks[i]);
 		i++;
 	}
 	i = 0;
 	confRelatives["server"];
-	while (serverBlocks[i] != nullptr)
+	while (serverBlocks[i] != NULL)
 	{
 		confRelatives["server"].push_back(serverBlocks[i]);
 		i++;
 	}
 	i = 0;
 	confRelatives["location"];
-	while (locationBlocks[i] != nullptr)
+	while (locationBlocks[i] != NULL)
 	{
 		confRelatives["location"].push_back(locationBlocks[i]);
 		i++;
@@ -140,15 +142,14 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 	std::string directiveValue;
 	std::vector<ConfCtx*> ctxs;
 	HttpConfCtx* httpCtx;
-	VServerCtx* vserverCtx;
 	struct ConfParseUtil::SServer* serverInfo;
 	struct ConfParseUtil::SLocation* locationInfo;
 	bool isPushed;
 
 	it = tokens.begin();
 	blockStack.push("_");
-	serverInfo = nullptr;
-	locationInfo = nullptr;
+	serverInfo = NULL;
+	locationInfo = NULL;
 	//ブロックはblockStackに積んでいって、構造解析を行う。
 	//スタックにする理由は構造の解析を行うため、セマンティック解析はsetter()に情報を入れる前/後に行うことにする
 	while (it != tokens.end())

@@ -58,7 +58,7 @@ void VServerCtx::addLocation(LocationCtx* location)
 #ifdef DEBUG
 	std::cout << "VServerCtx addlocation Called" << std::endl;
 #endif
-	if (location != nullptr)
+	if (location != NULL)
 		locationCtxs_.push_back(location);
 }
 

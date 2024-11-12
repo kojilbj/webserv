@@ -28,10 +28,7 @@ namespace Wbsv
 		void addServer(struct ConfParseUtil::SServer server);
 		ServerCtx* getServerCtx(const std::string& ipAddress, const std::string& port);
 
-		void addServerCtx(void)
-		{
-			serverCtxs_.push_back(ServerCtx());
-		}
+		void addServerCtx(void);
 		void addServerCtx(const ServerCtx& sc)
 		{
 			serverCtxs_.push_back(sc);

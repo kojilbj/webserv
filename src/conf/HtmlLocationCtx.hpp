@@ -16,7 +16,10 @@ namespace Wbsv
 	public:
 		HtmlLocationCtx()
 			: LocationCtx()
-		{ }
+		{
+			index_ = "index.html";
+			root_ = "html";
+		}
 		HtmlLocationCtx(const HtmlLocationCtx& other)
 			: LocationCtx(other), index_(other.index_), root_(other.root_)
 		{ }
@@ -27,7 +30,7 @@ namespace Wbsv
 			root_ = other.root_;
 			return *this;
 		}
-		~HtmlLocationCtx() { };
+		~HtmlLocationCtx(){};
 		int contentHandler(Http&);
 		void setIndex(const std::string& index);
 		void setRoot(const std::string& root);

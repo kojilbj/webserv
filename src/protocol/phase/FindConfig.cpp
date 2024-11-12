@@ -12,7 +12,7 @@ int FindConfig::handler(Http& h)
 	for (it = lv->begin(); it != lv->end(); it++)
 	{
 		std::string requestUri = h.getUri();
-		std::string path = (*it)->path;
+		std::string path = (*it)->getPath();
 		if (path.compare(requestUri.substr(0, path.size())) == 0)
 		{
 			found = true;
@@ -21,11 +21,12 @@ int FindConfig::handler(Http& h)
 	}
 	if (!found)
 	{
-		std::map<std::string, std::string>::iterator errit;
-		if ((errit = vs->errorPages.find("404")) != vs->errorPages.end())
+		ErrorPages e = vs->getErrorPages();
+		std::string path;
+		if ((path = e.getErrorPagePath("404")) != "")
 		{
 			std::cout << "404 has default error page" << std::endl;
-			h.setUri(errit->second);
+			h.setUri(path);
 			return AGAIN;
 		}
 		std::cout << "404 has \"not\" default error page" << std::endl;
@@ -34,6 +35,6 @@ int FindConfig::handler(Http& h)
 		h.messageBodyOut = h.defaultErrorPages["404"];
 		return DONE;
 	}
-	printLog(LOG_DEBUG, "LocationCtx found at " + h.getLocationCtx()->path);
+	printLog(LOG_DEBUG, "LocationCtx found at " + h.getLocationCtx()->getPath());
 	return OK;
 }

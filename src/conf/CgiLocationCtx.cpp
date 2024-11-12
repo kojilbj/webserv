@@ -62,13 +62,13 @@ const std::map<std::string, std::string>& CgiLocationCtx::getCgiParam(void) cons
 static void
 parseUri(Http& h, std::map<std::string, std::string>& param, std::string index, std::string store)
 {
-	int pos = 0;
+	size_t pos = 0;
 	std::string uri = h.getUri();
 	std::string path;
 	if ((pos = uri.find("?")) != string::npos)
 	{
 		path = uri.substr(0, pos);
-		int pos2 = 0;
+		size_t pos2 = 0;
 		if ((pos2 = uri.find("#", pos + 1)) != string::npos)
 			param["QUERY_STRING"] = uri.substr(pos + 1, pos2);
 		else
@@ -159,13 +159,13 @@ int CgiLocationCtx::contentHandler(Http& h)
 	char environData[param_.size()][maxParamLen(param_) + 1];
 	std::memset(environData, 0, sizeof(environData));
 	std::map<std::string, std::string>::iterator it = param_.begin();
-	for (int i = 0; i != param_.size(); i++, it++)
+	for (size_t i = 0; i != param_.size(); i++, it++)
 	{
 		std::string value = it->first + "=" + it->second;
 		std::strncpy(environData[i], value.c_str(), value.size());
 	}
 	char* environPtrs[param_.size()];
-	int i = 0;
+	size_t i = 0;
 	for (; i != param_.size(); i++)
 	{
 		environPtrs[i] = environData[i];
