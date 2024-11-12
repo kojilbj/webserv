@@ -1,7 +1,7 @@
 #include "VServerCtx.hpp"
 
 VServerCtx::VServerCtx(void)
-	: defaultServer(false)
+	: defaultServer_(false)
 {
 #ifdef DEBUG
 	std::cout << "VServerCtx Consturcor Called" << std::endl;

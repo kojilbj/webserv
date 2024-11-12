@@ -1,7 +1,7 @@
 #ifndef PROTOCOL_HPP
 #define PROTOCOL_HPP
 
-#include "Connection.hpp"
+#include "../Connection.hpp"
 #include <string>
 #include <vector>
 
@@ -19,7 +19,7 @@ namespace Wbsv
 	{
 	public:
 		Protocol()
-			: wevReady(false), upstream(NULL){};
+			: wevReady(false), upstream(NULL) { };
 		virtual ~Protocol();
 		virtual void selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls) = 0;
 		virtual int invokeRevHandler() = 0;

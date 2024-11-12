@@ -25,8 +25,6 @@ namespace Wbsv
 	{
 	public:
 		VServerCtx(void);
-		VServerCtx(const VServerCtx& other);
-		~VServerCtx(void);
 
 		void addLocation(LocationCtx* location);
 		void addLocation(const std::vector<LocationCtx*> locations);
@@ -52,12 +50,11 @@ namespace Wbsv
 		const std::vector<LocationCtx*>& getLocations(void) const;
 		const std::vector<std::string>& getServerNames(void) const;
 
-		VServerCtx();
 		VServerCtx(const VServerCtx& other)
-			: defaultServer(other.defaultServer)
-			, serverName(other.serverName)
-			, clientMaxBodySize(other.clientMaxBodySize)
-			, errorPages(other.errorPages)
+			: defaultServer_(other.defaultServer_)
+			, serverNames_(other.serverNames_)
+			, errorPages_(other.errorPages_)
+			, clientMaxBodySize_(other.clientMaxBodySize_)
 		{
 			std::vector<LocationCtx*>::const_iterator it = other.locationCtxs_.begin();
 			HtmlLocationCtx* hlc;

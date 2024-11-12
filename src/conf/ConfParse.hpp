@@ -10,33 +10,38 @@
 #include <string>
 #include <vector>
 
-class ConfParse
+namespace Wbsv
 {
-public:
-	ConfParse(void);
-	~ConfParse(void);
 
-	static std::vector<ConfCtx*> confParse(const std::string& confFileName);
+	class ConfParse
+	{
+	public:
+		ConfParse(void);
+		~ConfParse(void);
 
-private:
-	static std::vector<std::string> confTokenizer(std::ifstream& confFile);
+		static std::vector<ConfCtx*> confParse(const std::string& confFileName);
 
-	static std::map<std::string, std::vector<std::string> > mapConfRelative(void);
+	private:
+		static std::vector<std::string> confTokenizer(std::ifstream& confFile);
 
-	static bool inspectStructure(const std::string& name,
-								 const std::string& parentBlock,
-								 std::map<std::string, std::vector<std::string> > confRelatives);
+		static std::map<std::string, std::vector<std::string> > mapConfRelative(void);
 
-	static std::string keyValue(std::vector<std::string>::const_iterator it,
-								const std::vector<std::string>& tokens);
+		static bool
+		inspectStructure(const std::string& name,
+						 const std::string& parentBlock,
+						 std::map<std::string, std::vector<std::string> > confRelatives);
 
-	static ConfCtx* createCtx(const std::string& ctxName);
+		static std::string keyValue(std::vector<std::string>::const_iterator it,
+									const std::vector<std::string>& tokens);
 
-	static void store2Server(HttpConfCtx& httpCtx, const ConfParseUtil::SServer& serverInfo);
+		static ConfCtx* createCtx(const std::string& ctxName);
 
-	static std::vector<ConfCtx*>
-	parser(const std::vector<std::string>& tokens,
-		   const std::map<std::string, std::vector<std::string> > confRelatives);
-};
+		static void store2Server(HttpConfCtx& httpCtx, const ConfParseUtil::SServer& serverInfo);
 
+		static std::vector<ConfCtx*>
+		parser(const std::vector<std::string>& tokens,
+			   const std::map<std::string, std::vector<std::string> > confRelatives);
+	};
+
+}; // namespace Wbsv
 #endif
