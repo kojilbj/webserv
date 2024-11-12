@@ -80,14 +80,12 @@ void Http::initPhaseHandler()
 
 int Http::invokeRevHandler()
 {
-#ifdef DEBUG
-	std::cout << "Invoking revHandler: " << std::endl;
-#endif
 	return (this->*(revHandler))();
 }
 
 void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 {
+	printLog(LOG_DEBUG, "Http::selectServerCtx");
 	std::vector<ConfCtx*>::iterator it;
 
 	for (it = cfs->begin(); it != cfs->end(); it++)
@@ -121,11 +119,6 @@ void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 				{
 					serverCtx = &(*sit);
 					c.serverCtx = serverCtx;
-#ifdef DEBUG
-					std::cout << "Listening socket (" << ls->sfd
-							  << ") is belong to the server which is ..." << std::endl;
-					std::cout << "\tlisten: " << listen.first << ":" << listen.second << std::endl;
-#endif
 				}
 				freeaddrinfo(result);
 			}
@@ -145,9 +138,7 @@ void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 
 void Http::selectVServerCtx(ServerCtx* serverCtx, string host)
 {
-#ifdef DEBUG
-	std::cout << "selectVServerCtx" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::selectVServerCtx");
 	std::vector<VServerCtx>* v = serverCtx->getVServerCtxs();
 	std::vector<VServerCtx>::iterator it;
 	std::vector<VServerCtx>::iterator defaultServer;
@@ -156,34 +147,28 @@ void Http::selectVServerCtx(ServerCtx* serverCtx, string host)
 		if (it->serverName == host)
 		{
 			vserverCtx_ = &(*it);
-#ifdef DEBUG
-			std::cout << "Host: " << host << " matched" << std::endl;
-#endif
+			printLog(LOG_DEBUG, "Host: " + host + " is selected");
 			return;
 		}
 		if (it->defaultServer)
 			defaultServer = it;
 	}
-#ifdef DEBUG
-	std::cout << "Default server used" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Default server is selected");
 	vserverCtx_ = &(*defaultServer);
 }
 
 int Http::waitRequestHandler()
 {
-#ifdef DEBUG
-	std::cout << "Http::waitRequestHandler" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::waitRequestHandler");
 	// wevReady = true;
 	char tmp[clientHeaderSize + 1];
 	std::memset(tmp, 0, clientHeaderSize + 1);
 	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
 	c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
-	std::cout << "after recv:" << std::endl;
-	std::cout << "\tmaxsize of recv: " << clientHeaderSize << std::endl;
-	std::cout << "\treadnum: " << readnum << std::endl;
+	std::stringstream num;
+	num << readnum;
+	printLog(LOG_DEBUG, num.str() + " byte is read");
 #endif
 	if (readnum <= 0)
 		return ERROR;
@@ -197,13 +182,7 @@ int Http::waitRequestHandler()
 
 int Http::processRequestLine()
 {
-#ifdef DEBUG
-	std::cout << "Http::processRequestLine" << std::endl;
-	std::cout << "Current state of Request object: " << std::endl;
-	std::cout << "pos: " << pos << std::endl;
-	std::cout << "state: " << state << std::endl;
-	std::cout << "headerIn: " << headerIn << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::processRequestLine");
 	int rv = AGAIN;
 	for (;;)
 	{
@@ -217,9 +196,9 @@ int Http::processRequestLine()
 				ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
 				c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
-				std::cout << "after recv:" << std::endl;
-				std::cout << "\tmaxsize of recv: " << bufSize << std::endl;
-				std::cout << "\treadnum: " << readnum << std::endl;
+				std::stringstream num;
+				num << readnum;
+				printLog(LOG_DEBUG, num.str() + " byte is read");
 #endif
 				if (readnum <= 0)
 					return ERROR;
@@ -233,14 +212,15 @@ int Http::processRequestLine()
 		if (rv == OK)
 		{
 #ifdef DEBUG
-			std::cout << "Request-line is parsed" << std::endl;
-			std::cout << "Method: "
-					  << (method == GET	   ? "GET"
-						  : method == POST ? "POST"
-										   : "DELETE")
-					  << std::endl;
-			std::cout << "URI: " << uri << std::endl;
-			std::cout << "Version: " << major << "." << minor << std::endl;
+			printLog(LOG_DEBUG, "request-line is parsed");
+			string m = method == GET ? "GET" : method == POST ? "POST" : "DELETE";
+			printLog(LOG_DEBUG, "Method: " + m);
+			printLog(LOG_DEBUG, "URI: " + uri);
+			std::stringstream ma;
+			std::stringstream mi;
+			ma << major;
+			mi << minor;
+			printLog(LOG_DEBUG, "Version: HTTP/" + ma.str() + "." + mi.str());
 #endif
 			requestLineLen = pos;
 			/* processRequestUri(); */
@@ -250,9 +230,7 @@ int Http::processRequestLine()
 		}
 		else if (rv != AGAIN)
 		{
-#ifdef DEBUG
-			std::cout << "Error return after parseRequestLine" << std::endl;
-#endif
+			printLog(LOG_DEBUG, "parseRequestLine returned ERROR");
 			statusLine = "HTTP/1.1 400 Bad Request\r\n";
 			headerOut = "\r\n";
 			messageBodyOut = defaultErrorPages["400"];
@@ -293,9 +271,7 @@ bool isLargerThanMaxBodySize(size_t max, std::string& bodySize)
 
 int Http::processRequestHeader()
 {
-#ifdef DEBUG
-	std::cout << "Http::processRequestHeader" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::processRequestHeader");
 	int rv = AGAIN;
 
 	for (;;)
@@ -311,9 +287,9 @@ int Http::processRequestHeader()
 				ssize_t readnum = recv(c.cfd, buf, leftAvailableHeaderSize, 0);
 				c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
-				std::cout << "after recv:" << std::endl;
-				std::cout << "\tmaxsize of recv: " << leftAvailableHeaderSize << std::endl;
-				std::cout << "\treadnum: " << readnum << std::endl;
+				std::stringstream num;
+				num << readnum;
+				printLog(LOG_DEBUG, num.str() + " byte is read");
 #endif
 				if (readnum <= 0)
 					return ERROR;
@@ -389,11 +365,11 @@ int Http::processRequestHeader()
 				}
 			}
 #ifdef DEBUG
+			printLog(LOG_DEBUG, "request-header is parsed");
 			map<string, string>::iterator it;
-			std::cout << "Request-header is parsed" << std::endl;
 			for (it = headersIn.begin(); it != headersIn.end(); it++)
 			{
-				std::cout << "{ " << it->first << " : " << it->second << " }" << std::endl;
+				printLog(LOG_DEBUG, "{" + it->first + " : " + it->second + "}");
 			}
 #endif
 			// pos = 0;
@@ -432,9 +408,7 @@ int Http::processRequestHeader()
 
 int Http::parseRequestLine()
 {
-#ifdef DEBUG
-	std::cout << "Http::parseRequestLine" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::parseRequestLine");
 	enum lineState
 	{
 		METHOD = 0,
@@ -602,9 +576,7 @@ int Http::parseRequestLine()
 
 int Http::parseRequestHeaderLine()
 {
-#ifdef DEBUG
-	std::cout << "Http::parseRequestHeaderLine" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::parseRequestHeaderLine");
 	enum headerState
 	{
 		START = 0,
@@ -737,9 +709,7 @@ int Http::parseRequestHeaderLine()
 
 int Http::parseChunkedRequest(const char* buf, size_t size)
 {
-#ifdef DEBUG
-	std::cout << "parseChunkedRequest" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::parseChunkedRequest");
 	enum chunkedRequestState
 	{
 		START = 0,
@@ -753,15 +723,11 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 	};
 	otherThanChunkDataSize_ = 0;
 	unchunkedRequestSize_ = 0;
-	std::cout << "state: " << state << std::endl;
 	for (int i = 0; i < size; i++)
 	{
 		switch (state)
 		{
 		case START:
-#ifdef DEBUG
-			std::cout << "START" << std::endl;
-#endif
 			if (!std::isdigit(buf[i]) && !std::isxdigit(buf[i]))
 				return ERROR;
 			otherThanChunkDataSize_++;
@@ -769,9 +735,6 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			state = CHUNK_SIZE;
 			break;
 		case CHUNK_SIZE:
-#ifdef DEBUG
-			std::cout << "CHUNK_SIZE" << std::endl;
-#endif
 			otherThanChunkDataSize_++;
 			if (buf[i] == CR)
 			{
@@ -781,9 +744,6 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 				// ss << tmp;
 				ss >> chunkSize_;
 				// chunkSize_ += 100;
-#ifdef DEBUG
-				std::cout << "chunk-size: " << chunkSize_ << std::endl;
-#endif
 				if (chunkSize_ == 0)
 					state = LAST_CHUNK_ALMOST_DONE;
 				else
@@ -808,9 +768,6 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			chunkSizeStr_ += buf[i];
 			break;
 		case CHUNK_EXTENSION: // does not support "chunk-extension".
-#ifdef DEBUG
-			std::cout << "CHUNK_EXTENSION" << std::endl;
-#endif
 			otherThanChunkDataSize_++;
 			if (buf[i] == CR)
 			{
@@ -819,9 +776,6 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			}
 			break;
 		case CHUNK_SIZE_ALMOST_DONE:
-#ifdef DEBUG
-			std::cout << "CHUNK_SIZE_ALMOST_DONE" << std::endl;
-#endif
 			if (buf[i] != LF)
 				return ERROR;
 			otherThanChunkDataSize_++;
@@ -844,18 +798,12 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			countChunkData_++;
 			break;
 		case CHUNK_DATA_ALMOST_DONE:
-#ifdef DEBUG
-			std::cout << "chunk-data almost done" << std::endl;
-#endif
 			if (buf[i] != LF)
 				return ERROR;
 			otherThanChunkDataSize_++;
 			state = START;
 			break;
 		case LAST_CHUNK_EXTENSION: // does not support "chunk-extension".
-#ifdef DEBUG
-			std::cout << "LAST_CHUNK_EXTENSION" << std::endl;
-#endif
 			otherThanChunkDataSize_++;
 			if (buf[i] == CR)
 			{
@@ -867,9 +815,6 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			if (buf[i] != LF)
 				return ERROR;
 			otherThanChunkDataSize_++;
-#ifdef DEBUG
-			std::cout << "parsing chunked request done" << std::endl;
-#endif
 			return DONE;
 			// does not support "trailar".
 		}
@@ -879,15 +824,11 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 
 int Http::processRequest()
 {
+	printLog(LOG_DEBUG, "Http::processRequest");
 	revHandler = &Http::processRequest;
-#ifdef DEBUG
-	std::cout << "processRequest" << std::endl;
-#endif
 	if (headersIn.find("Transfer-Encoding") != headersIn.end()) // chunked Transfer-Encoding
 	{
-#ifdef DEBUG
-		std::cout << "process transfer-encoding" << std::endl;
-#endif
+		printLog(LOG_DEBUG, "processing transfer-encoding");
 		int rv = DONE;
 		if (alreadyRead)
 		{
@@ -1056,9 +997,7 @@ int Http::processRequest()
 	}
 	else if (headersIn.find("Content-Length") != headersIn.end())
 	{
-#ifdef DEBUG
-		std::cout << "process content-encoding" << std::endl;
-#endif
+		printLog(LOG_DEBUG, "processing content-length");
 		if (alreadyRead)
 		{
 			bodyLen_ = atoi(headersIn["Content-Length"].c_str());
@@ -1142,9 +1081,7 @@ int Http::processRequest()
 
 int Http::coreRunPhase()
 {
-#ifdef DEBUG
-	std::cout << "coreRunPhase" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::coreRunPhase");
 	std::vector<PhaseHandler*>::iterator it;
 	int rev;
 	for (it = ph.begin(); it != ph.end(); it++)
@@ -1160,9 +1097,7 @@ int Http::coreRunPhase()
 
 int Http::emptyHandler()
 {
-#ifdef DEBUG
-	std::cout << "emptyHandler" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::emptyHandler");
 	return AGAIN;
 }
 
@@ -1170,10 +1105,8 @@ int Http::processUpstream()
 {
 	if (upstream)
 	{
+		printLog(LOG_DEBUG, "Http::processUpstream");
 		revHandler = &Http::emptyHandler;
-#ifdef DEBUG
-		std::cout << "processUpstream" << std::endl;
-#endif
 		return UPSTREAM_AGAIN;
 	}
 	return finalizeRequest();
@@ -1181,9 +1114,7 @@ int Http::processUpstream()
 
 int Http::finalizeRequest()
 {
-#ifdef DEBUG
-	std::cout << "finalizeRequest" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::finalizeRequest");
 	wevReady = true;
 	revHandler = &Http::finalizeRequest;
 	// it may be not needed
@@ -1296,9 +1227,7 @@ int Http::finalizeRequest()
 				}
 				if (readnum == 0)
 				{
-#ifdef DEBUG
-					std::cout << "regular file completely read" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "regular file completely read");
 					close(fd_);
 					if (!responseBodyFileName_.empty())
 						std::remove(responseBodyFileName_.c_str());
@@ -1368,9 +1297,7 @@ int Http::finalizeRequest()
 				}
 				if (readnum == 0)
 				{
-#ifdef DEBUG
-					std::cout << "regular file completely read" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "regular file completely read");
 					close(fd_);
 					if (!responseBodyFileName_.empty())
 						std::remove(responseBodyFileName_.c_str());
@@ -1457,9 +1384,7 @@ int Http::finalizeRequest()
 
 int Http::readDiscardedRequest()
 {
-#ifdef DEBUG
-	std::cout << "readDiscardedRequest" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Http::readDiscardedRequest");
 	wevReady = false;
 	if (alreadyRead)
 	{

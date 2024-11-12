@@ -4,9 +4,7 @@ using namespace Wbsv;
 
 int Content::handler(Http& h)
 {
-#ifdef DEBUG
-	std::cout << "Content handler" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Content::handler");
 	LocationCtx* lc = h.getLocationCtx();
 	return lc->contentHandler(h);
 }

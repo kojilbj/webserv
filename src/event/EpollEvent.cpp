@@ -31,11 +31,6 @@ void Epoll::init(Webserv& ws)
 		ed->type = ListeningFd;
 		ed->data.ls = &(*it);
 		eventList.data.ptr = reinterpret_cast<void*>(ed);
-#ifdef DEBUG
-		std::cout << "Before epoll_wait:" << std::endl;
-		std::cout << "\teventData: " << ed << std::endl;
-		std::cout << "\teventData->data.ls: " << ed->data.ls << std::endl;
-#endif
 		freeList.push_back(ed);
 		if (epoll_ctl(ep, EPOLL_CTL_ADD, it->sfd, &eventList) == -1)
 		{
@@ -47,9 +42,7 @@ void Epoll::init(Webserv& ws)
 
 void Epoll::timeOutHandler(Webserv& ws)
 {
-#ifdef DEBUG
-	std::cout << "timeOutHandler" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "timeOutHandler");
 	std::list<struct eventData*>::iterator it = freeList.begin();
 	int alignIndex = -1;
 	bool timeout = false;
@@ -66,10 +59,19 @@ void Epoll::timeOutHandler(Webserv& ws)
 		{
 			Protocol* p = (*it)->data.p;
 #ifdef DEBUG
-			std::cout << "connection fd: " << p->c.cfd << std::endl;
-			std::cout << "last read time: " << p->c.lastReadTime << std::endl;
-			std::cout << "current time: " << std::time(NULL) << std::endl;
-			std::cout << "diff: " << std::time(NULL) - p->c.lastReadTime << std::endl;
+			std::stringstream fd;
+			fd << p->c.cfd;
+			if (p->c.lastReadTime == -1)
+				printLog(LOG_DEBUG,
+						 "connection fd (" + fd.str() + ") has 10 seconds left by timeout");
+			else
+			{
+				std::stringstream left;
+				left << 10 - (std::time(NULL) - p->c.lastReadTime);
+				printLog(LOG_DEBUG,
+						 "connection fd (" + fd.str() + ") has " + left.str() +
+							 " seconds left by timeout");
+			}
 #endif
 			// default client_request_timeout is 10s
 			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 10)
@@ -97,11 +99,14 @@ void Epoll::timeOutHandler(Webserv& ws)
 		{
 			Upstream* upstream = (*it)->data.upstream;
 #ifdef DEBUG
-			std::cout << "upstream fd (write/read): " << upstream->writeFd << "/"
-					  << upstream->readFd << std::endl;
-			std::cout << "last read time: " << upstream->lastReadTime << std::endl;
-			std::cout << "current time: " << std::time(NULL) << std::endl;
-			std::cout << "diff: " << std::time(NULL) - upstream->lastReadTime << std::endl;
+			if (upstream->lastReadTime == -1)
+				printLog(LOG_DEBUG, "upstream fd has 10 seconds left by timeout");
+			else
+			{
+				std::stringstream left;
+				left << 10 - (std::time(NULL) - upstream->lastReadTime);
+				printLog(LOG_DEBUG, "upstream fd has " + left.str() + " seconds left by timeout");
+			}
 #endif
 			// default client_request_timeout is 10s
 			if (upstream->lastReadTime != -1 && std::time(NULL) - upstream->lastReadTime >= 10)
@@ -151,13 +156,13 @@ void Epoll::processEvents(Webserv& ws)
 {
 	int maxEvents = 5;
 	struct epoll_event eventResult[maxEvents];
-#ifdef DEBUG
-	std::cout << "Waiting for next events ..." << std::endl;
-#endif
+	printLog(LOG_DEBUG, "waiting for next events ...");
 	// timeout is 10s
 	int events = epoll_wait(ep, eventResult, maxEvents, 10000);
 #ifdef DEBUG
-	std::cout << events << " events occured" << std::endl;
+	std::stringstream num;
+	num << events;
+	printLog(LOG_DEBUG, "epoll_wait returned " + num.str() + " events");
 #endif
 	if (events == -1)
 	{
@@ -170,24 +175,19 @@ void Epoll::processEvents(Webserv& ws)
 	{
 		/* this data pointer must be freed after use */
 		struct eventData* ed = reinterpret_cast<struct eventData*>(eventResult[i].data.ptr);
-#ifdef DEBUG
-		std::cout << "After epoll_wait:" << std::endl;
-		std::cout << "\teventData: " << ed << std::endl;
-		std::cout << "\teventData->data: " << ed->data.ls << std::endl;
-#endif
 		if (ed->type == ListeningFd)
 		{
 			Listening* ls = ed->data.ls;
 #ifdef DEBUG
-			std::cout << "Listening socket event occured" << std::endl;
-			std::cout << "fd: " << ls->sfd << std::endl;
+			std::stringstream fd;
+			fd << ls->sfd;
+			printLog(LOG_DEBUG, "listening fd (" + fd.str() + ") event occured");
 			if (eventResult[i].events & EPOLLIN)
-				std::cout << "event: EPOLLIN" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLIN");
 			if (eventResult[i].events & EPOLLOUT)
-				std::cout << "event: EPOLLOUT" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLOUT");
 			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-				std::cout << "event: EPOLLERR" << std::endl;
-			std::cout << std::endl;
+				printLog(LOG_DEBUG, "EPOLLRDHUP | EPOLLHUP | EPOLLERR");
 #endif
 			if (eventResult[i].events & EPOLLIN)
 				ws.acceptEvent(ls);
@@ -198,21 +198,19 @@ void Epoll::processEvents(Webserv& ws)
 		{
 			Protocol* p = ed->data.p;
 #ifdef DEBUG
-			std::cout << "Connection socket event occured" << std::endl;
-			std::cout << "fd: " << p->c.cfd << std::endl;
+			std::stringstream fd;
+			fd << p->c.cfd;
+			printLog(LOG_DEBUG, "connection fd (" + fd.str() + ") event occured");
 			if (eventResult[i].events & EPOLLIN)
-				std::cout << "event: EPOLLIN" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLIN");
 			if (eventResult[i].events & EPOLLOUT)
-				std::cout << "event: EPOLLOUT" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLOUT");
 			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-				std::cout << "event: EPOLLERR" << std::endl;
-			std::cout << std::endl;
+				printLog(LOG_DEBUG, "EPOLLRDHUP | EPOLLHUP | EPOLLERR");
 #endif
 			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 			{
-#ifdef DEBUG
-				std::cout << "EPOLLERR returned, close connection " << p->c.cfd << std::endl;
-#endif
+				printLog(LOG_DEBUG, "EPOLLRDHUP | EPOLLHUP | EPOLLERR returned, close connection");
 				close(p->c.cfd);
 				ws.getFreeList()->remove(p);
 				delete p;
@@ -222,27 +220,24 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
-#ifdef DEBUG
-					std::cout << "RevHandler finished, close connection " << p->c.cfd << std::endl;
-#endif
+					printLog(LOG_DEBUG, "revHandler returned OK, close connection");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
 				}
 				else if (rv == AGAIN)
 				{
-#ifdef DEBUG
-					std::cout << "RevHandler return AGAIN, addEvent(MOD)" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "revHandler returned AGAIN, go back to epoll_wait");
 					data_t data;
 					data.p = p;
 					ev->addEvent(p->c.cfd, data, ConnectionFd, MOD);
 				}
 				else if (rv == UPSTREAM_AGAIN)
 				{
-#ifdef DEBUG
-					std::cout << "RevHandler return UPSTREAM_AGAIN, addEvent(ADD)" << std::endl;
-#endif
+					printLog(
+						LOG_DEBUG,
+						"revHandler returned UPSTREAM_AGAIN, add upstream fd to epoll_wait and "
+						"go back to epoll_wait");
 					data_t data;
 					data.upstream = p->upstream;
 					ev->addEvent(p->upstream->writeFd, data, UpstreamFd, ADD);
@@ -252,10 +247,7 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else
 				{
-#ifdef DEBUG
-					std::cout << "Error occured while revHandler, close connection " << p->c.cfd
-							  << std::endl;
-#endif
+					printLog(LOG_DEBUG, "revHandler returned ERROR, close connection");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -269,27 +261,21 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
-#ifdef DEBUG
-					std::cout << "RevHandler finished, close connection" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "revHandler returned OK, close connection");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
 				}
 				else if (rv == AGAIN)
 				{
-#ifdef DEBUG
-					std::cout << "RevHandler return AGAIN, addEvent(MOD)" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "revHandler returned AGAIN, go back to epoll_wait");
 					data_t data;
 					data.p = p;
 					ev->addEvent(p->c.cfd, data, ConnectionFd, MOD);
 				}
 				else
 				{
-#ifdef DEBUG
-					std::cout << "Error occured while revHandler, close connection" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "revHandler returned ERROR, close connection");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -301,18 +287,17 @@ void Epoll::processEvents(Webserv& ws)
 		else if (ed->type == UpstreamFd)
 		{
 #ifdef DEBUG
-			std::cout << "Upstream socket event occured" << std::endl;
+			printLog(LOG_DEBUG, "upstream fd event occured");
 			if (eventResult[i].events & EPOLLIN)
-				std::cout << "event: EPOLLIN" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLIN");
 			if (eventResult[i].events & EPOLLOUT)
-				std::cout << "event: EPOLLOUT" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLOUT");
 			if (eventResult[i].events & EPOLLRDHUP)
-				std::cout << "event: EPOLLRDHUP" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLRDHUP");
 			if (eventResult[i].events & EPOLLHUP)
-				std::cout << "event: EPOLLHUP" << std::endl;
+				printLog(LOG_DEBUG, "EPOLLHUP");
 			if (eventResult[i].events & EPOLLERR)
-				std::cout << "event: EPOLLERR" << std::endl;
-			std::cout << std::endl;
+				printLog(LOG_DEBUG, "EPOLLERR");
 #endif
 			Upstream* upstream = ed->data.upstream;
 			if (eventResult[i].events & EPOLLOUT)
@@ -320,9 +305,7 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = upstream->invokeRevHandler();
 				if (rv == OK)
 				{
-#ifdef DEBUG
-					std::cout << "Upstream revHandler finished, close connection" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "upstream revHandler returned OK, close connection");
 					close(upstream->writeFd);
 					upstream->writeFd = -1;
 					data_t data;
@@ -333,19 +316,15 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else if (rv == AGAIN)
 				{
-#ifdef DEBUG
-					std::cout << "Upstream RevHandler return AGAIN, addEvent(MOD)" << std::endl;
-#endif
+					printLog(LOG_DEBUG,
+							 "upstream revHandler returned AGAIN, go back to epoll_wait");
 					data_t data;
 					data.upstream = upstream;
 					ev->addEvent(upstream->writeFd, data, UpstreamFd, MOD);
 				}
 				else // ERROR
 				{
-#ifdef DEBUG
-					std::cout << "Error occured while Upstream revHandler, close connection"
-							  << std::endl;
-#endif
+					printLog(LOG_DEBUG, "upstream revHandler returned ERROR, close connection");
 					close(upstream->writeFd);
 					close(upstream->readFd);
 					data_t data;
@@ -363,9 +342,7 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = upstream->invokeRevHandler();
 				if (rv == OK)
 				{
-#ifdef DEBUG
-					std::cout << "Upstream revHandler finished, close connection" << std::endl;
-#endif
+					printLog(LOG_DEBUG, "upstream revHandler returned OK, close connection");
 					close(upstream->readFd);
 					data_t data;
 					data.p = upstream->p;
@@ -373,19 +350,15 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else if (rv == AGAIN)
 				{
-#ifdef DEBUG
-					std::cout << "Upstream RevHandler return AGAIN, addEvent(MOD)" << std::endl;
-#endif
+					printLog(LOG_DEBUG,
+							 "upstream revHandler returned AGAIN, go back to epoll_wait");
 					data_t data;
 					data.upstream = upstream;
 					ev->addEvent(upstream->readFd, data, UpstreamFd, MOD);
 				}
 				else // ERROR
 				{
-#ifdef DEBUG
-					std::cout << "Error occured while Upstream revHandler, close connection"
-							  << std::endl;
-#endif
+					printLog(LOG_DEBUG, "upstream revHandler returned ERROR, close connection");
 					if (upstream->writeFd != -1)
 						close(upstream->writeFd);
 					close(upstream->readFd);
@@ -400,7 +373,7 @@ void Epoll::processEvents(Webserv& ws)
 		else
 		{
 #ifdef DEBUG
-			std::cerr << "unknown event: " << ed->type << std::endl;
+			std::cerr << "unknown event occured: " << ed->type << std::endl;
 #endif
 			break;
 		}

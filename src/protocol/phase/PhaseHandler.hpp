@@ -1,6 +1,8 @@
 #ifndef PHASEHANDLER_HPP
 #define PHASEHANDLER_HPP
 
+#include "log.hpp"
+
 namespace Wbsv
 {
 	class Http;

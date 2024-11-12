@@ -4,9 +4,7 @@ using namespace Wbsv;
 
 int Access::handler(Http& h)
 {
-#ifdef DEBUG
-	std::cout << "Access handler" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Access::handler");
 	// switch (h.getMethod())
 	// {
 	// case GET:

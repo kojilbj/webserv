@@ -4,9 +4,7 @@ using namespace Wbsv;
 
 int Rewrite::handler(Http& h)
 {
-#ifdef DEBUG
-	std::cout << "Rewrite handler" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Rewrite::handler");
 	LocationCtx* lc = h.getLocationCtx();
 	if (!(dynamic_cast<ReturnLocationCtx*>(lc)))
 		return OK;

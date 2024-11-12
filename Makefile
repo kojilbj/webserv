@@ -15,6 +15,7 @@ SRCS = main.cpp\
 	   Rewrite.cpp\
 	   Access.cpp\
 	   Content.cpp\
+	   log.cpp\
 
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))

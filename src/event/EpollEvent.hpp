@@ -2,6 +2,7 @@
 #	define EPOLLEVENT_HPP
 
 #	include "Connection.hpp"
+#	include "log.hpp"
 #	include "Listening.hpp"
 #	include "Protocol.hpp"
 #	include "Http.hpp"

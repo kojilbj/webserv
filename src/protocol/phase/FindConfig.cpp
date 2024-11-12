@@ -4,9 +4,7 @@ using namespace Wbsv;
 
 int FindConfig::handler(Http& h)
 {
-#ifdef DEBUG
-	std::cout << "FindConfig handler" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "FindConfig::handler");
 	VServerCtx* vs = h.getVServerCtx();
 	std::vector<LocationCtx*>* lv = vs->getLocationCtxs();
 	std::vector<LocationCtx*>::iterator it;
@@ -36,9 +34,6 @@ int FindConfig::handler(Http& h)
 		h.messageBodyOut = h.defaultErrorPages["404"];
 		return DONE;
 	}
-#ifdef DEBUG
-	std::cout << "LocationCtx found" << std::endl;
-	std::cout << "path: " << h.getLocationCtx()->path << std::endl;
-#endif
+	printLog(LOG_DEBUG, "LocationCtx found at " + h.getLocationCtx()->path);
 	return OK;
 }

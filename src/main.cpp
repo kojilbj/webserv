@@ -39,6 +39,8 @@ extern Wbsv::Event* ev;
 #include "ReturnLocationCtx.hpp"
 #include "ServerCtx.hpp"
 #include "VServerCtx.hpp"
+#include "log.hpp"
+#include <iomanip>
 #include <iostream>
 
 void Wbsv::confParse(Wbsv::Webserv& ws)
@@ -90,29 +92,35 @@ void Wbsv::confParse(Wbsv::Webserv& ws)
 
 void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 {
-	std::cout << "--- Parsed Configuration file ---" << std::endl << std::endl;
+	printLog(LOG_DEBUG, "configuration file parsed");
+	std::cout << "\n\n---------------------------------------------\n";
 	using namespace Wbsv;
-	std::cout << "confCtxs size: " << confCtxs->size() << std::endl;
+	std::cout << "confCtxs (size: " << confCtxs->size() << "):" << std::endl;
 	std::vector<ConfCtx*>::iterator it;
 	for (it = (*confCtxs).begin(); it != (*confCtxs).end(); it++)
 	{
 		HttpConfCtx* hcc = (HttpConfCtx*)*it;
-		std::cout << "mainConf size: " << hcc->getMainCtxs().size() << std::endl;
-		std::cout << "serverConf size: " << hcc->getServerCtxs().size() << std::endl;
+		std::cout << "\tmainConf (size: " << hcc->getMainCtxs().size() << "):" << std::endl;
+		std::cout << "\tserverConf (size: " << hcc->getServerCtxs().size() << "):" << std::endl;
 		std::vector<ServerCtx>::iterator sit;
 		for (sit = hcc->getServerCtxs().begin(); sit != hcc->getServerCtxs().end(); sit++)
 		{
-			std::cout << "\tlisten.first: " << sit->getListen().first << std::endl;
-			std::cout << "\tlisten.second: " << sit->getListen().second << std::endl;
+			std::cout << std::setw(20) << std::left
+					  << "\t\tlisten.first: " << sit->getListen().first << std::endl;
+			std::cout << std::setw(20) << std::left
+					  << "\t\tlisten.second: " << sit->getListen().second << std::endl;
 			std::vector<VServerCtx>::iterator vsit;
 			for (vsit = sit->getVServerCtxs()->begin(); vsit != sit->getVServerCtxs()->end();
 				 vsit++)
 			{
-				std::cout << "\tdefaultServer: " << std::boolalpha << vsit->defaultServer
+				std::cout << std::setw(20) << std::left << "\n\t\tvserverConf:\n";
+				std::cout << std::setw(20) << std::left << "\t\tdefaultServer: " << std::boolalpha
+						  << vsit->defaultServer << std::endl;
+				std::cout << std::setw(20) << std::left << "\t\tserver_name: " << vsit->serverName
 						  << std::endl;
-				std::cout << "\tserver_name: " << vsit->serverName << std::endl;
-				std::cout << "\tlocationConf size: " << vsit->getLocationCtxs()->size()
-						  << std::endl;
+				std::cout << std::setw(20) << std::left
+						  << "\t\tlocationConf (size: " << vsit->getLocationCtxs()->size()
+						  << "):" << std::endl;
 				std::vector<LocationCtx*>::const_iterator lit;
 				for (lit = vsit->getLocationCtxs()->begin(); lit != vsit->getLocationCtxs()->end();
 					 lit++)
@@ -120,43 +128,61 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 					HtmlLocationCtx* hlc;
 					CgiLocationCtx* clc;
 					ReturnLocationCtx* rlc;
+					// std::cout.width(20);
 					if ((hlc = dynamic_cast<HtmlLocationCtx*>(*lit)))
 					{
-						std::cout << "\t\tpath: " << hlc->path << std::endl;
-						std::cout << "\t\troot: " << hlc->root << std::endl;
-						std::cout << "\t\tindex: " << hlc->index << std::endl;
+						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << hlc->path
+								  << std::endl;
+						std::cout << std::setw(20) << std::left << "\t\t\troot: " << hlc->root
+								  << std::endl;
+						std::cout << std::setw(20) << std::left << "\t\t\tindex: " << hlc->index
+								  << std::endl;
 					}
 					else if ((clc = dynamic_cast<CgiLocationCtx*>(*lit)))
 					{
-						std::cout << "\t\tpath: " << clc->path << std::endl;
-						std::cout << "\t\tSCRIPT_FILENAME: " << clc->param["SCRIPT_FILENAME"]
+						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << clc->path
 								  << std::endl;
-						std::cout << "\t\tindex: " << clc->index << std::endl;
+						std::cout << std::setw(20) << std::left
+								  << "\t\t\tSCRIPT_FILENAME: " << clc->param["SCRIPT_FILENAME"]
+								  << std::endl;
+						std::cout << std::setw(20) << std::left << "\t\t\tindex: " << clc->index
+								  << std::endl;
 					}
 					else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*lit)))
 					{
-						std::cout << "\t\tpath: " << rlc->path << std::endl;
-						std::cout << "\t\tredirect: " << rlc->redirect.first << " "
+						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << rlc->path
+								  << std::endl;
+						std::cout << std::setw(20) << std::left
+								  << "\t\t\tredirect: " << rlc->redirect.first << " "
 								  << rlc->redirect.second << std::endl;
 					}
+					std::cout << std::endl;
 				}
+				std::cout << std::endl;
 			}
 		}
 	}
-	std::cout << "---------------------------------" << std::endl << std::endl;
+	std::cout << "\n---------------------------------------------\n\n";
 }
 void printListening(std::vector<Wbsv::Listening>* lss)
 {
-	std::cout << "--- Listenings ---" << std::endl << std::endl;
+	printLog(LOG_DEBUG, "listening sockets created");
+	std::cout << "\n---------------------------------------------\n\n";
 	std::cout << "size: " << lss->size() << std::endl;
 	std::vector<Wbsv::Listening>::iterator it;
 	for (it = lss->begin(); it != lss->end(); it++)
 	{
-		std::cout << "\tsfd: " << it->sfd << std::endl;
+		std::cout << std::setw(20) << std::left << "\tsfd: " << it->sfd << std::endl;
 		if (it->family == AF_INET)
-			std::cout << "\tfamily: AF_INET" << std::endl;
+		{
+			std::cout << std::setw(20) << std::left << "\tfamily:";
+			std::cout << "AF_INET" << std::endl;
+		}
 		if (it->socktype == SOCK_STREAM)
-			std::cout << "\tsocktype: SOCK_STREAM" << std::endl;
+		{
+			std::cout << std::setw(20) << std::left << "\tsocktype:";
+			std::cout << "SOCK_STREAM" << std::endl;
+		}
 		char host[NI_MAXHOST];
 		char port[NI_MAXSERV];
 		getnameinfo((struct sockaddr*)&it->sockaddrIn,
@@ -166,12 +192,12 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 					port,
 					NI_MAXSERV,
 					NI_NUMERICHOST);
-		std::cout << "\thost: " << host << std::endl;
-		std::cout << "\tport: " << port << std::endl;
-		std::cout << "\tbacklog: " << it->backlog << std::endl;
-		std::cout << "\tprotocol: " << it->protocol << std::endl;
+		std::cout << std::setw(20) << std::left << "\thost: " << host << std::endl;
+		std::cout << std::setw(20) << std::left << "\tport: " << port << std::endl;
+		std::cout << std::setw(20) << std::left << "\tbacklog: " << it->backlog << std::endl;
+		std::cout << std::setw(20) << std::left << "\tprotocol: " << it->protocol << std::endl;
 	}
-	std::cout << "------------------" << std::endl << std::endl;
+	std::cout << "\n---------------------------------------------\n\n";
 }
 
 /* ----------- end ------------- */

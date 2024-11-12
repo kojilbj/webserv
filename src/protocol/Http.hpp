@@ -2,6 +2,7 @@
 #define HTTP_HPP
 
 #include "Protocol.hpp"
+#include "log.hpp"
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
