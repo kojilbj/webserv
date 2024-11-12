@@ -308,14 +308,15 @@ int main(int argc, char* argv[])
 	if (argc < 2)
 		return 0;
 	std::string confFileName(argv[1]);
-	HttpConfCtx* httpCtx;
+	HttpConfCtx* httpCtx = NULL;
+	std::vector<ConfCtx*> ctx;
 	try
 	{
 		if (argc != 2)
 			return 0;
 		Wbsv::Webserv ws;
 		/* confFileModule */
-		std::vector<ConfCtx*> ctx = ConfParse::confParse(confFileName);
+		ctx = ConfParse::confParse(confFileName);
 		if (!ctx.empty())
 			httpCtx = dynamic_cast<HttpConfCtx*>(ctx.back());
 		if (httpCtx != NULL)

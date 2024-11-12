@@ -30,7 +30,7 @@ PROTO_SRCS = Protocol.cpp\
 	   Access.cpp\
 	   Content.cpp
 
-SRCS = $(CORE_SRCS) $(CONF_SRC) $(EVENT_SRC) $(PROTO_SRC)
+SRCS = $(CORE_SRCS) $(CONF_SRCS) $(EVENT_SRCS) $(PROTO_SRCS)
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++
