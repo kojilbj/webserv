@@ -1,6 +1,7 @@
 #ifndef RETURNLOCATIONCTX_HPP
 #define RETURNLOCATIONCTX_HPP
 
+#include "../protocol/Http.hpp"
 #include "LocationCtx.hpp"
 #include <map>
 
@@ -13,16 +14,18 @@ namespace Wbsv
 	public:
 		ReturnLocationCtx();
 		ReturnLocationCtx(const ReturnLocationCtx& other)
-			: LocationCtx(other), redirect(other.redirect), redirectCodeDict(other.redirectCodeDict)
+			: LocationCtx(other)
+			, redirect_(other.redirect_)
+			, redirectCodeDict_(other.redirectCodeDict_)
 		{ }
 		ReturnLocationCtx& operator=(const ReturnLocationCtx& other)
 		{
 			LocationCtx::operator=(other);
-			redirect = other.redirect;
-			redirectCodeDict = other.redirectCodeDict;
+			redirect_ = other.redirect_;
+			redirectCodeDict_ = other.redirectCodeDict_;
 			return *this;
 		}
-		~ReturnLocationCtx(){};
+		~ReturnLocationCtx() { };
 		int contentHandler(Http&);
 		void setRedirect(const std::string& redirect);
 		const std::vector<std::string>& getRedirect(void) const;
@@ -32,7 +35,5 @@ namespace Wbsv
 		std::map<std::string, std::string> redirectCodeDict_;
 	};
 } // namespace Wbsv
-
-#include "Http.hpp"
 
 #endif

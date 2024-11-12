@@ -1,6 +1,7 @@
 #ifndef HTMLLOCATIONCTX_HPP
 #define HTMLLOCATIONCTX_HPP
 
+#include "../protocol/Http.hpp"
 #include "LocationCtx.hpp"
 #include <dirent.h>
 #include <sstream>
@@ -17,16 +18,16 @@ namespace Wbsv
 			: LocationCtx()
 		{ }
 		HtmlLocationCtx(const HtmlLocationCtx& other)
-			: LocationCtx(other), index(other.index), root(other.root)
+			: LocationCtx(other), index_(other.index_), root_(other.root_)
 		{ }
 		HtmlLocationCtx& operator=(const HtmlLocationCtx& other)
 		{
 			LocationCtx::operator=(other);
-			index = other.index;
-			root = other.root;
+			index_ = other.index_;
+			root_ = other.root_;
 			return *this;
 		}
-		~HtmlLocationCtx(){};
+		~HtmlLocationCtx() { };
 		int contentHandler(Http&);
 		void setIndex(const std::string& index);
 		void setRoot(const std::string& root);
@@ -38,7 +39,5 @@ namespace Wbsv
 		std::string root_;
 	};
 } // namespace Wbsv
-
-#include "Http.hpp"
 
 #endif
