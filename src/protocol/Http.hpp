@@ -33,9 +33,9 @@ namespace Wbsv
 
 	enum httpMethod
 	{
-		GET = 0,
-		POST,
-		DELETE
+		GET = 1,
+		POST = 2,
+		DELETE = 4
 	};
 
 	class Http : public Protocol

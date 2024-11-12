@@ -1,11 +1,8 @@
 #ifndef LOCATIONCTX_HPP
 #define LOCATIONCTX_HPP
 
-#define GET 1
-#define POST 2
-#define DELETE 4
-
 #include "ConfParseUtil.hpp"
+#include "Http.hpp"
 #include <string>
 
 namespace Wbsv
