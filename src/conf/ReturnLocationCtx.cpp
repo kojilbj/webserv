@@ -5,20 +5,20 @@ using namespace Wbsv;
 ReturnLocationCtx::ReturnLocationCtx()
 	: LocationCtx()
 {
-	redirectCodeDict["301"] = "Moved Parmanently";
-	redirectCodeDict["302"] = "Moved Temporarily";
-	redirectCodeDict["303"] = "See Other";
-	redirectCodeDict["307"] = "Temporary Redirect";
+	redirectCodeDict_["301"] = "Moved Parmanently";
+	redirectCodeDict_["302"] = "Moved Temporarily";
+	redirectCodeDict_["303"] = "See Other";
+	redirectCodeDict_["307"] = "Temporary Redirect";
 }
 
 int ReturnLocationCtx::contentHandler(Http& h)
 {
-	h.statusLine += "HTTP/1.1 " + redirect.first + " " + redirectCodeDict[redirect.first] + "\r\n";
-	if (redirect.first == "301" || redirect.first == "302" || redirect.first == "303" ||
-		redirect.first == "307")
-		h.headerOut += "Location: " + redirect.second + "\r\n";
+	h.statusLine += "HTTP/1.1 " + redirect_[0] + " " + redirectCodeDict_[redirect_[0]] + "\r\n";
+	if (redirect_[0] == "301" || redirect_[0] == "302" || redirect_[0] == "303" ||
+		redirect_[0] == "307")
+		h.headerOut += "Location: " + redirect_[1] + "\r\n";
 	h.headerOut += "\r\n";
-	h.messageBodyOut += redirect.second;
+	h.messageBodyOut += redirect_[1];
 	/* if ( rewrite destination is like "http://www.google.com" ) */
 	/* redirect response */
 	/* if ( rewrite destination is like "localhost:80/something" ) */

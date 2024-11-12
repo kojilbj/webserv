@@ -42,6 +42,7 @@ void Epoll::init(Webserv& ws)
 
 void Epoll::timeOutHandler(Webserv& ws)
 {
+	(void)ws;
 	printLog(LOG_DEBUG, "timeOutHandler");
 	std::list<struct eventData*>::iterator it = freeList.begin();
 	int alignIndex = -1;

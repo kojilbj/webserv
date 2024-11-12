@@ -4,6 +4,7 @@ using namespace Wbsv;
 
 int Access::handler(Http& h)
 {
+	(void)h;
 	printLog(LOG_DEBUG, "Access::handler");
 	// switch (h.getMethod())
 	// {

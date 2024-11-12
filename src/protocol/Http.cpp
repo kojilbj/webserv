@@ -3,7 +3,8 @@
 using namespace Wbsv;
 
 Http::Http()
-	: clientHeaderSize(1024)
+	: completelyRead(true)
+	, clientHeaderSize(1024)
 	, largeClientHeaderSize(8192)
 	, requestLineLen(0)
 	, pos(0)
@@ -20,11 +21,10 @@ Http::Http()
 	, fd_(-1)
 	, requestBodyFileFd_(-1)
 	, responseBodyFileFd_(-1)
-	, completelyRead(true)
 	, otherThanChunkDataSize_(0)
-	, unchunkedRequestSize_(0)
 	, chunkSize_(0)
 	, countChunkData_(0)
+	, unchunkedRequestSize_(0)
 {
 	std::memset(responseBodyBuf_, 0, 1024);
 	std::memset(chunkedRequestBuf_, 0, 1025);
@@ -91,7 +91,7 @@ void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 	for (it = cfs->begin(); it != cfs->end(); it++)
 	{
 		ConfCtx* ctx = *it;
-		if (ctx->getProtocol() == "HTTP")
+		if (ctx->getName() == "HTTP")
 		{
 			HttpConfCtx* hc = reinterpret_cast<HttpConfCtx*>(ctx);
 			std::vector<ServerCtx>::iterator sit;
@@ -128,7 +128,7 @@ void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 	std::vector<VServerCtx>::iterator vsit = vserverCtxs->begin();
 	for (; vsit != vserverCtxs->end(); vsit++)
 	{
-		if (vsit->defaultServer)
+		if (vsit->getDefaultServer())
 		{
 			vserverCtx_ = &(*vsit);
 			break;
@@ -144,13 +144,13 @@ void Http::selectVServerCtx(ServerCtx* serverCtx, string host)
 	std::vector<VServerCtx>::iterator defaultServer;
 	for (it = v->begin(); it != v->end(); it++)
 	{
-		if (it->serverName == host)
+		if (it->getServerNames()[0] == host)
 		{
 			vserverCtx_ = &(*it);
 			printLog(LOG_DEBUG, "Host: " + host + " is selected");
 			return;
 		}
-		if (it->defaultServer)
+		if (it->getDefaultServer())
 			defaultServer = it;
 	}
 	printLog(LOG_DEBUG, "Default server is selected");
@@ -336,7 +336,7 @@ int Http::processRequestHeader()
 			std::map<std::string, std::string>::iterator result;
 			if ((result = headersIn.find("Content-Length")) != headersIn.end())
 			{
-				if (isLargerThanMaxBodySize(vserverCtx_->clientMaxBodySize, result->second))
+				if (isLargerThanMaxBodySize(vserverCtx_->getClientMaxBodySize(), result->second))
 				{
 					statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
 					std::stringstream size;
@@ -723,7 +723,7 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 	};
 	otherThanChunkDataSize_ = 0;
 	unchunkedRequestSize_ = 0;
-	for (int i = 0; i < size; i++)
+	for (size_t i = 0; i < size; i++)
 	{
 		switch (state)
 		{
@@ -832,7 +832,7 @@ int Http::processRequest()
 		int rv = DONE;
 		if (alreadyRead)
 		{
-			if (headerIn.size() - pos > vserverCtx_->clientMaxBodySize)
+			if (headerIn.size() - pos > vserverCtx_->getClientMaxBodySize())
 			{
 				statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
 				headerOut = "\r\n";
@@ -927,7 +927,7 @@ int Http::processRequest()
 			}
 			if (readnum == clientHeaderSize)
 				ready = true;
-			if (st.st_size + readnum > vserverCtx_->clientMaxBodySize)
+			if ((size_t)(st.st_size + readnum) > vserverCtx_->getClientMaxBodySize())
 			{
 				statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
 				headerOut = "\r\n";
@@ -1149,7 +1149,7 @@ int Http::finalizeRequest()
 #endif
 		if (writenum == -1)
 			return ERROR;
-		if (writenum < statusLine.size())
+		if ((size_t)writenum < statusLine.size())
 		{
 			responseState = statusLineDoing;
 			pos = writenum;
@@ -1168,7 +1168,7 @@ int Http::finalizeRequest()
 #endif
 		if (writenum == -1)
 			return ERROR;
-		if (writenum < statusLine.size() - pos)
+		if ((size_t)writenum < statusLine.size() - pos)
 		{
 			pos += writenum;
 			return AGAIN;
@@ -1187,7 +1187,7 @@ int Http::finalizeRequest()
 #endif
 		if (writenum == -1)
 			return ERROR;
-		if (writenum < headerOut.size())
+		if ((size_t)writenum < headerOut.size())
 		{
 			responseState = headerOutDoing;
 			pos = writenum;
@@ -1206,7 +1206,7 @@ int Http::finalizeRequest()
 #endif
 		if (writenum == -1)
 			return ERROR;
-		if (writenum < headerOut.size() - pos)
+		if ((size_t)writenum < headerOut.size() - pos)
 		{
 			pos += writenum;
 			return AGAIN;
@@ -1273,7 +1273,7 @@ int Http::finalizeRequest()
 #endif
 			if (writenum == -1)
 				return ERROR;
-			if (writenum < messageBodyOut.size())
+			if ((size_t)writenum < messageBodyOut.size())
 			{
 				responseState = messageBodyDoing;
 				pos = writenum;
@@ -1358,7 +1358,7 @@ int Http::finalizeRequest()
 #endif
 			if (writenum == -1)
 				return ERROR;
-			if (writenum < messageBodyOut.size() - pos)
+			if ((size_t)writenum < messageBodyOut.size() - pos)
 			{
 				pos += writenum;
 				return AGAIN;

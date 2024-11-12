@@ -7,12 +7,12 @@ ServerCtx::ServerCtx(void)
 #ifdef DEBUG
 	std::cout << "ServerCtx Constructor Called" << std::endl;
 #endif
-	listenPort_ = 80;
 	listenIP_ = "0.0.0.0";
+	listenPort_ = 80;
 }
 
 ServerCtx::ServerCtx(const ServerCtx& other)
-	: listenPort_(other.listenPort_), listenIP_(other.listenIP_)
+	: listenIP_(other.listenIP_), listenPort_(other.listenPort_)
 {
 	this->vserverCtxs_.clear();
 	for (std::vector<VServerCtx>::const_iterator it = other.vserverCtxs_.begin();
@@ -31,15 +31,6 @@ const std::string& ServerCtx::getIpAddress(void) const
 const std::string& ServerCtx::getPort(void) const
 {
 	return (listenPort_);
-}
-
-std::pair<std::string, std::string> ServerCtx::getListen(void) const
-{
-	std::pair<std::string, std::string> listen;
-
-	listen.first = listenIP_;
-	listen.second = listenPort_;
-	return listen;
 }
 
 const std::vector<VServerCtx>& ServerCtx::getVServers(void) const
