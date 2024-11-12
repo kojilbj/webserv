@@ -56,8 +56,11 @@ namespace ConfParseUtil
 		std::string index;
 		std::string autoIndex;
 		std::string limitExcept;
+
 		std::string cgiIndex;
 		std::string cgiParam;
+		std::string cgiStore;
+
 		std::string return_;
 	};
 

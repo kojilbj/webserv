@@ -271,7 +271,14 @@ void printHttpConfCtx(HttpConfCtx& httpCtx)
 					std::cout << "autoIndex: " << cgi->isAutoIndex() << std::endl;
 					std::cout << "LimitExcept: " << cgi->getLimitExcept() << std::endl;
 					std::cout << "CgiIndex: " << cgi->getCgiIndex() << std::endl;
-					//CgiParam
+					std::cout << "CgiStore: " << cgi->getStore() << std::endl;
+					std::map<std::string, std::string> param = cgi->getCgiParam();
+					for (std::map<std::string, std::string>::iterator it = param.begin();
+						 it != param.end();
+						 it++)
+					{
+						std::cout << "Key: " << it->first << " Value: " << it->second << std::endl;
+					}
 				}
 				if (retur != NULL)
 				{

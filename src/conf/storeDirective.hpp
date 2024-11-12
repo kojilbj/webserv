@@ -21,6 +21,7 @@ void storeLocationDirective(struct ConfParseUtil::SLocation& location,
 							const std::string& directiveValue);
 void storeCgiParam(struct ConfParseUtil::SLocation& location, const std::string& value);
 void storeCgiIndex(struct ConfParseUtil::SLocation& location, const std::string& value);
+void storeCgiStore(struct ConfParseUtil::SLocation& location, const std::string& value);
 void storeReturn(struct ConfParseUtil::SLocation& location, const std::string& value);
 
 //Server

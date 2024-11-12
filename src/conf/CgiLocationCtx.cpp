@@ -1,6 +1,16 @@
 #include "CgiLocationCtx.hpp"
 
 using namespace Wbsv;
+CgiLocationCtx::CgiLocationCtx(void)
+{
+#ifdef DEBUG
+	std::cout << "CgiLocationCtx Constructor Called" << std::endl;
+#endif
+	index_ = "index.php";
+	store_ = "/test";
+}
+
+CgiLocationCtx::~CgiLocationCtx(void) { }
 
 void CgiLocationCtx::setCgiIndex(const std::string& cgiIndex)
 {

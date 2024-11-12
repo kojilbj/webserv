@@ -26,6 +26,7 @@ namespace Wbsv
 		void addVServer(struct ConfParseUtil::SServer server);
 
 		ServerCtx& operator=(const ServerCtx& other);
+		void addVServer(struct ConfParseUtil::SServer server, bool isFirst = false);
 
 		std::pair<std::string, std::string> getListen() const
 		{

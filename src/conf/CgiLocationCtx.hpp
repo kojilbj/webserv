@@ -31,7 +31,7 @@ namespace Wbsv
 		~CgiLocationCtx() { };
 
 		void setCgiIndex(const std::string& cgiIndex);
-		void setStore(const std::string& path);
+		void CgiLocationCtx::setStore(const std::string& path);
 		void setCgiParam(const std::string& key, const std::string& path);
 		const std::string& getCgiIndex(void) const;
 		const std::map<std::string, std::string>& getCgiParam(void) const;

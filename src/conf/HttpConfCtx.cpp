@@ -83,5 +83,5 @@ void HttpConfCtx::addServer(struct ConfParseUtil::SServer serverInfo)
 		serverCtx.setListenIP(serverInfo.listenIP);
 	if (!serverInfo.listenPort.empty())
 		serverCtx.setListenPort(serverInfo.listenPort);
-	serverCtx.addVServer(serverInfo);
+	serverCtx.addVServer(serverInfo, true);
 }
