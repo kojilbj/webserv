@@ -44,6 +44,7 @@ namespace Wbsv
 		void setDefaultServer(const std::string& isOn);
 
 		bool isDefaultServer(void) const;
+		bool hasServerName(const std::string& host) const;
 
 		const ErrorPages& getErrorPages(void) const;
 		size_t getClientMaxBodySize(void) const;

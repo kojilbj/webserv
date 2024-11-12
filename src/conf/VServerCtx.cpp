@@ -280,3 +280,15 @@ size_t VServerCtx::getClientMaxBodySize(void) const
 {
 	return clientMaxBodySize_;
 }
+
+bool VServerCtx::hasServerName(const std::string& host) const
+{
+	for (std::vector<std::string>::const_iterator it = serverNames_.begin();
+		 it != serverNames_.end();
+		 it++)
+	{
+		if (*it == host)
+			return true;
+	}
+	return false;
+}
