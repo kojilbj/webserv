@@ -95,13 +95,13 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 			}
 		}
 		if (!location.cgiIndex.empty())
-			cgiLocationCtx->setCgiIndex(location.cgiIndex);
+			cgiLocationCtx->setIndex(location.cgiIndex);
 		//paramがちょい不明
 		if (!location.cgiParam.empty())
 		{
 			std::string key = location.cgiParam.substr(0, location.cgiParam.find(' '));
 			std::string path = location.cgiParam.substr(location.cgiParam.find(' ') + 1);
-			cgiLocationCtx->setCgiParam(key, path);
+			cgiLocationCtx->setParam(key, path);
 		}
 		if (!location.cgiStore.empty())
 		{

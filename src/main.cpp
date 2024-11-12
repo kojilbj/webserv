@@ -1,4 +1,5 @@
 // #include "CgiLocationCtx.hpp"
+#include "CgiLocationCtx.hpp"
 #include "ConfParse.hpp"
 #include "HtmlLocationCtx.hpp"
 #include "HttpConfCtx.hpp"
@@ -45,127 +46,80 @@ using namespace Wbsv;
 // 	}
 // }
 
-// void Wbsv::confParse(Wbsv::Webserv& ws)
-// {
-// 	std::vector<ConfCtx*>* confCtxs = new std::vector<ConfCtx*>;
-// 	HttpConfCtx* httpConfCtx = new HttpConfCtx;
-// 	ServerCtx sc;
-// 	sc.addListen("172.17.0.2", "80");
-// 	VServerCtx vsc;
-// 	vsc.defaultServer = true;
-// 	vsc.serverName = "localhost";
-// 	vsc.clientMaxBodySize = 1000000;
-// 	vsc.errorPages["404"] = "/404.html";
-// 	// this must be dynamicaly allocated
-// 	HtmlLocationCtx* hlc = new HtmlLocationCtx;
-// 	hlc->path = "/";
-// 	hlc->root = "/root/webserv/test/html";
-// 	hlc->index = "index.html";
-// 	hlc->autoindex = true;
-// 	vsc.addLocationCtx((LocationCtx*)hlc);
-// 	// this must be dynamicaly allocated
-// 	HtmlLocationCtx* hlc2 = new HtmlLocationCtx;
-// 	hlc2->path = "/images/";
-// 	hlc2->root = "/root/webserv/test";
-// 	vsc.addLocationCtx((LocationCtx*)hlc2);
-// 	// this must be dynamicaly allocated
-// 	ReturnLocationCtx* rlc = new ReturnLocationCtx;
-// 	rlc->path = "/redirect";
-// 	rlc->redirect.first = "301";
-// 	rlc->redirect.second = "http://nginx.org";
-// 	vsc.addLocationCtx((LocationCtx*)rlc);
-// 	// this must be dynamicaly allocated
-// 	CgiLocationCtx* clc = new CgiLocationCtx;
-// 	clc->path = "/php/";
-// 	clc->index = "upload.php";
-// 	clc->param["SCRIPT_FILENAME"] = "/root/webserv/test/cgi$cgi_path_info";
-// 	clc->store = "/root/webserv/test/images/";
-// 	vsc.addLocationCtx((LocationCtx*)clc);
-// 	HtmlLocationCtx* hlc3 = new HtmlLocationCtx;
-// 	hlc3->path = "/404.html";
-// 	hlc3->root = "/root/webserv/test/html";
-// 	vsc.addLocationCtx((LocationCtx*)hlc3);
-// 	sc.addVServerCtx(vsc);
-// 	httpConfCtx->addServerCtx(sc);
-// 	confCtxs->push_back(httpConfCtx);
-// 	ws.setConfCtxs(confCtxs);
-// 	std::vector<LocationCtx*>* v = vsc.getLocationCtxs();
-// }
-
-// void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
-// {
-// 	printLog(LOG_DEBUG, "configuration file parsed");
-// 	std::cout << "\n\n---------------------------------------------\n";
-// 	using namespace Wbsv;
-// 	std::cout << "confCtxs (size: " << confCtxs->size() << "):" << std::endl;
-// 	std::vector<ConfCtx*>::iterator it;
-// 	for (it = (*confCtxs).begin(); it != (*confCtxs).end(); it++)
-// 	{
-// 		HttpConfCtx* hcc = (HttpConfCtx*)*it;
-// 		std::cout << "\tmainConf (size: " << hcc->getMainCtxs().size() << "):" << std::endl;
-// 		std::cout << "\tserverConf (size: " << hcc->getServerCtxs().size() << "):" << std::endl;
-// 		std::vector<ServerCtx>::iterator sit;
-// 		for (sit = hcc->getServerCtxs().begin(); sit != hcc->getServerCtxs().end(); sit++)
-// 		{
-// 			std::cout << std::setw(20) << std::left
-// 					  << "\t\tlisten.first: " << sit->getListen().first << std::endl;
-// 			std::cout << std::setw(20) << std::left
-// 					  << "\t\tlisten.second: " << sit->getListen().second << std::endl;
-// 			std::vector<VServerCtx>::iterator vsit;
-// 			for (vsit = sit->getVServerCtxs()->begin(); vsit != sit->getVServerCtxs()->end();
-// 				 vsit++)
-// 			{
-// 				std::cout << std::setw(20) << std::left << "\n\t\tvserverConf:\n";
-// 				std::cout << std::setw(20) << std::left << "\t\tdefaultServer: " << std::boolalpha
-// 						  << vsit->defaultServer << std::endl;
-// 				std::cout << std::setw(20) << std::left << "\t\tserver_name: " << vsit->serverName
-// 						  << std::endl;
-// 				std::cout << std::setw(20) << std::left
-// 						  << "\t\tlocationConf (size: " << vsit->getLocationCtxs()->size()
-// 						  << "):" << std::endl;
-// 				std::vector<LocationCtx*>::const_iterator lit;
-// 				for (lit = vsit->getLocationCtxs()->begin(); lit != vsit->getLocationCtxs()->end();
-// 					 lit++)
-// 				{
-// 					HtmlLocationCtx* hlc;
-// 					CgiLocationCtx* clc;
-// 					ReturnLocationCtx* rlc;
-// 					// std::cout.width(20);
-// 					if ((hlc = dynamic_cast<HtmlLocationCtx*>(*lit)))
-// 					{
-// 						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << hlc->path
-// 								  << std::endl;
-// 						std::cout << std::setw(20) << std::left << "\t\t\troot: " << hlc->root
-// 								  << std::endl;
-// 						std::cout << std::setw(20) << std::left << "\t\t\tindex: " << hlc->index
-// 								  << std::endl;
-// 					}
-// 					else if ((clc = dynamic_cast<CgiLocationCtx*>(*lit)))
-// 					{
-// 						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << clc->path
-// 								  << std::endl;
-// 						std::cout << std::setw(20) << std::left
-// 								  << "\t\t\tSCRIPT_FILENAME: " << clc->param["SCRIPT_FILENAME"]
-// 								  << std::endl;
-// 						std::cout << std::setw(20) << std::left << "\t\t\tindex: " << clc->index
-// 								  << std::endl;
-// 					}
-// 					else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*lit)))
-// 					{
-// 						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << rlc->path
-// 								  << std::endl;
-// 						std::cout << std::setw(20) << std::left
-// 								  << "\t\t\tredirect: " << rlc->redirect.first << " "
-// 								  << rlc->redirect.second << std::endl;
-// 					}
-// 					std::cout << std::endl;
-// 				}
-// 				std::cout << std::endl;
-// 			}
-// 		}
-// 	}
-// 	std::cout << "\n---------------------------------------------\n\n";
-// }
+void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
+{
+	printLog(LOG_DEBUG, "configuration file parsed");
+	std::cout << "\n\n---------------------------------------------\n";
+	using namespace Wbsv;
+	std::cout << "confCtxs (size: " << confCtxs->size() << "):" << std::endl;
+	std::vector<ConfCtx*>::iterator it;
+	for (it = (*confCtxs).begin(); it != (*confCtxs).end(); it++)
+	{
+		HttpConfCtx* hcc = (HttpConfCtx*)*it;
+		std::cout << "\tmainConf (size: " << hcc->getMainCtxs().size() << "):" << std::endl;
+		std::cout << "\tserverConf (size: " << hcc->getServerCtxs().size() << "):" << std::endl;
+		std::vector<ServerCtx>::iterator sit;
+		for (sit = hcc->getServerCtxs().begin(); sit != hcc->getServerCtxs().end(); sit++)
+		{
+			std::cout << std::setw(20) << std::left
+					  << "\t\tlisten.first: " << sit->getListen().first << std::endl;
+			std::cout << std::setw(20) << std::left
+					  << "\t\tlisten.second: " << sit->getListen().second << std::endl;
+			std::vector<VServerCtx>::iterator vsit;
+			for (vsit = sit->getVServerCtxs()->begin(); vsit != sit->getVServerCtxs()->end();
+				 vsit++)
+			{
+				std::cout << std::setw(20) << std::left << "\n\t\tvserverConf:\n";
+				std::cout << std::setw(20) << std::left << "\t\tdefaultServer: " << std::boolalpha
+						  << vsit->getDefaultServer() << std::endl;
+				std::cout << std::setw(20) << std::left
+						  << "\t\tserver_name: " << vsit->getServerNames()[0] << std::endl;
+				std::cout << std::setw(20) << std::left
+						  << "\t\tlocationConf (size: " << vsit->getLocationCtxs()->size()
+						  << "):" << std::endl;
+				std::vector<LocationCtx*>::const_iterator lit;
+				for (lit = vsit->getLocationCtxs()->begin(); lit != vsit->getLocationCtxs()->end();
+					 lit++)
+				{
+					HtmlLocationCtx* hlc;
+					CgiLocationCtx* clc;
+					ReturnLocationCtx* rlc;
+					// std::cout.width(20);
+					if ((hlc = dynamic_cast<HtmlLocationCtx*>(*lit)))
+					{
+						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << hlc->getPath()
+								  << std::endl;
+						std::cout << std::setw(20) << std::left << "\t\t\troot: " << hlc->getRoot()
+								  << std::endl;
+						std::cout << std::setw(20) << std::left
+								  << "\t\t\tindex: " << hlc->getIndex() << std::endl;
+					}
+					else if ((clc = dynamic_cast<CgiLocationCtx*>(*lit)))
+					{
+						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << clc->getPath()
+								  << std::endl;
+						std::cout << std::setw(20) << std::left
+								  << "\t\t\tSCRIPT_FILENAME: " << clc->getParam()["SCRIPT_FILENAME"]
+								  << std::endl;
+						std::cout << std::setw(20) << std::left
+								  << "\t\t\tindex: " << clc->getIndex() << std::endl;
+					}
+					else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*lit)))
+					{
+						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << rlc->getPath()
+								  << std::endl;
+						std::cout << std::setw(20) << std::left
+								  << "\t\t\tredirect: " << rlc->getRedirect()[0] << " "
+								  << rlc->getRedirect()[1] << std::endl;
+					}
+					std::cout << std::endl;
+				}
+				std::cout << std::endl;
+			}
+		}
+	}
+	std::cout << "\n---------------------------------------------\n\n";
+}
 
 void printListening(std::vector<Wbsv::Listening>* lss)
 {
@@ -198,106 +152,107 @@ void printListening(std::vector<Wbsv::Listening>* lss)
 		std::cout << std::setw(20) << std::left << "\thost: " << host << std::endl;
 		std::cout << std::setw(20) << std::left << "\tport: " << port << std::endl;
 		std::cout << std::setw(20) << std::left << "\tbacklog: " << it->backlog << std::endl;
-		std::cout << std::setw(20) << std::left << "\tprotocol: " << it->protocol << std::endl;
+		std::cout << std::setw(20) << std::left << "\tprotocol: " << it->protocol << std::endl
+				  << std::endl;
 	}
 	std::cout << "\n---------------------------------------------\n\n";
 }
 
-void printHttpConfCtx(HttpConfCtx& httpCtx)
-{
-	std::cout << "--- HttpConfCtx ---" << std::endl << std::endl;
-	for (std::vector<ServerCtx>::iterator it = httpCtx.getServerCtxs().begin();
-		 it != httpCtx.getServerCtxs().end();
-		 it++)
-	{
-		std::cout << "--- Server ---" << std::endl;
-		std::cout << "Listen IP: " << (*it).getIpAddress() << std::endl;
-		std::cout << "Listen Port: " << (*it).getPort() << std::endl;
-		for (std::vector<VServerCtx>::const_iterator ite = (*it).getVServers().begin();
-			 ite != (*it).getVServers().end();
-			 ite++)
-		{
+// void printHttpConfCtx(HttpConfCtx& httpCtx)
+// {
+// 	std::cout << "--- HttpConfCtx ---" << std::endl << std::endl;
+// 	for (std::vector<ServerCtx>::iterator it = httpCtx.getServerCtxs().begin();
+// 		 it != httpCtx.getServerCtxs().end();
+// 		 it++)
+// 	{
+// 		std::cout << "--- Server ---" << std::endl;
+// 		std::cout << "Listen IP: " << (*it).getIpAddress() << std::endl;
+// 		std::cout << "Listen Port: " << (*it).getPort() << std::endl;
+// 		for (std::vector<VServerCtx>::const_iterator ite = (*it).getVServers().begin();
+// 			 ite != (*it).getVServers().end();
+// 			 ite++)
+// 		{
 
-			std::cout << std::endl;
-			std::cout << "--- VServer ---" << std::endl;
-			std::cout << "isDefaultServer: " << ((*ite).isDefaultServer() ? "true" : "false")
-					  << std::endl;
-			std::cout << "Client Max Body Size: " << (*ite).getClientMaxBodySize() << std::endl;
-			std::cout << "serverNames: ";
-			for (std::vector<std::string>::const_iterator iter = (*ite).getServerNames().begin();
-				 iter != (*ite).getServerNames().end();
-				 iter++)
-			{
-				std::cout << (*iter) << " ";
-			}
-			std::cout << std::endl;
-			std::cout << "ErrorPage" << std::endl;
-			for (std::vector<ErrorPage>::const_iterator iter =
-					 (*ite).getErrorPages().getErrorPages().begin();
-				 iter != (*ite).getErrorPages().getErrorPages().end();
-				 iter++)
-			{
-				std::cout << "Page Path: " << (*iter).getErrorPagePath() << std::endl;
-				std::cout << "Error Numbers: ";
-				for (std::vector<std::string>::const_iterator itera =
-						 (*iter).getErrorNumber().begin();
-					 itera != (*iter).getErrorNumber().end();
-					 itera++)
-				{
-					std::cout << (*itera) << " ";
-				}
-				std::cout << std::endl;
-			}
-			for (std::vector<LocationCtx*>::const_iterator iter = ite->getLocations().begin();
-				 iter != ite->getLocations().end();
-				 iter++)
-			{
-				HtmlLocationCtx* html = dynamic_cast<HtmlLocationCtx*>(*iter);
-				CgiLocationCtx* cgi = dynamic_cast<CgiLocationCtx*>(*iter);
-				ReturnLocationCtx* retur = dynamic_cast<ReturnLocationCtx*>(*iter);
-				if (html != NULL)
-				{
-					std::cout << "-----HtmlLocationCtx-------" << std::endl;
-					std::cout << "path: " << html->getPath() << std::endl;
-					std::cout << "autoIndex: " << html->isAutoIndex() << std::endl;
-					std::cout << "LimitExcept: " << html->getLimitExcept() << std::endl;
-					std::cout << "index: " << html->getIndex() << std::endl;
-					std::cout << "root: " << html->getRoot() << std::endl;
-				}
-				if (cgi != NULL)
-				{
-					std::cout << "-----CgiLocationCtx-------" << std::endl;
-					std::cout << "path: " << cgi->getPath() << std::endl;
-					std::cout << "autoIndex: " << cgi->isAutoIndex() << std::endl;
-					std::cout << "LimitExcept: " << cgi->getLimitExcept() << std::endl;
-					std::cout << "CgiIndex: " << cgi->getCgiIndex() << std::endl;
-					std::cout << "CgiStore: " << cgi->getStore() << std::endl;
-					std::map<std::string, std::string> param = cgi->getCgiParam();
-					for (std::map<std::string, std::string>::iterator it = param.begin();
-						 it != param.end();
-						 it++)
-					{
-						std::cout << "Key: " << it->first << " Value: " << it->second << std::endl;
-					}
-				}
-				if (retur != NULL)
-				{
-					std::cout << "-----ReturnLocationCtx-------" << std::endl;
-					std::cout << "path: " << retur->getPath() << std::endl;
-					std::cout << "autoIndex: " << retur->isAutoIndex() << std::endl;
-					std::cout << "LimitExcept: " << retur->getLimitExcept() << std::endl;
-					std::vector<std::string> re = retur->getRedirect();
-					std::cout << "return: ";
-					for (std::vector<std::string>::iterator it = re.begin(); it != re.end(); it++)
-						std::cout << *it << " ";
-					std::cout << std::endl;
-				}
-			}
-		}
-		std::cout << "------------------" << std::endl;
-		std::cout << "------------------" << std::endl << std::endl;
-	}
-}
+// 			std::cout << std::endl;
+// 			std::cout << "--- VServer ---" << std::endl;
+// 			std::cout << "isDefaultServer: " << ((*ite).isDefaultServer() ? "true" : "false")
+// 					  << std::endl;
+// 			std::cout << "Client Max Body Size: " << (*ite).getClientMaxBodySize() << std::endl;
+// 			std::cout << "serverNames: ";
+// 			for (std::vector<std::string>::const_iterator iter = (*ite).getServerNames().begin();
+// 				 iter != (*ite).getServerNames().end();
+// 				 iter++)
+// 			{
+// 				std::cout << (*iter) << " ";
+// 			}
+// 			std::cout << std::endl;
+// 			std::cout << "ErrorPage" << std::endl;
+// 			for (std::vector<ErrorPage>::const_iterator iter =
+// 					 (*ite).getErrorPages().getErrorPages().begin();
+// 				 iter != (*ite).getErrorPages().getErrorPages().end();
+// 				 iter++)
+// 			{
+// 				std::cout << "Page Path: " << (*iter).getErrorPagePath() << std::endl;
+// 				std::cout << "Error Numbers: ";
+// 				for (std::vector<std::string>::const_iterator itera =
+// 						 (*iter).getErrorNumber().begin();
+// 					 itera != (*iter).getErrorNumber().end();
+// 					 itera++)
+// 				{
+// 					std::cout << (*itera) << " ";
+// 				}
+// 				std::cout << std::endl;
+// 			}
+// 			for (std::vector<LocationCtx*>::const_iterator iter = ite->getLocations().begin();
+// 				 iter != ite->getLocations().end();
+// 				 iter++)
+// 			{
+// 				HtmlLocationCtx* html = dynamic_cast<HtmlLocationCtx*>(*iter);
+// 				CgiLocationCtx* cgi = dynamic_cast<CgiLocationCtx*>(*iter);
+// 				ReturnLocationCtx* retur = dynamic_cast<ReturnLocationCtx*>(*iter);
+// 				if (html != NULL)
+// 				{
+// 					std::cout << "-----HtmlLocationCtx-------" << std::endl;
+// 					std::cout << "path: " << html->getPath() << std::endl;
+// 					std::cout << "autoIndex: " << html->isAutoIndex() << std::endl;
+// 					std::cout << "LimitExcept: " << html->getLimitExcept() << std::endl;
+// 					std::cout << "index: " << html->getIndex() << std::endl;
+// 					std::cout << "root: " << html->getRoot() << std::endl;
+// 				}
+// 				if (cgi != NULL)
+// 				{
+// 					std::cout << "-----CgiLocationCtx-------" << std::endl;
+// 					std::cout << "path: " << cgi->getPath() << std::endl;
+// 					std::cout << "autoIndex: " << cgi->isAutoIndex() << std::endl;
+// 					std::cout << "LimitExcept: " << cgi->getLimitExcept() << std::endl;
+// 					std::cout << "CgiIndex: " << cgi->getIndex() << std::endl;
+// 					std::cout << "CgiStore: " << cgi->getStore() << std::endl;
+// 					std::map<std::string, std::string> param = cgi->getParam();
+// 					for (std::map<std::string, std::string>::iterator it = param.begin();
+// 						 it != param.end();
+// 						 it++)
+// 					{
+// 						std::cout << "Key: " << it->first << " Value: " << it->second << std::endl;
+// 					}
+// 				}
+// 				if (retur != NULL)
+// 				{
+// 					std::cout << "-----ReturnLocationCtx-------" << std::endl;
+// 					std::cout << "path: " << retur->getPath() << std::endl;
+// 					std::cout << "autoIndex: " << retur->isAutoIndex() << std::endl;
+// 					std::cout << "LimitExcept: " << retur->getLimitExcept() << std::endl;
+// 					std::vector<std::string> re = retur->getRedirect();
+// 					std::cout << "return: ";
+// 					for (std::vector<std::string>::iterator it = re.begin(); it != re.end(); it++)
+// 						std::cout << *it << " ";
+// 					std::cout << std::endl;
+// 				}
+// 			}
+// 		}
+// 		std::cout << "------------------" << std::endl;
+// 		std::cout << "------------------" << std::endl << std::endl;
+// 	}
+// }
 
 /* ----------- end ------------- */
 
@@ -311,23 +266,24 @@ void sigintHandler(int signal)
 
 int main(int argc, char* argv[])
 {
-	(void)argv;
+	std::string confFileName;
 	if (argc < 2)
-		return 0;
-	std::string confFileName(argv[1]);
-	HttpConfCtx* httpCtx = NULL;
-	std::vector<ConfCtx*> ctx;
+		confFileName = "test/conf/test.conf";
+	else
+		confFileName = argv[1];
+	// HttpConfCtx* httpCtx = NULL;
 	try
 	{
-		if (argc != 2)
-			return 0;
+		std::vector<ConfCtx*> ctx;
+		// if (argc != 2)
+		// 	return 0;
 		Wbsv::Webserv ws;
 		/* confFileModule */
 		ctx = ConfParse::confParse(confFileName);
-		if (!ctx.empty())
-			httpCtx = dynamic_cast<HttpConfCtx*>(ctx.back());
-		if (httpCtx != NULL)
-			printHttpConfCtx(*httpCtx);
+		// if (!ctx.empty())
+		// 	httpCtx = dynamic_cast<HttpConfCtx*>(ctx.back());
+		// if (httpCtx != NULL)
+		// 	printHttpConfCtx(*httpCtx);
 		ws.setConfCtxs(&ctx);
 		// printConf(ws.getConfCtxs());
 		/* initialize 'ws' elements with values got by configuration file */

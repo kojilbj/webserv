@@ -1045,6 +1045,11 @@ int Http::processRequest()
 			char buf[leftRequestBodyLen + 2];
 			std::memset(buf, 0, leftRequestBodyLen + 2);
 			ssize_t readnum = recv(c.cfd, buf, leftRequestBodyLen + 1, 0);
+#ifdef DEBUG
+			std::stringstream num;
+			num << readnum;
+			printLog(LOG_DEBUG, num.str() + " byte is read");
+#endif
 			c.lastReadTime = std::time(NULL);
 			if (readnum <= 0)
 			{
@@ -1072,6 +1077,8 @@ int Http::processRequest()
 			// when "Content-Length: 1000" but real length is 999, ready must be true because 1 byte can be read.
 			if (readnum == leftRequestBodyLen + 1)
 				ready = true;
+			else
+				ready = false;
 		}
 		close(requestBodyFileFd_);
 	}
@@ -1242,7 +1249,7 @@ int Http::finalizeRequest()
 						  << std::endl;
 				std::cout << "readnum from regular file: " << readnum << std::endl;
 				std::cout << "writenum to client: " << writenum << std::endl;
-				// std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
+				std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)

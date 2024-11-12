@@ -15,7 +15,7 @@ Webserv::~Webserv()
 	{
 		delete *it;
 	}
-	delete confCtxs_;
+	// delete confCtxs_;
 	delete listenings_;
 	std::list<Protocol*>::iterator pit;
 	for (pit = freeList.begin(); pit != freeList.end(); pit++)
