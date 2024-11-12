@@ -1,5 +1,7 @@
 #include "ServerCtx.hpp"
 
+using namespace Wbsv;
+
 ServerCtx::ServerCtx(void)
 {
 #ifdef DEBUG
@@ -12,12 +14,12 @@ ServerCtx::ServerCtx(void)
 ServerCtx::ServerCtx(const ServerCtx& other)
 	: listenPort_(other.listenPort_), listenIP_(other.listenIP_)
 {
-	this->vServerCtxs_.clear();
-	for (std::vector<VServerCtx>::const_iterator it = other.vServerCtxs_.begin();
-		 it != other.vServerCtxs_.end();
+	this->vserverCtxs_.clear();
+	for (std::vector<VServerCtx>::const_iterator it = other.vserverCtxs_.begin();
+		 it != other.vserverCtxs_.end();
 		 it++)
 	{
-		this->vServerCtxs_.push_back(*it);
+		this->vserverCtxs_.push_back(*it);
 	}
 }
 
@@ -42,7 +44,7 @@ std::pair<std::string, std::string> ServerCtx::getListen(void) const
 
 const std::vector<VServerCtx>& ServerCtx::getVServers(void) const
 {
-	return (vServerCtxs_);
+	return (vserverCtxs_);
 }
 
 void ServerCtx::addVServer(struct ConfParseUtil::SServer server, bool isFirst)
@@ -77,7 +79,7 @@ void ServerCtx::addVServer(struct ConfParseUtil::SServer server, bool isFirst)
 		}
 	}
 	vsctx.setDefaultServer(isFirst);
-	vServerCtxs_.push_back(vsctx);
+	vserverCtxs_.push_back(vsctx);
 }
 
 void ServerCtx::setListenPort(const std::string& listenPort)
@@ -105,12 +107,12 @@ ServerCtx& ServerCtx::operator=(const ServerCtx& other)
 	{
 		listenPort_ = other.listenPort_;
 		listenIP_ = other.listenIP_;
-		this->vServerCtxs_.clear();
-		for (std::vector<VServerCtx>::const_iterator it = other.vServerCtxs_.begin();
-			 it != other.vServerCtxs_.end();
+		this->vserverCtxs_.clear();
+		for (std::vector<VServerCtx>::const_iterator it = other.vserverCtxs_.begin();
+			 it != other.vserverCtxs_.end();
 			 it++)
 		{
-			this->vServerCtxs_.push_back(*it);
+			this->vserverCtxs_.push_back(*it);
 		}
 	}
 	return *this;

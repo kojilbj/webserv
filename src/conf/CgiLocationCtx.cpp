@@ -9,8 +9,20 @@ CgiLocationCtx::CgiLocationCtx(void)
 	index_ = "index.php";
 	store_ = "/test";
 }
+CgiLocationCtx::CgiLocationCtx(const CgiLocationCtx& other)
+	: LocationCtx(other), index_(other.index_), param_(other.param_), store_(other.store_)
+{ }
 
 CgiLocationCtx::~CgiLocationCtx(void) { }
+
+CgiLocationCtx& CgiLocationCtx::operator=(const CgiLocationCtx& other)
+{
+	LocationCtx::operator=(other);
+	index_ = other.index_;
+	param_ = other.param_;
+	store_ = other.store_;
+	return *this;
+}
 
 void CgiLocationCtx::setCgiIndex(const std::string& cgiIndex)
 {

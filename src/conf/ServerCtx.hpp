@@ -23,8 +23,6 @@ namespace Wbsv
 		const std::string& getPort(void) const;
 		const std::vector<VServerCtx>& getVServers(void) const;
 
-		void addVServer(struct ConfParseUtil::SServer server);
-
 		ServerCtx& operator=(const ServerCtx& other);
 		void addVServer(struct ConfParseUtil::SServer server, bool isFirst = false);
 

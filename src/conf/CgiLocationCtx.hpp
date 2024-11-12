@@ -14,24 +14,13 @@ namespace Wbsv
 	class CgiLocationCtx : public LocationCtx
 	{
 	public:
-		CgiLocationCtx()
-			: LocationCtx()
-		{ }
-		CgiLocationCtx(const CgiLocationCtx& other)
-			: LocationCtx(other), index_(other.index_), param_(other.param_), store_(other.store_)
-		{ }
-		CgiLocationCtx& operator=(const CgiLocationCtx& other)
-		{
-			LocationCtx::operator=(other);
-			index_ = other.index_;
-			param_ = other.param_;
-			store_ = other.store_;
-			return *this;
-		}
-		~CgiLocationCtx() { };
+		CgiLocationCtx();
+		CgiLocationCtx(const CgiLocationCtx& other);
+		CgiLocationCtx& operator=(const CgiLocationCtx& other);
+		~CgiLocationCtx();
 
 		void setCgiIndex(const std::string& cgiIndex);
-		void CgiLocationCtx::setStore(const std::string& path);
+		void setStore(const std::string& path);
 		void setCgiParam(const std::string& key, const std::string& path);
 		const std::string& getCgiIndex(void) const;
 		const std::map<std::string, std::string>& getCgiParam(void) const;

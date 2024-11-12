@@ -50,7 +50,6 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 	}
 }
 
-
 ServerCtx* HttpConfCtx::getServerCtx(const std::string& ipAddress, const std::string& port)
 {
 	for (std::vector<ServerCtx>::iterator it = serverCtxs_.begin(); it != serverCtxs_.end(); it++)
@@ -73,7 +72,7 @@ void HttpConfCtx::addServer(struct ConfParseUtil::SServer serverInfo)
 	{
 		if (it->getIpAddress() == serverInfo.listenIP && it->getPort() == serverInfo.listenPort)
 		{
-			(*it).addVServer(serverInfo);
+			it->addVServer(serverInfo);
 			return;
 		}
 	}
