@@ -54,12 +54,12 @@ HttpConfCtx::~HttpConfCtx(void) { }
 
 void HttpConfCtx::addServerCtx(ServerCtx serverCtx)
 {
-	servers_.push_back(serverCtx);
+	serverCtxs_.push_back(serverCtx);
 }
 
 ServerCtx* HttpConfCtx::getServerCtx(const std::string& ipAddress, const std::string& port)
 {
-	for (std::vector<ServerCtx>::iterator it = servers_.begin(); it != servers_.end(); it++)
+	for (std::vector<ServerCtx>::iterator it = serverCtxs_.begin(); it != serverCtxs_.end(); it++)
 	{
 		if ((*it).getIpAddress() == ipAddress && (*it).getPort() == port)
 			return &(*it);
@@ -75,7 +75,7 @@ void HttpConfCtx::addServer(struct ConfParseUtil::SServer serverInfo)
 		serverInfo.listenIP = "127.0.0.1";
 	if (serverInfo.listenPort.empty())
 		serverInfo.listenPort = "80";
-	for (std::vector<ServerCtx>::iterator it = servers_.begin(); it != servers_.end(); it++)
+	for (std::vector<ServerCtx>::iterator it = serverCtxs_.begin(); it != serverCtxs_.end(); it++)
 	{
 		if (it->getIpAddress() == serverInfo.listenIP && it->getPort() == serverInfo.listenPort)
 		{
@@ -84,7 +84,7 @@ void HttpConfCtx::addServer(struct ConfParseUtil::SServer serverInfo)
 		}
 	}
 	addServerCtx();
-	ServerCtx& serverCtx = servers_.back();
+	ServerCtx& serverCtx = serverCtxs_.back();
 	if (!serverInfo.listenIP.empty())
 		serverCtx.setListenIP(serverInfo.listenIP);
 	if (!serverInfo.listenPort.empty())
