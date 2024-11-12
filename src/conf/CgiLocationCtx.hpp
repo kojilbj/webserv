@@ -1,7 +1,7 @@
 #ifndef CGILOCATIONCTX_HPP
 #define CGILOCATIONCTX_HPP
 
-#include "../protocol/Http.hpp"
+#include "Http.hpp"
 #include "LocationCtx.hpp"
 #include <cstdio>
 #include <cstring>

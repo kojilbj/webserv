@@ -1,9 +1,6 @@
 #ifndef CONFCTX_HPP
 #define CONFCTX_HPP
 
-#include "../Listening.hpp"
-#include "../Webserv.hpp"
-
 #include <string>
 #include <vector>
 
@@ -30,5 +27,9 @@ namespace Wbsv
 
 	void confParse(Webserv& ws);
 } // namespace Wbsv
+
+#include "Listening.hpp"
+#include "Webserv.hpp"
+
 
 #endif

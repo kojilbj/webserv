@@ -14,20 +14,20 @@ namespace Wbsv
 	{
 	public:
 		Upstream()
-			: writeFd(0)
-			, readFd(0)
+			: readFd(0)
+			, writeFd(0)
+			, peerClosed(false)
 			, p(NULL)
+			, lastReadTime(-1)
 			, revHandler_(&Upstream::sendRequestBody)
 			, alreadyRead_(false)
 			, alreadyWrite_(false)
 			, requestBodyFd_(-1)
 			, responseBodyFd_(-1)
-			, peerClosed(false)
-			, lastReadTime(-1)
 		{ }
 		int invokeRevHandler();
-		int writeFd;
 		int readFd;
+		int writeFd;
 		bool peerClosed;
 		Protocol* p;
 		time_t lastReadTime;

@@ -2,6 +2,7 @@
 
 void printLog(int type, std::string msg)
 {
+	(void)msg;
 	// 2024/01/01 01:01:01
 	char now[80];
 	std::time_t rawtime = std::time(NULL);

@@ -19,7 +19,7 @@ namespace Wbsv
 	{
 	public:
 		Protocol()
-			: wevReady(false), upstream(NULL) { };
+			: upstream(NULL), wevReady(false){};
 		virtual ~Protocol();
 		virtual void selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls) = 0;
 		virtual int invokeRevHandler() = 0;
