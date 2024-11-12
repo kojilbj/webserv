@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "CgiLocationCtx.hpp"
 #include "ConfParseUtil.hpp"
@@ -11,8 +13,6 @@
 #include "HtmlLocationCtx.hpp"
 #include "LocationCtx.hpp"
 #include "ReturnLocationCtx.hpp"
-#include <string>
-#include <vector>
 
 namespace Wbsv
 {
@@ -50,46 +50,8 @@ namespace Wbsv
 		const std::vector<LocationCtx*>& getLocations(void) const;
 		const std::vector<std::string>& getServerNames(void) const;
 
-		VServerCtx(const VServerCtx& other)
-			: defaultServer_(other.defaultServer_)
-			, serverNames_(other.serverNames_)
-			, errorPages_(other.errorPages_)
-			, clientMaxBodySize_(other.clientMaxBodySize_)
-		{
-			std::vector<LocationCtx*>::const_iterator it = other.locationCtxs_.begin();
-			HtmlLocationCtx* hlc;
-			CgiLocationCtx* clc;
-			ReturnLocationCtx* rlc;
-			for (; it != other.locationCtxs_.end(); it++)
-			{
-				if ((hlc = dynamic_cast<HtmlLocationCtx*>(*it)))
-				{
-					HtmlLocationCtx* tmp = new HtmlLocationCtx;
-					*tmp = *hlc;
-					locationCtxs_.push_back(reinterpret_cast<LocationCtx*>(tmp));
-				}
-				else if ((clc = dynamic_cast<CgiLocationCtx*>(*it)))
-				{
-					CgiLocationCtx* tmp = new CgiLocationCtx;
-					*tmp = *clc;
-					locationCtxs_.push_back(reinterpret_cast<LocationCtx*>(tmp));
-				}
-				else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*it)))
-				{
-					ReturnLocationCtx* tmp = new ReturnLocationCtx;
-					*tmp = *rlc;
-					locationCtxs_.push_back(reinterpret_cast<LocationCtx*>(tmp));
-				}
-			}
-		}
-		~VServerCtx()
-		{
-			std::vector<LocationCtx*>::iterator it;
-			for (it = locationCtxs_.begin(); it != locationCtxs_.end(); it++)
-			{
-				delete *it;
-			}
-		};
+		VServerCtx(const VServerCtx& other);
+		~VServerCtx(void);
 		std::vector<LocationCtx*>* getLocationCtxs()
 		{
 			return &locationCtxs_;

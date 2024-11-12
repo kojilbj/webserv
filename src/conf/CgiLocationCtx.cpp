@@ -1,22 +1,40 @@
 #include "CgiLocationCtx.hpp"
 
+using namespace Wbsv;
+
 void CgiLocationCtx::setCgiIndex(const std::string& cgiIndex)
 {
 	if (cgiIndex.find(' ') != std::string::npos)
 		throw std::logic_error("Error Invalid Cgi Index: " + cgiIndex);
-	cgiIndex_ = cgiIndex;
+	index_ = cgiIndex;
 }
 
 const std::string& CgiLocationCtx::getCgiIndex(void) const
 {
-	return cgiIndex_;
+	return index_;
 }
 
-void CgiLocationCtx::setCgiParam() { }
-
+void CgiLocationCtx::setCgiParam(const std::string& key, const std::string& path)
+{
+	if (key.empty() || key.find(' ') != std::string::npos)
+		throw std::logic_error("Error Invalid Cgi Param Key: " + key);
+	if (path.empty() || path.find(' ') != std::string::npos)
+		throw std::logic_error("Error Invalid Cgi Param Path: " + path);
+	param_[key] = path;
+}
+void CgiLocationCtx::setStore(const std::string& path)
+{
+	if (path.find(' ') != std::string::npos)
+		throw std::logic_error("Error Invalid Cgi Index: " + path);
+	store_ = path;
+}
+const std::string& CgiLocationCtx::getStore(void) const
+{
+	return store_;
+}
 const std::map<std::string, std::string>& CgiLocationCtx::getCgiParam(void) const
 {
-	return cgiParam_;
+	return param_;
 }
 
 static void
@@ -105,9 +123,9 @@ static size_t maxParamLen(std::map<std::string, std::string>& param)
 
 int CgiLocationCtx::contentHandler(Http& h)
 {
-	std::string scriptFileNameTmp = param["SCRIPT_FILENAME"];
-	parseUri(h, param, index, store);
-	headerIn2Param(h, param);
+	std::string scriptFileNameTmp = param_["SCRIPT_FILENAME"];
+	parseUri(h, param_, index_, store_);
+	headerIn2Param(h, param_);
 #ifdef DEBUG
 	std::cout << "Cgi contentHandler" << std::endl;
 	std::map<std::string, std::string>::iterator itDebug = param.begin();
@@ -116,17 +134,17 @@ int CgiLocationCtx::contentHandler(Http& h)
 		std::cout << "{ " << itDebug->first << " : " << itDebug->second << " }" << std::endl;
 	}
 #endif
-	char environData[param.size()][maxParamLen(param) + 1];
+	char environData[param_.size()][maxParamLen(param_) + 1];
 	std::memset(environData, 0, sizeof(environData));
-	std::map<std::string, std::string>::iterator it = param.begin();
-	for (int i = 0; i != param.size(); i++, it++)
+	std::map<std::string, std::string>::iterator it = param_.begin();
+	for (int i = 0; i != param_.size(); i++, it++)
 	{
 		std::string value = it->first + "=" + it->second;
 		std::strncpy(environData[i], value.c_str(), value.size());
 	}
-	char* environPtrs[param.size()];
+	char* environPtrs[param_.size()];
 	int i = 0;
-	for (; i != param.size(); i++)
+	for (; i != param_.size(); i++)
 	{
 		environPtrs[i] = environData[i];
 	}
@@ -137,7 +155,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 	// if (param["PATH_INFO"].find(".php") != string::npos)
 	// {
 	pathname = "/usr/bin/php-cgi";
-	arg1 = param["PATH_INFO"];
+	arg1 = param_["PATH_INFO"];
 	// }
 	char* argv[3];
 	argv[0] = const_cast<char*>(pathname.c_str());
@@ -182,9 +200,9 @@ int CgiLocationCtx::contentHandler(Http& h)
 	{
 		close(p2cFd[0]);
 		close(c2pFd[1]);
-		param["SCRIPT_FILENAME"] = scriptFileNameTmp;
-		if (param.find("HTTP_COOKIE") != param.end())
-			param.erase("HTTP_COOKIE");
+		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
+		if (param_.find("HTTP_COOKIE") != param_.end())
+			param_.erase("HTTP_COOKIE");
 		h.upstream = new Upstream;
 		h.upstream->writeFd = p2cFd[1];
 		h.upstream->readFd = c2pFd[0];

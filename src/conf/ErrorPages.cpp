@@ -116,7 +116,7 @@ const std::vector<ErrorPage>& ErrorPages::getErrorPages(void) const
 	return errorPages_;
 }
 
-const std::string& ErrorPages::getErrorPagePath(const std::string& errorNumber) const
+std::string ErrorPages::getErrorPagePath(const std::string& errorNumber) const
 {
 	for (std::vector<ErrorPage>::const_iterator it = errorPages_.begin(); it != errorPages_.end();
 		 it++)
@@ -132,7 +132,7 @@ const std::string& ErrorPages::getErrorPagePath(const std::string& errorNumber) 
 	return "";
 }
 
-const std::string& ErrorPages::getErrorPagePath(int errorNumber) const
+std::string ErrorPages::getErrorPagePath(int errorNumber) const
 {
 	for (std::vector<ErrorPage>::const_iterator it = errorPages_.begin(); it != errorPages_.end();
 		 it++)

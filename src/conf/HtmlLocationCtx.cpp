@@ -74,7 +74,7 @@ static int autoindexHandler(Http& h, std::string& dirname)
 
 int HtmlLocationCtx::contentHandler(Http& h)
 {
-	std::string fullPath = root;
+	std::string fullPath = root_;
 	std::string uri = h.getUri();
 	fullPath += uri;
 	if (uri[uri.size() - 1] == '/')
@@ -98,7 +98,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			h.headerOut = "\r\n";
 			return DONE;
 		default: // GET
-			std::string fullPathWithIndex = fullPath + index;
+			std::string fullPathWithIndex = fullPath + index_;
 			int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
 			if (fd == -1)
 			{

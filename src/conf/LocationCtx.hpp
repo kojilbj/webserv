@@ -2,7 +2,6 @@
 #define LOCATIONCTX_HPP
 
 #include "ConfParseUtil.hpp"
-#include "Http.hpp"
 #include <string>
 
 namespace Wbsv
@@ -13,7 +12,7 @@ namespace Wbsv
 	{
 	public:
 		LocationCtx()
-			: limitExcept(GET), autoindex(false){};
+			: limitExcept(1), autoindex(false) { };
 		LocationCtx(const LocationCtx& other)
 			: path(other.path), limitExcept(other.limitExcept), autoindex(other.autoindex)
 		{ }
@@ -24,7 +23,7 @@ namespace Wbsv
 			autoindex = other.autoindex;
 			return *this;
 		}
-		virtual ~LocationCtx(){};
+		virtual ~LocationCtx() { };
 		virtual int contentHandler(Http&) = 0;
 
 		void setPath(const std::string& path);
@@ -49,4 +48,5 @@ namespace Wbsv
 	};
 } // namespace Wbsv
 
+#include "Http.hpp"
 #endif

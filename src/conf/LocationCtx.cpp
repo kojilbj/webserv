@@ -1,5 +1,7 @@
 #include "LocationCtx.hpp"
 
+using namespace Wbsv;
+
 void LocationCtx::setPath(const std::string& pat)
 {
 #ifdef DEBUG
@@ -73,7 +75,7 @@ void LocationCtx::setAutoIndex(bool isOn)
 #ifdef DEBUG
 	std::cout << "LocationCtx setAutoIndex Called" << std::endl;
 #endif
-	autoIndex = isOn;
+	autoindex = isOn;
 }
 
 void LocationCtx::setAutoIndex(const std::string& isOn)
@@ -82,9 +84,9 @@ void LocationCtx::setAutoIndex(const std::string& isOn)
 	std::cout << "LocationCtx setAutoIndex Called" << std::endl;
 #endif
 	if (isOn == "on")
-		autoIndex = true;
+		autoindex = true;
 	else if (isOn == "off")
-		autoIndex = false;
+		autoindex = false;
 	else
 		throw std::logic_error("Error Invalid Auto Index: " + isOn);
 }
@@ -125,5 +127,5 @@ bool LocationCtx::allowDelete(void) const
 
 bool LocationCtx::isAutoIndex(void) const
 {
-	return autoIndex;
+	return autoindex;
 }

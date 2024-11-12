@@ -1,5 +1,7 @@
 #include "VServerCtx.hpp"
 
+using namespace Wbsv;
+
 VServerCtx::VServerCtx(void)
 	: defaultServer_(false)
 {
@@ -9,6 +11,46 @@ VServerCtx::VServerCtx(void)
 	setClientMaxBodySize("1m");
 	addServerName("_");
 }
+VServerCtx::VServerCtx(const VServerCtx& other)
+	: defaultServer_(other.defaultServer_)
+	, serverNames_(other.serverNames_)
+	, errorPages_(other.errorPages_)
+	, clientMaxBodySize_(other.clientMaxBodySize_)
+{
+	std::vector<LocationCtx*>::const_iterator it = other.locationCtxs_.begin();
+	HtmlLocationCtx* hlc;
+	CgiLocationCtx* clc;
+	ReturnLocationCtx* rlc;
+	for (; it != other.locationCtxs_.end(); it++)
+	{
+		if ((hlc = dynamic_cast<HtmlLocationCtx*>(*it)))
+		{
+			HtmlLocationCtx* tmp = new HtmlLocationCtx;
+			*tmp = *hlc;
+			locationCtxs_.push_back(reinterpret_cast<LocationCtx*>(tmp));
+		}
+		else if ((clc = dynamic_cast<CgiLocationCtx*>(*it)))
+		{
+			CgiLocationCtx* tmp = new CgiLocationCtx;
+			*tmp = *clc;
+			locationCtxs_.push_back(reinterpret_cast<LocationCtx*>(tmp));
+		}
+		else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*it)))
+		{
+			ReturnLocationCtx* tmp = new ReturnLocationCtx;
+			*tmp = *rlc;
+			locationCtxs_.push_back(reinterpret_cast<LocationCtx*>(tmp));
+		}
+	}
+}
+VServerCtx::~VServerCtx()
+{
+	std::vector<LocationCtx*>::iterator it;
+	for (it = locationCtxs_.begin(); it != locationCtxs_.end(); it++)
+	{
+		delete *it;
+	}
+};
 
 void VServerCtx::addLocation(LocationCtx* location)
 {
@@ -16,7 +58,7 @@ void VServerCtx::addLocation(LocationCtx* location)
 	std::cout << "VServerCtx addlocation Called" << std::endl;
 #endif
 	if (location != nullptr)
-		locations_.push_back(location);
+		locationCtxs_.push_back(location);
 }
 
 void VServerCtx::addLocation(std::vector<LocationCtx*> location)
@@ -26,7 +68,7 @@ void VServerCtx::addLocation(std::vector<LocationCtx*> location)
 #endif
 	for (std::vector<LocationCtx*>::const_iterator it = location.begin(); it != location.end();
 		 it++)
-		locations_.push_back(*it);
+		locationCtxs_.push_back(*it);
 }
 
 //不必要な情報があった場合のエラーなどもここで行うのがいいと思う
@@ -74,7 +116,7 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 		if (!location.limitExcept.empty())
 			returnLocationCtx->setLimitExcept(location.limitExcept);
 		if (!location.return_.empty())
-			returnLocationCtx->setReturn(location.return_);
+			returnLocationCtx->setRedirect(location.return_);
 		addLocation(returnLocationCtx);
 	}
 	else
@@ -142,7 +184,7 @@ void VServerCtx::addServerName(const std::string& serverName)
 const std::vector<LocationCtx*>& VServerCtx::getLocations(void) const
 {
 	// std::cout << "VServerCtx getlocation Called" << std::endl;
-	return locations_;
+	return locationCtxs_;
 }
 
 void VServerCtx::setDefaultServer(bool isOn)

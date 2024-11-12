@@ -40,8 +40,8 @@ public:
 	void addErrorPage(const std::string& path, const std::string& errorNumber);
 	void addErrorPage(const ErrorPage& errorPage);
 
-	const std::string& getErrorPagePath(const std::string& errorNumber) const;
-	const std::string& getErrorPagePath(int errorNumber) const;
+	std::string getErrorPagePath(const std::string& errorNumber) const;
+	std::string getErrorPagePath(int errorNumber) const;
 
 	const std::vector<ErrorPage>& getErrorPages(void) const;
 

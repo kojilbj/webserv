@@ -1,7 +1,6 @@
 #ifndef CGILOCATIONCTX_HPP
 #define CGILOCATIONCTX_HPP
 
-#include "Http.hpp"
 #include "LocationCtx.hpp"
 #include <cstdio>
 #include <cstring>
@@ -32,9 +31,11 @@ namespace Wbsv
 		~CgiLocationCtx() { };
 
 		void setCgiIndex(const std::string& cgiIndex);
-		void setCgiParam(void);
+		void setStore(const std::string& path);
+		void setCgiParam(const std::string& key, const std::string& path);
 		const std::string& getCgiIndex(void) const;
 		const std::map<std::string, std::string>& getCgiParam(void) const;
+		const std::string& getStore(void) const;
 		int contentHandler(Http& h);
 
 	private:
@@ -43,5 +44,7 @@ namespace Wbsv
 		std::string store_;
 	};
 } // namespace Wbsv
+
+#include "Http.hpp"
 
 #endif
