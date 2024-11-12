@@ -1,6 +1,9 @@
 #ifndef SERVERCTX_HPP
 #define SERVERCTX_HPP
 
+#include "ConfCtx.hpp"
+#include "ConfParseUtil.hpp"
+#include "LocationCtx.hpp"
 #include "VServerCtx.hpp"
 #include <vector>
 
@@ -9,9 +12,26 @@ namespace Wbsv
 	class ServerCtx
 	{
 	public:
+		ServerCtx(void);
+		ServerCtx(const ServerCtx& other);
+		~ServerCtx(void){};
+
+		void setListenPort(const std::string& listenPort);
+		void setListenIP(const std::string& listenIP);
+
+		const std::string& getIpAddress(void) const;
+		const std::string& getPort(void) const;
+		const std::vector<VServerCtx>& getVServers(void) const;
+
+		std::pair<std::string, std::string> getListen(void) const;
+
+		void addVServer(struct ConfParseUtil::SServer server);
+
+		ServerCtx& operator=(const ServerCtx& other);
+
 		const std::pair<std::string, std::string>& getListen() const
 		{
-			return listen_;
+			return make_pair(listenIP_, listenPort_);
 		}
 		std::vector<VServerCtx>* getVServerCtxs()
 		{
@@ -19,8 +39,8 @@ namespace Wbsv
 		}
 		void addListen(const std::string& host, const std::string& port)
 		{
-			listen_.first = host;
-			listen_.second = port;
+			listenIP_ = host;
+			listenPort_ = port;
 		}
 		void addVServerCtx(const VServerCtx& vsc)
 		{
@@ -28,7 +48,8 @@ namespace Wbsv
 		}
 
 	private:
-		std::pair<std::string, std::string> listen_;
+		std::string listenIP_;
+		std::string listenPort_;
 		std::vector<VServerCtx> vserverCtxs_;
 	};
 } // namespace Wbsv

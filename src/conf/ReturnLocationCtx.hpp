@@ -24,8 +24,12 @@ namespace Wbsv
 		}
 		~ReturnLocationCtx(){};
 		int contentHandler(Http&);
-		std::pair<std::string, std::string> redirect;
-		std::map<std::string, std::string> redirectCodeDict;
+		void setRedirect(const std::string& redirect);
+		const std::vector<std::string>& getRedirect(void) const;
+
+	private:
+		std::vector<std::string> redirect_;
+		std::map<std::string, std::string> redirectCodeDict_;
 	};
 } // namespace Wbsv
 

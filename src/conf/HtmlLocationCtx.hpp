@@ -28,8 +28,14 @@ namespace Wbsv
 		}
 		~HtmlLocationCtx(){};
 		int contentHandler(Http&);
-		std::string index;
-		std::string root;
+		void setIndex(const std::string& index);
+		void setRoot(const std::string& root);
+		const std::string& getIndex(void) const;
+		const std::string& getRoot(void) const;
+
+	private:
+		std::string index_;
+		std::string root_;
 	};
 } // namespace Wbsv
 

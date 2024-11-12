@@ -1,8 +1,15 @@
 #ifndef VSERVERCTX_HPP
 #define VSERVERCTX_HPP
 
+#include <algorithm>
+#include <cctype>
+#include <iostream>
+
 #include "CgiLocationCtx.hpp"
+#include "ConfParseUtil.hpp"
+#include "ErrorPages.hpp"
 #include "HtmlLocationCtx.hpp"
+#include "LocationCtx.hpp"
 #include "ReturnLocationCtx.hpp"
 #include <string>
 #include <vector>
@@ -17,8 +24,35 @@ namespace Wbsv
 	class VServerCtx
 	{
 	public:
-		VServerCtx()
-			: defaultServer(false), clientMaxBodySize(0){};
+		VServerCtx(void);
+		VServerCtx(const VServerCtx& other);
+		~VServerCtx(void);
+
+		void addLocation(LocationCtx* location);
+		void addLocation(const std::vector<LocationCtx*> locations);
+		void addLocation(std::vector<struct ConfParseUtil::SLocation> locations);
+		void addLocation(struct ConfParseUtil::SLocation locations);
+
+		void setServerName(const std::string& serverName);
+		void addServerName(const std::string& serverName);
+
+		void setClientMaxBodySize(const std::string& clientMaxBodySize);
+		void setClientMaxBodySize(size_t clientMaxBodySize);
+
+		void addErrorPage(const std::string& errorNumber, const std::string& path);
+		void addErrorPage(const ErrorPage& errorPage);
+
+		void setDefaultServer(bool isOn);
+		void setDefaultServer(const std::string& isOn);
+
+		bool isDefaultServer(void) const;
+
+		const ErrorPages& getErrorPages(void) const;
+		size_t getClientMaxBodySize(void) const;
+		const std::vector<LocationCtx*>& getLocations(void) const;
+		const std::vector<std::string>& getServerNames(void) const;
+
+		VServerCtx();
 		VServerCtx(const VServerCtx& other)
 			: defaultServer(other.defaultServer)
 			, serverName(other.serverName)
@@ -67,12 +101,12 @@ namespace Wbsv
 		{
 			locationCtxs_.push_back(lc);
 		}
-		bool defaultServer;
-		std::string serverName;
-		size_t clientMaxBodySize;
-		std::map<std::string, std::string> errorPages;
 
 	private:
+		bool defaultServer_;
+		std::vector<std::string> serverNames_;
+		ErrorPages errorPages_;
+		size_t clientMaxBodySize_;
 		std::vector<LocationCtx*> locationCtxs_;
 	};
 } // namespace Wbsv

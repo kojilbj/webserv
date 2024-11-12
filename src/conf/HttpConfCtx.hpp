@@ -2,6 +2,7 @@
 #define HTTPCONFCTX_HPP
 
 #include "ConfCtx.hpp"
+#include "ConfParseUtil.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -19,8 +20,23 @@ namespace Wbsv
 	class HttpConfCtx : public ConfCtx
 	{
 	public:
-		HttpConfCtx(){};
+		HttpConfCtx()
+			: ConfCtx("HTTP"){};
 		~HttpConfCtx(){};
+
+		void addServer(struct ConfParseUtil::SServer server);
+		ServerCtx* getServerCtx(const std::string& ipAddress, const std::string& port);
+
+	private:
+		std::vector<ServerCtx> servers_;
+		void addServerCtx(void)
+		{
+			servers_.push_back(ServerCtx());
+		}
+		void addServerCtx(const ServerCtx& sc)
+		{
+			serverCtxs_.push_back(sc);
+		}
 		const std::vector<std::vector<std::string> >& getMainCtxs() const
 		{
 			return mainCtxs_;
@@ -28,14 +44,6 @@ namespace Wbsv
 		std::vector<ServerCtx>& getServerCtxs()
 		{
 			return serverCtxs_;
-		}
-		void addServerCtx(const ServerCtx& sc)
-		{
-			serverCtxs_.push_back(sc);
-		}
-		std::string getProtocol() const
-		{
-			return "HTTP";
 		}
 		void initListening(std::vector<Listening>* lss) const;
 

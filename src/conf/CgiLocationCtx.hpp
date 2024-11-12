@@ -29,10 +29,17 @@ namespace Wbsv
 			return *this;
 		}
 		~CgiLocationCtx(){};
+
+		void setCgiIndex(const std::string& cgiIndex);
+		void setCgiParam(void);
+		const std::string& getCgiIndex(void) const;
+		const std::map<std::string, std::string>& getCgiParam(void) const;
 		int contentHandler(Http& h);
-		std::string index;
-		std::map<std::string, std::string> param;
-		std::string store;
+
+	private:
+		std::string index_;
+		std::map<std::string, std::string> param_;
+		std::string store_;
 	};
 } // namespace Wbsv
 

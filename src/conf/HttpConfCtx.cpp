@@ -49,3 +49,45 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 		lss->push_back(ls);
 	}
 }
+
+HttpConfCtx::~HttpConfCtx(void) { }
+
+void HttpConfCtx::addServerCtx(ServerCtx serverCtx)
+{
+	servers_.push_back(serverCtx);
+}
+
+ServerCtx* HttpConfCtx::getServerCtx(const std::string& ipAddress, const std::string& port)
+{
+	for (std::vector<ServerCtx>::iterator it = servers_.begin(); it != servers_.end(); it++)
+	{
+		if ((*it).getIpAddress() == ipAddress && (*it).getPort() == port)
+			return &(*it);
+	}
+	return nullptr;
+}
+
+void HttpConfCtx::addServer(struct ConfParseUtil::SServer serverInfo)
+{
+	if (serverInfo.listenIP.empty())
+		serverInfo.listenIP = "0.0.0.0";
+	if (serverInfo.listenIP == "localhost")
+		serverInfo.listenIP = "127.0.0.1";
+	if (serverInfo.listenPort.empty())
+		serverInfo.listenPort = "80";
+	for (std::vector<ServerCtx>::iterator it = servers_.begin(); it != servers_.end(); it++)
+	{
+		if (it->getIpAddress() == serverInfo.listenIP && it->getPort() == serverInfo.listenPort)
+		{
+			(*it).addVServer(serverInfo);
+			return;
+		}
+	}
+	addServerCtx();
+	ServerCtx& serverCtx = servers_.back();
+	if (!serverInfo.listenIP.empty())
+		serverCtx.setListenIP(serverInfo.listenIP);
+	if (!serverInfo.listenPort.empty())
+		serverCtx.setListenPort(serverInfo.listenPort);
+	serverCtx.addVServer(serverInfo);
+}

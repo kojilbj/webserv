@@ -12,9 +12,17 @@ namespace Wbsv
 	class ConfCtx
 	{
 	public:
+		ConfCtx(std::string& protoName)
+			: name(protoName){};
 		virtual ~ConfCtx(){};
-		virtual std::string getProtocol() const = 0;
+		virtual std::string getName()
+		{
+			return name;
+		}
 		virtual void initListening(std::vector<Listening>*) const = 0;
+
+	protected:
+		std::string name;
 	};
 
 	void confParse(Webserv& ws);

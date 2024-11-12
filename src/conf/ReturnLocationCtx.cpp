@@ -26,3 +26,26 @@ int ReturnLocationCtx::contentHandler(Http& h)
 	/* count redirect (redirect loop is up to 5) */
 	return DONE;
 }
+
+void ReturnLocationCtx::setRedirect(const std::string& redirect)
+{
+	std::vector<std::string> strs;
+
+	strs = ConfParseUtil::split(redirect, ' ');
+	for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
+	{
+		if (it == strs.begin())
+		{
+			if (ConfParseUtil::isStatusCode(*it) == false || ConfParseUtil::isInfoCode(*it))
+				throw std::logic_error("Error Invalid Return: " + redirect);
+			else
+				redirect_.clear();
+		}
+		redirect_.push_back(*it);
+	}
+}
+
+const std::vector<std::string>& ReturnLocationCtx::getRedirect(void) const
+{
+	return redirect_;
+}
