@@ -3,6 +3,7 @@
 
 #include "ConfCtx.hpp"
 #include "ConfParseUtil.hpp"
+#include "ServerCtx.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -21,8 +22,8 @@ namespace Wbsv
 	{
 	public:
 		HttpConfCtx()
-			: ConfCtx("HTTP"){};
-		~HttpConfCtx(){};
+			: ConfCtx("HTTP") { };
+		~HttpConfCtx() { };
 
 		void addServer(struct ConfParseUtil::SServer server);
 		ServerCtx* getServerCtx(const std::string& ipAddress, const std::string& port);

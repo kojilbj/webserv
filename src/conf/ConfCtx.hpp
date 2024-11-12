@@ -1,6 +1,9 @@
 #ifndef CONFCTX_HPP
 #define CONFCTX_HPP
 
+#include "../Listening.hpp"
+#include "../Webserv.hpp"
+
 #include <string>
 #include <vector>
 
@@ -12,9 +15,9 @@ namespace Wbsv
 	class ConfCtx
 	{
 	public:
-		ConfCtx(std::string& protoName)
-			: name(protoName){};
-		virtual ~ConfCtx(){};
+		ConfCtx(const std::string& protoName)
+			: name(protoName) { };
+		virtual ~ConfCtx() { };
 		virtual std::string getName()
 		{
 			return name;
@@ -27,8 +30,5 @@ namespace Wbsv
 
 	void confParse(Webserv& ws);
 } // namespace Wbsv
-
-#include "Listening.hpp"
-#include "Webserv.hpp"
 
 #endif
