@@ -8,7 +8,7 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 	for (it = serverCtxs_.begin(); it != serverCtxs_.end(); it++)
 	{
 		Listening ls;
-		ls.protocol = getProtocol();
+		ls.protocol = name;
 		std::string host = (it->getListen()).first;
 		std::string port = (it->getListen()).second;
 		if (host == "unix")
@@ -50,12 +50,6 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 	}
 }
 
-HttpConfCtx::~HttpConfCtx(void) { }
-
-void HttpConfCtx::addServerCtx(ServerCtx serverCtx)
-{
-	serverCtxs_.push_back(serverCtx);
-}
 
 ServerCtx* HttpConfCtx::getServerCtx(const std::string& ipAddress, const std::string& port)
 {
@@ -64,7 +58,7 @@ ServerCtx* HttpConfCtx::getServerCtx(const std::string& ipAddress, const std::st
 		if ((*it).getIpAddress() == ipAddress && (*it).getPort() == port)
 			return &(*it);
 	}
-	return nullptr;
+	return NULL;
 }
 
 void HttpConfCtx::addServer(struct ConfParseUtil::SServer serverInfo)
