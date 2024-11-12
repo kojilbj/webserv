@@ -7,6 +7,7 @@ VServerCtx::VServerCtx(void)
 #endif
 	setClientMaxBodySize("1m");
 	addServerName("_");
+	setDefaultServer(false);
 }
 
 VServerCtx::VServerCtx(const VServerCtx& other)
@@ -65,7 +66,15 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 			cgiLocationCtx->setCgiIndex(location.cgiIndex);
 		//paramがちょい不明
 		if (!location.cgiParam.empty())
-			cgiLocationCtx->setCgiParam();
+		{
+			std::string key = location.cgiParam.substr(0, location.cgiParam.find(' '));
+			std::string path = location.cgiParam.substr(location.cgiParam.find(' ') + 1);
+			cgiLocationCtx->setCgiParam(key, path);
+		}
+		if (!location.cgiStore.empty())
+		{
+			cgiLocationCtx->setStore(location.cgiStore);
+		}
 		addLocation(cgiLocationCtx);
 	}
 	else if (!location.return_.empty())
@@ -158,16 +167,6 @@ const std::vector<LocationCtx*>& VServerCtx::getLocations(void) const
 void VServerCtx::setDefaultServer(bool isOn)
 {
 	defaultServer_ = isOn;
-}
-
-void VServerCtx::setDefaultServer(const std::string& isOn)
-{
-	if (isOn == "on")
-		defaultServer_ = true;
-	else if (isOn == "off")
-		defaultServer_ = false;
-	else
-		throw std::logic_error("Error Invalid DefaultServer: " + isOn);
 }
 
 void VServerCtx::setClientMaxBodySize(const std::string& clientMaxBodySize)

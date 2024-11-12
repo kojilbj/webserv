@@ -36,7 +36,6 @@ public:
 	void addErrorPage(const ErrorPage& errorPage);
 
 	void setDefaultServer(bool isOn);
-	void setDefaultServer(const std::string& isOn);
 
 	bool isDefaultServer(void) const;
 

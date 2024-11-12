@@ -27,7 +27,7 @@ std::map<std::string, std::vector<std::string> > ConfParse::mapConfRelative(void
 {
 	size_t i;
 	std::map<std::string, std::vector<std::string> > confRelatives;
-	const char* blocks[] = {"http", "mail", nullptr};
+	const char* blocks[] = {"http", nullptr};
 	const char* httpBlocks[] = {"server", nullptr};
 	const char* serverBlocks[] = {
 		"listen", "location", "error_page", "client_max_body_size", "server_name", nullptr};
@@ -39,6 +39,7 @@ std::map<std::string, std::vector<std::string> > ConfParse::mapConfRelative(void
 									"return",
 									"cgi_param",
 									"cgi_index",
+									"cgi_store",
 									nullptr};
 
 	i = 0;

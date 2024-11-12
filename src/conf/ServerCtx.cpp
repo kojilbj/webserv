@@ -47,7 +47,7 @@ const std::vector<VServerCtx>& ServerCtx::getVServers(void) const
 	return (vServerCtxs_);
 }
 
-void ServerCtx::addVServer(struct ConfParseUtil::SServer server)
+void ServerCtx::addVServer(struct ConfParseUtil::SServer server, bool isFirst)
 {
 	VServerCtx vsctx;
 
@@ -67,8 +67,6 @@ void ServerCtx::addVServer(struct ConfParseUtil::SServer server)
 	}
 	if (!server.clientMaxBodySize.empty())
 		vsctx.setClientMaxBodySize(server.clientMaxBodySize);
-	if (!server.defaultServer.empty())
-		vsctx.setDefaultServer(server.defaultServer);
 	for (std::vector<ErrorPage>::const_iterator it = server.errorPages.getErrorPages().begin();
 		 it != server.errorPages.getErrorPages().end();
 		 it++)
@@ -80,6 +78,7 @@ void ServerCtx::addVServer(struct ConfParseUtil::SServer server)
 			vsctx.addErrorPage(*ite, (*it).getErrorPagePath());
 		}
 	}
+	vsctx.setDefaultServer(isFirst);
 	vServerCtxs_.push_back(vsctx);
 }
 

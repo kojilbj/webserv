@@ -35,6 +35,11 @@ void storeCgiParam(struct ConfParseUtil::SLocation& location, const std::string&
 	location.cgiParam = value;
 }
 
+void storeCgiStore(struct ConfParseUtil::SLocation& location, const std::string& value)
+{
+	location.cgiStore = value;
+}
+
 void storeReturn(struct ConfParseUtil::SLocation& location, const std::string& value)
 {
 	location.return_ = value;
@@ -62,6 +67,8 @@ void storeLocationDirective(struct ConfParseUtil::SLocation& location,
 		storeCgiIndex(location, value);
 	else if (key == "cgi_param")
 		storeCgiParam(location, value);
+	else if (key == "cgi_store")
+		storeCgiStore(location, value);
 	else if (key == "return")
 		storeReturn(location, value);
 }

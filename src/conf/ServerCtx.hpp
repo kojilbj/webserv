@@ -26,7 +26,7 @@ public:
 
 	std::pair<std::string, std::string> getListen(void) const;
 
-	void addVServer(struct ConfParseUtil::SServer server);
+	void addVServer(struct ConfParseUtil::SServer server, bool isFirst = false);
 
 	ServerCtx& operator=(const ServerCtx& other);
 
