@@ -14,7 +14,7 @@ namespace Wbsv
 	public:
 		ServerCtx(void);
 		ServerCtx(const ServerCtx& other);
-		~ServerCtx(void){};
+		~ServerCtx(void) { };
 
 		void setListenPort(const std::string& listenPort);
 		void setListenIP(const std::string& listenIP);
@@ -23,13 +23,11 @@ namespace Wbsv
 		const std::string& getPort(void) const;
 		const std::vector<VServerCtx>& getVServers(void) const;
 
-		std::pair<std::string, std::string> getListen(void) const;
-
 		void addVServer(struct ConfParseUtil::SServer server);
 
 		ServerCtx& operator=(const ServerCtx& other);
 
-		const std::pair<std::string, std::string>& getListen() const
+		std::pair<std::string, std::string> getListen() const
 		{
 			return make_pair(listenIP_, listenPort_);
 		}
