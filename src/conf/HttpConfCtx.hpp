@@ -1,10 +1,12 @@
 #ifndef HTTPCONFCTX_HPP
 #define HTTPCONFCTX_HPP
 
+#include <iostream>
 #include <vector>
 
 #include "ConfCtx.hpp"
-#include "VServerCtx.hpp"
+#include "ConfParseUtil.hpp"
+#include "ServerCtx.hpp"
 
 class HttpConfCtx : public ConfCtx
 {
@@ -14,12 +16,16 @@ public:
 
 	// getMainCtx(void);
 	// getServerCtx(void);
-	void addVServerCtx(void);
-	std::vector<VServerCtx>& getVServerCtxs(void);
+	// void addServerCtx(ServerCtx serverCtx);
+	void addServer(struct ConfParseUtil::SServer server);
+	std::vector<ServerCtx>& getServerCtxs(void);
+	ServerCtx* getServerCtx(const std::string& ipAddress, const std::string& port);
 	// initListening(void);
 
 private:
-	std::vector<VServerCtx> servers_;
+	std::vector<ServerCtx> servers_;
+	void addServerCtx(void);
+	void addServerCtx(ServerCtx serverCtx);
 };
 
 #endif

@@ -1,8 +1,12 @@
 #ifndef CONFCTX_HPP
 #define CONFCTX_HPP
 
+#include "ErrorPages.hpp"
+#include "LocationCtx.hpp"
+
 #include <iostream>
 #include <string>
+#include <vector>
 
 class ConfCtx
 {

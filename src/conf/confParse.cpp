@@ -1,70 +1,29 @@
-#include "HttpConfCtx.hpp"
-#include "setDirective.hpp"
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <string>
-#include <vector>
+#include "ConfParse.hpp"
 
-std::vector<std::string> split(const std::string& str)
+std::vector<std::string> ConfParse::confTokenizer(std::ifstream& confFile)
 {
-	std::string lineBuff;
-	std::string tokenBuff;
-	std::stringstream sstr;
+	std::vector<std::string> line;
+	std::vector<std::string> tokensTmp;
 	std::vector<std::string> tokens;
+	std::vector<std::string> tmp;
 
-	sstr = std::stringstream(str);
-	while (std::getline(sstr, lineBuff, '\n'))
+	line = ConfParseUtil::split(confFile, '\n');
+	for (std::vector<std::string>::iterator it = line.begin(); it != line.end(); it++)
 	{
-		std::istringstream lineStream(lineBuff);
-		//Here error handle for case that the character at end of line isn't '{', '}' or ';'
-		//Need refactaring this stupid proccess for spit
-		while (std::getline(lineStream, tokenBuff, ' '))
-		{
-			std::istringstream tokenStream(tokenBuff);
-			while (std::getline(tokenStream, tokenBuff, '\t'))
-			{
-				//I don't know but tokenBuff stores void-string sometime relatively proccess for \t
-				if (!tokenBuff.empty())
-					tokens.push_back(tokenBuff);
-			}
-		}
+		tmp = ConfParseUtil::split(*it, '\t');
+		if (!tmp.empty())
+			tokensTmp.insert(tokensTmp.end(), tmp.begin(), tmp.end());
+	}
+	for (std::vector<std::string>::iterator it = tokensTmp.begin(); it != tokensTmp.end(); it++)
+	{
+		tmp = ConfParseUtil::split(*it, ' ');
+		if (!tmp.empty())
+			tokens.insert(tokens.end(), tmp.begin(), tmp.end());
 	}
 	return tokens;
 }
 
-std::vector<std::string> split(std::ifstream& file)
-{
-	std::string lineBuff;
-	std::string tokenBuff;
-	std::vector<std::string> tokens;
-
-	while (std::getline(file, lineBuff, '\n'))
-	{
-		std::istringstream lineStream(lineBuff);
-		//Here error handle for case that the character at end of line isn't '{', '}' or ';'
-		//Need refactaring this stupid proccess for spit
-		while (std::getline(lineStream, tokenBuff, ' '))
-		{
-			std::istringstream tokenStream(tokenBuff);
-			while (std::getline(tokenStream, tokenBuff, '\t'))
-			{
-				//I don't know but tokenBuff stores void-string sometime relatively proccess for \t
-				if (!tokenBuff.empty())
-					tokens.push_back(tokenBuff);
-			}
-		}
-	}
-	return tokens;
-}
-
-std::vector<std::string> confTokenizer(std::ifstream& confFile)
-{
-	return split(confFile);
-}
-
-std::map<std::string, std::vector<std::string> > mapConfRelative(void)
+std::map<std::string, std::vector<std::string> > ConfParse::mapConfRelative(void)
 {
 	size_t i;
 	std::map<std::string, std::vector<std::string> > confRelatives;
@@ -72,7 +31,15 @@ std::map<std::string, std::vector<std::string> > mapConfRelative(void)
 	const char* httpBlocks[] = {"server", nullptr};
 	const char* serverBlocks[] = {
 		"listen", "location", "error_page", "client_max_body_size", "server_name", nullptr};
-	const char* locationBlocks[] = {"path", "root", "index", "limit_except", "autoindex", nullptr};
+	const char* locationBlocks[] = {"path",
+									"root",
+									"index",
+									"limit_except",
+									"autoindex",
+									"return",
+									"cgi_param",
+									"cgi_index",
+									nullptr};
 
 	i = 0;
 	confRelatives["_"];
@@ -104,15 +71,9 @@ std::map<std::string, std::vector<std::string> > mapConfRelative(void)
 	return confRelatives;
 }
 
-void printStack(const std::vector<std::string>& stack)
-{
-	for (std::vector<std::string>::const_iterator it = stack.begin(); it != stack.end(); it++)
-		std::cout << *it << std::endl;
-}
-
-bool inspectStructure(const std::string& name,
-					  const std::string& parentBlock,
-					  std::map<std::string, std::vector<std::string> > confRelatives)
+bool ConfParse::inspectStructure(const std::string& name,
+								 const std::string& parentBlock,
+								 std::map<std::string, std::vector<std::string> > confRelatives)
 {
 	decltype(confRelatives)::iterator parentIt;
 	std::vector<std::string> childs;
@@ -131,8 +92,8 @@ bool inspectStructure(const std::string& name,
 	return false;
 }
 
-std::string keyValue(std::vector<std::string>::const_iterator it,
-					 const std::vector<std::string>& tokens)
+std::string ConfParse::keyValue(std::vector<std::string>::const_iterator it,
+								const std::vector<std::string>& tokens)
 {
 	std::string line;
 
@@ -153,24 +114,8 @@ std::string keyValue(std::vector<std::string>::const_iterator it,
 	return line;
 }
 
-int countSpace(const std::string& line)
-{
-	int count;
-	std::string::const_iterator it;
-
-	it = line.begin();
-	count = 0;
-	while (it != line.end())
-	{
-		if (*it == ' ')
-			count++;
-		it++;
-	}
-	return count;
-}
-
 //http以外のブロックを追加するときはここに処理を追加していく
-ConfCtx* createCtx(const std::string& ctxName)
+ConfCtx* ConfParse::createCtx(const std::string& ctxName)
 {
 	ConfCtx* ctx;
 
@@ -180,21 +125,31 @@ ConfCtx* createCtx(const std::string& ctxName)
 	return ctx;
 }
 
-void parser(const std::vector<std::string>& tokens,
-			const std::map<std::string, std::vector<std::string> > confRelatives)
+void ConfParse::store2Server(HttpConfCtx& httpCtx, const ConfParseUtil::SServer& serverInfo)
+{
+	httpCtx.addServer(serverInfo);
+}
+
+std::vector<ConfCtx*>
+ConfParse::parser(const std::vector<std::string>& tokens,
+				  const std::map<std::string, std::vector<std::string> > confRelatives)
 {
 	std::stack<std::string> blockStack;
 	std::vector<std::string>::const_iterator it;
 	std::string directiveValue;
 	std::vector<ConfCtx*> ctxs;
 	HttpConfCtx* httpCtx;
-	VServerCtx vsCtx;
+	VServerCtx* vserverCtx;
+	struct ConfParseUtil::SServer* serverInfo;
+	struct ConfParseUtil::SLocation* locationInfo;
 	bool isPushed;
 
 	it = tokens.begin();
 	blockStack.push("_");
+	serverInfo = nullptr;
+	locationInfo = nullptr;
 	//ブロックはblockStackに積んでいって、構造解析を行う。
-	//スタックにする理由は構造の解析を行うため、セマンティック解析はクラスに情報を入れる前/後に行うことにする
+	//スタックにする理由は構造の解析を行うため、セマンティック解析はsetter()に情報を入れる前/後に行うことにする
 	while (it != tokens.end())
 	{
 		isPushed = false;
@@ -204,7 +159,21 @@ void parser(const std::vector<std::string>& tokens,
 			isPushed = true;
 		}
 		else if (*it == "}")
+		{
+			if (blockStack.top() == "server")
+			{
+				//serverInfoにstoreした情報をServerクラスに入れていく
+				httpCtx = dynamic_cast<HttpConfCtx*>(ctxs.back());
+				store2Server(*httpCtx, *serverInfo);
+				delete serverInfo;
+			}
+			if (blockStack.top() == "location")
+			{
+				serverInfo->locations.push_back(*locationInfo);
+				// delete は serverInfoのdeleteで行われるようにする
+			}
 			blockStack.pop();
+		}
 		//;があると値なので構造は検査しなくてい(;がない時に構造検査をする)
 		else if ((*it).find(";") == std::string::npos)
 			inspectStructure(*it, blockStack.top(), confRelatives);
@@ -212,13 +181,11 @@ void parser(const std::vector<std::string>& tokens,
 			ctxs.push_back(createCtx(blockStack.top()));
 		if (blockStack.top() == "server" && isPushed)
 		{
-			httpCtx = dynamic_cast<HttpConfCtx*>(ctxs.back());
-			httpCtx->addVServerCtx();
+			serverInfo = new struct ConfParseUtil::SServer;
 		}
-		if (blockStack.top() == "location" & isPushed)
+		if (blockStack.top() == "location" && isPushed)
 		{
-			vsCtx = httpCtx->getVServerCtxs().back();
-			vsCtx.addLocation();
+			locationInfo = new struct ConfParseUtil::SLocation;
 		}
 		//ディレクティブはstackには積まれない
 		if (isPushed == false)
@@ -226,35 +193,38 @@ void parser(const std::vector<std::string>& tokens,
 			directiveValue = keyValue(it, tokens);
 			if (!directiveValue.empty())
 			{
+				//ここで一旦構造体に情報を詰め込んでおく
 				if (blockStack.top() == "server")
-					setServerDirective(vsCtx, directiveValue);
+					storeServerDirective(*serverInfo, directiveValue);
+				//多分Locatinoで行くのは無理だからstructuer作る必要がある
 				if (blockStack.top() == "location")
-					setLocationDirective(vsCtx.getLocations().back(), directiveValue);
+					storeLocationDirective(*locationInfo, directiveValue);
+				//serverブロックが終わった時にクラスにaddする。その時にVServerの形成を行う
 			}
 			// Iteratorを値の分進める
-			it += countSpace(keyValue(it, tokens));
+			it += ConfParseUtil::countSpace(keyValue(it, tokens));
 		}
 		it++;
 	}
+	return ctxs;
 }
 
-void confParse(std::string& confFileName)
+std::vector<ConfCtx*> ConfParse::confParse(const std::string& confFileName)
 {
 	std::ifstream confFile;
 	std::vector<std::string> tokens;
 	std::map<std::string, std::vector<std::string> > confRelatives;
+	std::vector<ConfCtx*> ctxs;
 
-	try
-	{
-		confFile.open(confFileName, std::ios::in);
-		if (!confFile.is_open())
-			throw std::invalid_argument("No Such File: " + confFileName);
-		tokens = confTokenizer(confFile);
-		confRelatives = mapConfRelative();
-		parser(tokens, confRelatives);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
+	confFile.open(confFileName, std::ios::in);
+	if (!confFile.is_open())
+		throw std::invalid_argument("No Such File: " + confFileName);
+	tokens = confTokenizer(confFile);
+	confRelatives = mapConfRelative();
+	ctxs = parser(tokens, confRelatives);
+	return ctxs;
 }
+
+ConfParse::ConfParse(void) { }
+
+ConfParse::~ConfParse(void) { }
