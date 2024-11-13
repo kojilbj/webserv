@@ -1,6 +1,7 @@
 #ifndef LOG_HPP
 #define LOG_HPP
 
+#include <cstring>
 #include <ctime>
 #include <iostream>
 #include <string>

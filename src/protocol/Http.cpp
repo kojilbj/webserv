@@ -210,6 +210,14 @@ int Http::createResponse(const std::string& code)
 		if (codes[i] == code)
 			break;
 	}
+	headerOut += "Server: webserv/1.0\r\n";
+	char now[80];
+	std::memset(now, 0, sizeof(now));
+	std::time_t rawtime = std::time(NULL);
+	std::strftime(now, 80, "%c", std::localtime(&rawtime));
+	headerOut += "Date: ";
+	headerOut += now;
+	headerOut += "\r\n";
 	ErrorPages e = vserverCtx_->getErrorPages();
 	switch (i)
 	{
@@ -1270,6 +1278,7 @@ int Http::finalizeRequest()
 		responseState = statusLineDone;
 		return AGAIN;
 	case statusLineDone:
+		headerOut += "Server: webserv/1.0\r\n";
 		headerOut += "\r\n";
 		writenum = write(c.cfd, headerOut.c_str(), headerOut.size());
 		c.lastReadTime = std::time(NULL);

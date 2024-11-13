@@ -5,6 +5,7 @@ void printLog(int type, std::string msg)
 	(void)msg;
 	// 2024/01/01 01:01:01
 	char now[80];
+	std::memset(now, 0, sizeof(now));
 	std::time_t rawtime = std::time(NULL);
 	std::strftime(now, 80, "%Y/%m/%d %T", std::localtime(&rawtime));
 	switch (type)

@@ -21,7 +21,8 @@ def index_html_request():
     w_res = requests.get(WEBSERV_URL)
     n_res = requests.get(NGINX_URL)
     assert w_res.status_code == n_res.status_code 
-    # assert w_res.headers == n_res.headers
+    # assert w_res.headers["Content-Length"] == n_res.headers["Content-Length"]
+    assert w_res.headers == n_res.headers
     assert w_res.content == n_res.content
 
 def upload_html_request():
@@ -29,7 +30,8 @@ def upload_html_request():
     w_res = requests.get(WEBSERV_URL + UPLOAD)
     n_res = requests.get(NGINX_URL + UPLOAD)
     assert w_res.status_code == n_res.status_code 
-    # assert w_res.headers == n_res.headers
+    # assert w_res.headers["Content-Length"] == n_res.headers["Content-Length"]
+    assert w_res.headers == n_res.headers
     assert w_res.content == n_res.content
 
 def upload_php_request():
