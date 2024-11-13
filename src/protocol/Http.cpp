@@ -3,7 +3,9 @@
 using namespace Wbsv;
 
 Http::Http()
-	: completelyRead(true)
+	: notFound(false)
+	, internalRedirect(false)
+	, completelyRead(true)
 	, clientHeaderSize(1024)
 	, largeClientHeaderSize(8192)
 	, requestLineLen(0)
@@ -32,6 +34,9 @@ Http::Http()
 	defaultErrorPages["400"] = "<html>\r\n<head><title>400 Bad "
 							   "Request</title></head>\r\n<body>\r\n<center><h1>400 Bad "
 							   "Request</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["403"] = "<html>\r\n<head><title>403 Forbidden"
+							   "</title></head>\r\n<body>\r\n<center><h1>400 Forbidden"
+							   "</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["404"] = "<html><html>\r\n<head><title>404 Not "
 							   "Found</title></head>\r\n<body>\r\n<center><h1>404 Not "
 							   "Found</h1></center>\r\n</body>\r\n</html>\r\n";
@@ -180,6 +185,96 @@ int Http::waitRequestHandler()
 	return processRequestLine();
 }
 
+int Http::createResponse(const std::string& code)
+{
+	std::string codes[16] = {"200",
+							 "204",
+							 "400",
+							 "403",
+							 "404",
+							 "405",
+							 "406",
+							 "408",
+							 "413",
+							 "414",
+							 "415",
+							 "417",
+							 "500",
+							 "501",
+							 "502",
+							 "505"};
+	size_t size = sizeof(codes) / sizeof(codes[0]);
+	size_t i = 0;
+	for (; i < size; i++)
+	{
+		if (codes[i] == code)
+			break;
+	}
+	ErrorPages e = vserverCtx_->getErrorPages();
+	switch (i)
+	{
+	case 0:
+		statusLine = "HTTP/1.1 200 OK\r\n";
+		return OK;
+	case 1:
+		statusLine = "HTTP/1.1 204 No Content\r\n";
+		return OK;
+	case 2:
+		statusLine = "HTTP/1.1 400 Bad Request\r\n";
+		break;
+	case 3:
+		statusLine = "HTTP/1.1 403 Bad Request\r\n";
+		break;
+	case 4:
+		statusLine = "HTTP/1.1 404 Not Found\r\n";
+		notFound = true;
+		break;
+	case 5:
+		statusLine = "HTTP/1.1 405 Not Allowed\r\n";
+		break;
+	case 6:
+		statusLine = "HTTP/1.1 406 Not Acceptable\r\n";
+		break;
+	case 7:
+		statusLine = "HTTP/1.1 408 Request Timeout\r\n";
+		break;
+	case 8:
+		statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
+		break;
+	case 9:
+		statusLine = "HTTP/1.1 414 Request-Line Too Long\r\n";
+		break;
+	case 10:
+		statusLine = "HTTP/1.1 415 Unsupported Media Type\r\n";
+		break;
+	case 11:
+		statusLine = "HTTP/1.1 417 Expectation Failed\r\n";
+		break;
+	case 12:
+		statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
+		break;
+	case 13:
+		statusLine = "HTTP/1.1 501 Not Implemented\r\n";
+		break;
+	case 14:
+		statusLine = "HTTP/1.1 502 Bad Gateway\r\n";
+		break;
+	case 15:
+		statusLine = "HTTP/1.1 505 HTTP Version Not Supported\r\n";
+		break;
+	}
+	std::string path;
+	if ((path = e.getErrorPagePath(code)) != "")
+	{
+		internalRedirect = true;
+		setUri(path);
+		setMethod(GET);
+		return AGAIN;
+	}
+	messageBodyOut = defaultErrorPages[code];
+	return DONE;
+}
+
 int Http::processRequestLine()
 {
 	printLog(LOG_DEBUG, "Http::processRequestLine");
@@ -231,9 +326,8 @@ int Http::processRequestLine()
 		else if (rv != AGAIN)
 		{
 			printLog(LOG_DEBUG, "parseRequestLine returned ERROR");
-			statusLine = "HTTP/1.1 400 Bad Request\r\n";
-			headerOut = "\r\n";
-			messageBodyOut = defaultErrorPages["400"];
+			if (createResponse("400") == AGAIN)
+				return coreRunPhase();
 			completelyRead = false;
 			return finalizeRequest();
 		}
@@ -241,16 +335,14 @@ int Http::processRequestLine()
 		{
 			if (headerIn.size() >= largeClientHeaderSize)
 			{
-				statusLine = "HTTP/1.1 414 Request-Line Too Long\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["414"];
+				if (createResponse("414") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			if (!ready)
 			{
-				statusLine = "HTTP/1.1 400 Bad Request\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["400"];
+				if (createResponse("400") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			ready = false;
@@ -321,10 +413,8 @@ int Http::processRequestHeader()
 				selectVServerCtx(c.serverCtx, headerFieldValueTmp);
 			if (headerFieldNameTmp == "Transfer-Encoding" && headerFieldValueTmp != "chunked")
 			{
-				// 501 (Unimplemented)
-				statusLine = "HTTP/1.1 501 Not Implemented\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["501"];
+				if (createResponse("501") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			headerFieldNameTmp = "";
@@ -338,12 +428,8 @@ int Http::processRequestHeader()
 			{
 				if (isLargerThanMaxBodySize(vserverCtx_->getClientMaxBodySize(), result->second))
 				{
-					statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
-					std::stringstream size;
-					size << result->second.size();
-					headerOut += "Content-Length: " + size.str() + "\r\n";
-					headerOut += "Content-type: text/html\r\n\r\n";
-					messageBodyOut = defaultErrorPages["413"];
+					if (createResponse("413") == AGAIN)
+						return coreRunPhase();
 					return finalizeRequest();
 				}
 			}
@@ -352,15 +438,13 @@ int Http::processRequestHeader()
 				if (result->second == "100-continue")
 				{
 					statusLine = "HTTP/1.1 100 Continue\r\n";
-					headerOut = "\r\n";
 					continueRequest_ = true;
 					return finalizeRequest();
 				}
 				else
 				{
-					statusLine = "HTTP/1.1 417 Expectation Failed\r\n";
-					headerOut = "\r\n";
-					messageBodyOut = defaultErrorPages["417"];
+					if (createResponse("417") == AGAIN)
+						return coreRunPhase();
 					return finalizeRequest();
 				}
 			}
@@ -377,25 +461,22 @@ int Http::processRequestHeader()
 		}
 		else if (rv != AGAIN)
 		{
-			statusLine = "HTTP/1.1 400 Bad Requet\r\n";
-			headerOut = "\r\n";
-			messageBodyOut = defaultErrorPages["400"];
+			if (createResponse("400") == AGAIN)
+				return coreRunPhase();
 			return finalizeRequest();
 		}
 		else // AGAIN
 		{
 			if (headerIn.size() - requestLineLen >= largeClientHeaderSize)
 			{
-				statusLine = "HTTP/1.1 400 Bad Requet\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["400"];
+				if (createResponse("400") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			if (!ready)
 			{
-				statusLine = "HTTP/1.1 400 Bad Requet\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["400"];
+				if (createResponse("400") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			ready = false;
@@ -834,9 +915,8 @@ int Http::processRequest()
 		{
 			if (headerIn.size() - pos > vserverCtx_->getClientMaxBodySize())
 			{
-				statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["413"];
+				if (createResponse("413") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			std::string tmpDir("/tmp/");
@@ -846,7 +926,8 @@ int Http::processRequest()
 			requestBodyFileFd_ = open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT);
 			if (requestBodyFileFd_ == -1)
 			{
-				// Internal Server Error
+				if (createResponse("500") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			int leftHeaderInSize = headerIn.size() - pos;
@@ -880,11 +961,10 @@ int Http::processRequest()
 					break;
 				else if (rv == ERROR) // ERROR
 				{
-					statusLine = "HTTP/1.1 400 Bad Request\r\n";
-					headerOut = "\r\n";
-					messageBodyOut = defaultErrorPages["400"];
 					close(requestBodyFileFd_);
 					std::remove(requestBodyFileName_.c_str());
+					if (createResponse("400") == AGAIN)
+						return coreRunPhase();
 					return finalizeRequest();
 				}
 				writenum = write(requestBodyFileFd_, unchunkedRequestBuf_, unchunkedRequestSize_);
@@ -895,9 +975,10 @@ int Http::processRequest()
 #endif
 				if (writenum < 0)
 				{
-					// Internal Server Error
 					close(requestBodyFileFd_);
 					std::remove(requestBodyFileName_.c_str());
+					if (createResponse("500") == AGAIN)
+						return coreRunPhase();
 					return finalizeRequest();
 				}
 				std::memset(unchunkedRequestBuf_, 0, 1024);
@@ -913,9 +994,10 @@ int Http::processRequest()
 			struct stat st;
 			if (stat(requestBodyFileName_.c_str(), &st) == -1)
 			{
-				// Server Internal Error
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
+				if (createResponse("500") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			ssize_t readnum = recv(c.cfd, chunkedRequestBuf_, clientHeaderSize, 0); // 1024
@@ -929,11 +1011,10 @@ int Http::processRequest()
 				ready = true;
 			if ((size_t)(st.st_size + readnum) > vserverCtx_->getClientMaxBodySize())
 			{
-				statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["413"];
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
+				if (createResponse("413") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 #ifdef DEBUG
@@ -953,11 +1034,10 @@ int Http::processRequest()
 #endif
 			if (rv == ERROR)
 			{
-				statusLine = "HTTP/1.1 400 Bad Request\r\n";
-				headerOut = "\r\n";
-				messageBodyOut = defaultErrorPages["400"];
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
+				if (createResponse("400") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			ssize_t writenum =
@@ -969,9 +1049,10 @@ int Http::processRequest()
 #endif
 			if (writenum < 0)
 			{
-				// Internal Server Error
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
+				if (createResponse("500") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			if (rv == OK || rv == AGAIN)
@@ -986,8 +1067,9 @@ int Http::processRequest()
 		struct stat st;
 		if (stat(requestBodyFileName_.c_str(), &st) == -1)
 		{
-			// Server Internal Error
 			std::remove(requestBodyFileName_.c_str());
+			if (createResponse("500") == AGAIN)
+				return coreRunPhase();
 			return finalizeRequest();
 		}
 		headersIn.erase("Transfer-Encoding");
@@ -1008,7 +1090,8 @@ int Http::processRequest()
 			requestBodyFileFd_ = open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT);
 			if (requestBodyFileFd_ == -1)
 			{
-				// Server Internal Error
+				if (createResponse("500") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			ssize_t writenum =
@@ -1019,9 +1102,10 @@ int Http::processRequest()
 #endif
 			if (writenum == -1)
 			{
-				// Server Internal Error
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
+				if (createResponse("500") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			if (writenum < bodyLen_)
@@ -1035,9 +1119,10 @@ int Http::processRequest()
 			struct stat st;
 			if (stat(requestBodyFileName_.c_str(), &st) == -1)
 			{
-				// Server Internal Error
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
+				if (createResponse("500") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			// maybe too much ?
@@ -1064,9 +1149,10 @@ int Http::processRequest()
 				writenum = write(requestBodyFileFd_, buf, readnum);
 			if (writenum == -1)
 			{
-				// Internal Server Error
 				close(requestBodyFileFd_);
 				std::remove(requestBodyFileName_.c_str());
+				if (createResponse("500") == AGAIN)
+					return coreRunPhase();
 				return finalizeRequest();
 			}
 			if (readnum < leftRequestBodyLen)
@@ -1184,6 +1270,7 @@ int Http::finalizeRequest()
 		responseState = statusLineDone;
 		return AGAIN;
 	case statusLineDone:
+		headerOut += "\r\n";
 		writenum = write(c.cfd, headerOut.c_str(), headerOut.size());
 		c.lastReadTime = std::time(NULL);
 #ifdef DEBUG

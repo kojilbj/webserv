@@ -21,19 +21,21 @@ int FindConfig::handler(Http& h)
 	}
 	if (!found)
 	{
-		ErrorPages e = vs->getErrorPages();
-		std::string path;
-		if ((path = e.getErrorPagePath("404")) != "")
-		{
-			std::cout << "404 has default error page" << std::endl;
-			h.setUri(path);
-			return AGAIN;
-		}
-		std::cout << "404 has \"not\" default error page" << std::endl;
-		h.statusLine = "HTTP/1.1 404 Not Found\r\n";
-		h.headerOut = "\r\n";
-		h.messageBodyOut = h.defaultErrorPages["404"];
-		return DONE;
+		return h.createResponse("404");
+		// ErrorPages e = vs->getErrorPages();
+		// std::string path;
+		// if ((path = e.getErrorPagePath("404")) != "")
+		// {
+		// 	std::cout << "404 has default error page" << std::endl;
+		// 	h.setUri(path);
+		// 	h.setMethod(GET);
+		// 	return AGAIN;
+		// }
+		// std::cout << "404 has \"not\" default error page" << std::endl;
+		// h.statusLine = "HTTP/1.1 404 Not Found\r\n";
+		// h.headerOut = "\r\n";
+		// h.messageBodyOut = h.defaultErrorPages["404"];
+		// return DONE;
 	}
 	printLog(LOG_DEBUG, "LocationCtx found at " + h.getLocationCtx()->getPath());
 	return OK;

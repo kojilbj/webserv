@@ -17,7 +17,6 @@ int ReturnLocationCtx::contentHandler(Http& h)
 	if (redirect_[0] == "301" || redirect_[0] == "302" || redirect_[0] == "303" ||
 		redirect_[0] == "307")
 		h.headerOut += "Location: " + redirect_[1] + "\r\n";
-	h.headerOut += "\r\n";
 	h.messageBodyOut += redirect_[1];
 	/* if ( rewrite destination is like "http://www.google.com" ) */
 	/* redirect response */

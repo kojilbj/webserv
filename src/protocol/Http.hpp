@@ -74,6 +74,10 @@ namespace Wbsv
 		{
 			return method;
 		};
+		void setMethod(int m)
+		{
+			method = m;
+		};
 		int getPos()
 		{
 			return pos;
@@ -113,6 +117,7 @@ namespace Wbsv
 		int emptyHandler();
 
 		/* Response handlers */
+		int createResponse(const std::string&);
 		int coreRunPhase();
 		int finalizeRequest();
 		int readDiscardedRequest();
@@ -125,6 +130,8 @@ namespace Wbsv
 		std::string responseBodyFileName_;
 
 		// Error
+		bool notFound;
+		bool internalRedirect;
 		map<string, string> defaultErrorPages;
 		bool completelyRead;
 

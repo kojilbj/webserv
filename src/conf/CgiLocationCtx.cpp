@@ -186,23 +186,23 @@ int CgiLocationCtx::contentHandler(Http& h)
 	// fd to send from parent to child.
 	int p2cFd[2];
 	if (pipe(p2cFd) < 0)
-	{
-		// Internal Server Error;
-		return DONE;
-	}
+		return h.createResponse("500");
 	int c2pFd[2];
 	if (pipe(c2pFd) < 0)
 	{
-		// Internal Server Error;
 		close(p2cFd[0]);
 		close(p2cFd[1]);
-		return DONE;
+		return h.createResponse("500");
 	}
 	int pid = fork();
 	if (pid < 0)
 	{
 		// Internal Server Error;
-		return DONE;
+		close(p2cFd[0]);
+		close(p2cFd[1]);
+		close(c2pFd[0]);
+		close(c2pFd[1]);
+		return h.createResponse("500");
 	}
 	if (pid == 0)
 	{

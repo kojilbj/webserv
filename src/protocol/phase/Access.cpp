@@ -6,41 +6,45 @@ int Access::handler(Http& h)
 {
 	(void)h;
 	printLog(LOG_DEBUG, "Access::handler");
+	// LocationCtx* lc = h.getLocationCtx();
 	// switch (h.getMethod())
 	// {
 	// case GET:
-	// 	if (!getLimitExcept(GET))
+	// 	if (!lc->getLimitExcept(GET))
 	// 	{
 	// 		h.statusLine = "HTTP/1.1 405 Not Allowed\r\n";
 	// 		h.headerOut = "Allow: ";
-	// 		if (getLimitExcept(POST))
+	// 		if (lc->getLimitExcept(POST))
 	// 			h.headerOut += "POST";
-	// 		if (getLimitExcept(DELETE))
+	// 		if (lc->getLimitExcept(DELETE))
 	// 			h.headerOut += ", DELETE";
+	// 		h.headerOut += "\r\n";
 	// 		return DONE;
 	// 	}
 	// 	break;
 	// case POST:
-	// 	if (!getLimitExcept(POST))
+	// 	if (!lc->getLimitExcept(POST))
 	// 	{
 	// 		h.statusLine = "HTTP/1.1 405 Not Allowed\r\n";
 	// 		h.headerOut = "Allow: ";
-	// 		if (getLimitExcept(GET))
+	// 		if (lc->getLimitExcept(GET))
 	// 			h.headerOut += "GET";
-	// 		if (getLimitExcept(DELETE))
+	// 		if (lc->getLimitExcept(DELETE))
 	// 			h.headerOut += ", DELETE";
+	// 		h.headerOut += "\r\n";
 	// 		return DONE;
 	// 	}
 	// 	break;
 	// case DELETE:
-	// 	if (!getLimitExcept(DELETE))
+	// 	if (!lc->getLimitExcept(DELETE))
 	// 	{
 	// 		h.statusLine = "HTTP/1.1 405 Not Allowed\r\n";
 	// 		h.headerOut = "Allow: ";
-	// 		if (getLimitExcept(GET))
+	// 		if (lc->getLimitExcept(GET))
 	// 			h.headerOut += "GET";
-	// 		if (getLimitExcept(POST))
+	// 		if (lc->getLimitExcept(POST))
 	// 			h.headerOut += ", POST";
+	// 		h.headerOut += "\r\n";
 	// 		return DONE;
 	// 	}
 	// 	break;

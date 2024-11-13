@@ -27,10 +27,11 @@ int Upstream::sendRequestBody()
 	{
 		close(requestBodyFd_);
 		h->wevReady = true;
-		h->statusLine = "HTTP/1.1 502 Bad Gateway\r\n";
-		h->headerOut = "\r\n";
-		h->messageBodyOut = h->defaultErrorPages["502"];
-		h->revHandler = &Http::finalizeRequest;
+		int rv = h->createResponse("502");
+		if (rv == AGAIN)
+			h->revHandler = &Http::coreRunPhase;
+		else
+			h->revHandler = &Http::finalizeRequest;
 		return ERROR;
 	}
 	int bufSize = 1024;
@@ -39,7 +40,11 @@ int Upstream::sendRequestBody()
 	ssize_t readnum = read(requestBodyFd_, buf, bufSize);
 	if (readnum == -1)
 	{
-		h->revHandler = &Http::finalizeRequest;
+		int rv = h->createResponse("500");
+		if (rv == AGAIN)
+			h->revHandler = &Http::coreRunPhase;
+		else
+			h->revHandler = &Http::finalizeRequest;
 		return ERROR;
 	}
 	if (readnum == 0)
@@ -53,7 +58,11 @@ int Upstream::sendRequestBody()
 	lastReadTime = std::time(NULL);
 	if (writenum == -1)
 	{
-		h->revHandler = &Http::finalizeRequest;
+		int rv = h->createResponse("500");
+		if (rv == AGAIN)
+			h->revHandler = &Http::coreRunPhase;
+		else
+			h->revHandler = &Http::finalizeRequest;
 		return ERROR;
 	}
 	return AGAIN;
@@ -96,13 +105,26 @@ int Upstream::recvResponseBody()
 	lastReadTime = std::time(NULL);
 	if (readnum == -1)
 	{
-		h->revHandler = &Http::finalizeRequest;
+		int rv = h->createResponse("500");
+		if (rv == AGAIN)
+			h->revHandler = &Http::coreRunPhase;
+		else
+			h->revHandler = &Http::finalizeRequest;
 		return ERROR;
 	}
 	if (readnum == 0)
 	{
 		close(responseBodyFd_);
 		int nextFd = open(h->responseBodyFileName_.c_str(), O_RDONLY);
+		if (nextFd == -1)
+		{
+			int rv = h->createResponse("500");
+			if (rv == AGAIN)
+				h->revHandler = &Http::coreRunPhase;
+			else
+				h->revHandler = &Http::finalizeRequest;
+			return ERROR;
+		}
 		h->setFd(nextFd);
 		h->wevReady = true;
 		h->statusLine = "HTTP/1.1 200 OK\r\n";
@@ -112,7 +134,11 @@ int Upstream::recvResponseBody()
 	ssize_t writenum = write(responseBodyFd_, buf, readnum);
 	if (writenum == -1)
 	{
-		h->revHandler = &Http::finalizeRequest;
+		int rv = h->createResponse("500");
+		if (rv == AGAIN)
+			h->revHandler = &Http::coreRunPhase;
+		else
+			h->revHandler = &Http::finalizeRequest;
 		return ERROR;
 	}
 	return AGAIN;
