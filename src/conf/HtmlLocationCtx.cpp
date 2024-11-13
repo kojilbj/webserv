@@ -93,8 +93,8 @@ int HtmlLocationCtx::contentHandler(Http& h)
 					if (!h.notFound)
 						return h.createResponse("404");
 					// if notFound == true, loop infinite.
-					h.statusLine = "HTTP/1.1 404 Not Found\r\n";
-					h.messageBodyOut = h.defaultErrorPages["404"];
+					h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
+					h.messageBodyOut = h.defaultErrorPages["403"];
 					return DONE;
 				}
 				return autoindexHandler(h, fullPath);
