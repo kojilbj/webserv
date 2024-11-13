@@ -74,6 +74,7 @@ static int autoindexHandler(Http& h, std::string& dirname)
 
 int HtmlLocationCtx::contentHandler(Http& h)
 {
+	printLog(LOG_DEBUG, "HtmlLocationCtx::contentHandler");
 	std::string fullPath = root_;
 	std::string uri = h.getUri();
 	fullPath += uri;
