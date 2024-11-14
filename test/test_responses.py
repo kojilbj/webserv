@@ -43,6 +43,7 @@ def upload_php_request():
     assert w_res.status_code == n_res.status_code 
     # assert w_res.headers["Content-Length"] == n_res.headers["Content-Length"]
     assert w_res.headers["Content-Type"] == n_res.headers["Content-Type"]
+    # assert w_res.content == n_res.content
 
 def OK_request():
     index_html_request()

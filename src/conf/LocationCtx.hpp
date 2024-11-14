@@ -12,7 +12,7 @@ namespace Wbsv
 	{
 	public:
 		LocationCtx()
-			: limitExcept(1), autoindex(false){};
+			: limitExcept(3), autoindex(false){};
 		LocationCtx(const LocationCtx& other)
 			: path(other.path), limitExcept(other.limitExcept), autoindex(other.autoindex)
 		{ }

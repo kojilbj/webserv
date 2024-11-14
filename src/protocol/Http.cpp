@@ -229,9 +229,31 @@ int Http::createResponse(const std::string& code)
 		statusLine = "HTTP/1.1 404 Not Found\r\n";
 		notFound = true;
 		break;
-	case 5:
+	case 5: {
 		statusLine = "HTTP/1.1 405 Not Allowed\r\n";
+		headerOut = "Allow: ";
+		bool added = false;
+		if (locationCtx_->allowGet())
+		{
+			headerOut += "GET";
+			added = true;
+		}
+		if (locationCtx_->allowPost())
+		{
+			if (added)
+				headerOut += ", ";
+			headerOut += "POST";
+			added = true;
+		}
+		if (locationCtx_->allowDelete())
+		{
+			if (added)
+				headerOut += ", ";
+			headerOut += "DELETE";
+		}
+		headerOut += "\r\n";
 		break;
+	}
 	case 6:
 		statusLine = "HTTP/1.1 406 Not Acceptable\r\n";
 		break;
@@ -1353,7 +1375,7 @@ int Http::finalizeRequest()
 						  << std::endl;
 				std::cout << "readnum from regular file: " << readnum << std::endl;
 				std::cout << "writenum to client: " << writenum << std::endl;
-				std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
+				// std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)

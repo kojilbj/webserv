@@ -172,6 +172,7 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 			if (blockStack.top() == "location")
 			{
 				serverInfo->locations.push_back(*locationInfo);
+				delete locationInfo;
 				// delete は serverInfoのdeleteで行われるようにする
 			}
 			blockStack.pop();
