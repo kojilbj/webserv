@@ -111,6 +111,11 @@ int Upstream::recvResponseBody()
 	char buf[bufSize + 1];
 	std::memset(buf, 0, bufSize + 1);
 	ssize_t readnum = read(readFd, buf, bufSize);
+#ifdef DEBUG
+	std::stringstream num;
+	num << readnum;
+	printLog(LOG_DEBUG, num.str() + " byte is read");
+#endif
 	lastReadTime = std::time(NULL);
 	if (readnum == -1)
 	{

@@ -1,65 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Sign Up</title>
-    <style>
-        body {
-            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            font-family: 'Roboto', sans-serif;
-            color: white;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-
-        .header {
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.2);
-            font-size: 24px;
-        }
-
-        .gallery {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .gallery img {
-            width: 200px;
-            height: 200px;
-            margin: 10px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .upload-button {
-            margin-top: 20px;
-        }
-
-        a {
-            text-decoration: none;
-            color: #fff;
-            background-color: rgba(0, 0, 0, 0.3);
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-    </style>
+	<title>Sign Up</title>
 </head>
 <body>
-    <header>
-        <h1>ImageShare - Sign Up</h1>
-    </header>
-
-    <section class="signup-form">
-        <form action="/php/signup.php" method="post">
-            <h2>Create an Account</h2>
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" name="submit">Sign Up</button>
-        </form>
-    </section>
+	<h1>Sign Up</h1>
+	<form action="/php/signup.php" method="post" enctype="multipart/form-data">
+		<p>Username: <input type="text" name="username"></p>
+		<p>Password: <input type="password" name="password"></p>
+		<p><input type="submit" name="submit" value="Sign Up"></p>
+	</form>
 </body>
 </html>
-

@@ -286,14 +286,16 @@ int Http::createResponse(const std::string& code)
 		break;
 	}
 	std::string path;
-	if ((path = e.getErrorPagePath(code)) != "")
+	if ((path = e.getErrorPagePath(code)) != "" &&
+		messageBodyOut == "") // when upstream failed, there are "File not found." message.
 	{
 		internalRedirect = true;
 		setUri(path);
 		setMethod(GET);
 		return AGAIN;
 	}
-	messageBodyOut = defaultErrorPages[code];
+	if (messageBodyOut == "")
+		messageBodyOut = defaultErrorPages[code];
 	std::stringstream len;
 	len << messageBodyOut.size();
 	headerOut += "Content-Type: text/html\r\n";

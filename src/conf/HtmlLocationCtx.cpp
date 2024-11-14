@@ -26,7 +26,7 @@ static int autoindexHandler(Http& h, std::string& dirname)
 	std::cout << "autoindexHandler" << std::endl;
 	DIR* dirp = opendir(dirname.c_str());
 	if (!dirp)
-		return h.createResponse("500");
+		return h.createResponse("404");
 	struct dirent* dp;
 	h.statusLine = "HTTP/1.1 200 OK\r\n";
 	h.messageBodyOut += "<html>\n<head>\n<title>Index of " + h.getUri() +
@@ -74,6 +74,13 @@ static int autoindexHandler(Http& h, std::string& dirname)
 int HtmlLocationCtx::contentHandler(Http& h)
 {
 	printLog(LOG_DEBUG, "HtmlLocationCtx::contentHandler");
+	if (access(root_.c_str(), F_OK) == -1)
+		return h.createResponse("404");
+	struct stat st;
+	if (stat(root_.c_str(), &st) == -1)
+		return h.createResponse("500");
+	if (!(st.st_mode & S_IROTH))
+		return h.createResponse("403");
 	std::string fullPath = root_;
 	std::string uri = h.getUri();
 	fullPath += uri;

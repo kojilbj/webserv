@@ -91,7 +91,6 @@ parseUri(Http& h, std::map<std::string, std::string>& param, std::string index, 
 	else
 		param["PATH_INFO"] = uri;
 	std::string scriptFilename = param["SCRIPT_FILENAME"];
-	std::cout << "first scriptFilename" << scriptFilename << std::endl;
 	std::string pathInfoVar = "$cgi_path_info";
 	pos = scriptFilename.find(pathInfoVar);
 	if (pos != string::npos)
@@ -145,9 +144,28 @@ static size_t maxParamLen(std::map<std::string, std::string>& param)
 
 int CgiLocationCtx::contentHandler(Http& h)
 {
+	std::string scriptFilename = param_["SCRIPT_FILENAME"];
+	std::string pathInfoVar = "$cgi_path_info";
+	std::string scriptName;
+	size_t pos = scriptFilename.find(pathInfoVar);
+	if (pos != string::npos)
+		scriptName = scriptFilename.substr(0, pos);
+	else
+		scriptName = scriptFilename;
+	if (access(scriptName.c_str(), F_OK | R_OK) == -1)
+	{
+		h.messageBodyOut = "File not found.\n";
+		return h.createResponse("404");
+	}
+
 	std::string scriptFileNameTmp = param_["SCRIPT_FILENAME"];
 	parseUri(h, param_, index_, store_);
 	headerIn2Param(h, param_);
+	struct stat st;
+	if (stat(param_["SCRIPT_FILENAME"].c_str(), &st) == -1)
+		return h.createResponse("500");
+	if (!(st.st_mode & S_IROTH))
+		return h.createResponse("500");
 #ifdef DEBUG
 	std::cout << "Cgi contentHandler" << std::endl;
 	std::map<std::string, std::string>::iterator itDebug = param_.begin();

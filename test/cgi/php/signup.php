@@ -7,6 +7,9 @@ if (isset($_POST['submit'])) {
     fputcsv($file, [$username, $password]);
     fclose($file);
     
-    echo "Registration successful! <a href='login.html'>Log In</a>";
+    echo "Registration successful! <a href='/login.html'>Log In</a>";
+}
+else {
+	echo "Invalid Method";
 }
 ?>

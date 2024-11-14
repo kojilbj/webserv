@@ -85,10 +85,17 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 					CgiLocationCtx* clc;
 					ReturnLocationCtx* rlc;
 					// std::cout.width(20);
+					std::cout << std::setw(20) << std::left << "\t\t\tpath: " << (*lit)->getPath()
+							  << std::endl;
+					std::cout << std::setw(20) << std::left
+							  << "\t\t\tautoindex: " << ((*lit)->isAutoIndex() ? "on" : "off")
+							  << std::endl;
+					std::cout << std::setw(20) << std::left
+							  << "\t\t\tlimit_except: " << ((*lit)->allowGet() ? "GET " : "")
+							  << ((*lit)->allowPost() ? "POST " : "")
+							  << ((*lit)->allowDelete() ? "DELETE" : "") << std::endl;
 					if ((hlc = dynamic_cast<HtmlLocationCtx*>(*lit)))
 					{
-						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << hlc->getPath()
-								  << std::endl;
 						std::cout << std::setw(20) << std::left << "\t\t\troot: " << hlc->getRoot()
 								  << std::endl;
 						std::cout << std::setw(20) << std::left
@@ -96,8 +103,6 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 					}
 					else if ((clc = dynamic_cast<CgiLocationCtx*>(*lit)))
 					{
-						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << clc->getPath()
-								  << std::endl;
 						std::cout << std::setw(20) << std::left
 								  << "\t\t\tSCRIPT_FILENAME: " << clc->getParam()["SCRIPT_FILENAME"]
 								  << std::endl;
@@ -108,8 +113,6 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 					}
 					else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*lit)))
 					{
-						std::cout << std::setw(20) << std::left << "\t\t\tpath: " << rlc->getPath()
-								  << std::endl;
 						std::cout << std::setw(20) << std::left
 								  << "\t\t\tredirect: " << rlc->getRedirect()[0] << " "
 								  << rlc->getRedirect()[1] << std::endl;
@@ -270,7 +273,7 @@ int main(int argc, char* argv[])
 {
 	std::string confFileName;
 	if (argc < 2)
-		confFileName = "test/conf/test.conf";
+		confFileName = "test/conf/default.conf";
 	else
 		confFileName = argv[1];
 	// HttpConfCtx* httpCtx = NULL;

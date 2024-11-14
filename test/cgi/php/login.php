@@ -26,4 +26,7 @@ if (isset($_POST['submit'])) {
 		echo "<a href='/php/private_index.php'>Go To My Page</a>";
 	}
 }
+else {
+	echo "Invalid Method";
+}
 ?>
