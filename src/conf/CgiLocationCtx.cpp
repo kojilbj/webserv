@@ -24,19 +24,19 @@ CgiLocationCtx& CgiLocationCtx::operator=(const CgiLocationCtx& other)
 	return *this;
 }
 
-void CgiLocationCtx::setCgiIndex(const std::string& cgiIndex)
+void CgiLocationCtx::setIndex(const std::string& cgiIndex)
 {
 	if (cgiIndex.find(' ') != std::string::npos)
 		throw std::logic_error("Error Invalid Cgi Index: " + cgiIndex);
 	index_ = cgiIndex;
 }
 
-const std::string& CgiLocationCtx::getCgiIndex(void) const
+const std::string& CgiLocationCtx::getIndex(void) const
 {
 	return index_;
 }
 
-void CgiLocationCtx::setCgiParam(const std::string& key, const std::string& path)
+void CgiLocationCtx::setParam(const std::string& key, const std::string& path)
 {
 	if (key.empty() || key.find(' ') != std::string::npos)
 		throw std::logic_error("Error Invalid Cgi Param Key: " + key);
@@ -54,7 +54,7 @@ const std::string& CgiLocationCtx::getStore(void) const
 {
 	return store_;
 }
-const std::map<std::string, std::string>& CgiLocationCtx::getCgiParam(void) const
+std::map<std::string, std::string>& CgiLocationCtx::getParam(void)
 {
 	return param_;
 }
@@ -150,8 +150,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 	headerIn2Param(h, param_);
 #ifdef DEBUG
 	std::cout << "Cgi contentHandler" << std::endl;
-	std::map<std::string, std::string>::iterator itDebug = param.begin();
-	for (; itDebug != param.end(); itDebug++)
+	std::map<std::string, std::string>::iterator itDebug = param_.begin();
+	for (; itDebug != param_.end(); itDebug++)
 	{
 		std::cout << "{ " << itDebug->first << " : " << itDebug->second << " }" << std::endl;
 	}
@@ -186,23 +186,23 @@ int CgiLocationCtx::contentHandler(Http& h)
 	// fd to send from parent to child.
 	int p2cFd[2];
 	if (pipe(p2cFd) < 0)
-	{
-		// Internal Server Error;
-		return DONE;
-	}
+		return h.createResponse("500");
 	int c2pFd[2];
 	if (pipe(c2pFd) < 0)
 	{
-		// Internal Server Error;
 		close(p2cFd[0]);
 		close(p2cFd[1]);
-		return DONE;
+		return h.createResponse("500");
 	}
 	int pid = fork();
 	if (pid < 0)
 	{
 		// Internal Server Error;
-		return DONE;
+		close(p2cFd[0]);
+		close(p2cFd[1]);
+		close(c2pFd[0]);
+		close(c2pFd[1]);
+		return h.createResponse("500");
 	}
 	if (pid == 0)
 	{

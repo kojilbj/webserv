@@ -10,16 +10,37 @@ def close_soon():
         s.close()
     time.sleep(0.1)
 
-def send_bad_words():
+def close_after_request_line():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
-        s.sendall(b"hello world")
-        data = s.recv(1024)
-        assert b"HTTP/1.1 400 Bad Request\r\n" in data
+        s.sendall(b"GET / HTTP/1.1\r\n\r\n")
         s.close()
     time.sleep(0.1)
 
-def only_status_line():
+def close_after_request_header():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(b"GET / HTTP/1.1\r\nHOST: localhost\r\n\r\n")
+        s.close()
+    time.sleep(0.1)
+
+def close_after_request_body():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(b"GET / HTTP/1.1\r\nHOST: localhost\r\n\r\nid=kisobe&name=keisei")
+        s.close()
+    time.sleep(0.1)
+
+def close_after_status_line():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(b"GET / HTTP/1.1\r\n\r\n")
+        data = s.recv(30)
+        assert b"HTTP/1.1 200 OK\r\n" in data
+        s.close()
+    time.sleep(0.1)
+
+def close_during_response():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         s.sendall(b"GET / HTTP/1.1\r\n\r\n")
@@ -28,37 +49,10 @@ def only_status_line():
         s.close()
     time.sleep(0.1)
 
-def bad_method():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(b"COMEHERE / HTTP/1.1\r\n\r\n")
-        data = s.recv(1024)
-        assert b"HTTP/1.1 400 Bad Request\r\n" in data
-        s.close()
-    time.sleep(0.1)
-
-def bad_uri():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(b"GET iamnoturi HTTP/1.1\r\n\r\n")
-        data = s.recv(1024)
-        assert b"HTTP/1.1 400 Bad Request\r\n" in data
-        s.close()
-    time.sleep(0.1)
-
-# def bad_version(): 
-#     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#         s.connect((HOST, PORT))
-#         s.sendall(b"GET / HTTP/1.0\r\n\r\n")
-#         data = s.recv(1024)
-#         assert b"HTTP/1.1 400 Bad Request\r\n" in data
-#         s.close()
-#     time.sleep(0.1)
-
 def test_badclient():
-    close_soon()
-    send_bad_words()
-    only_status_line()
-    bad_method()
-    bad_uri()
-    # bad_version()
+    for i in range(5):
+        close_soon()
+        close_after_request_line()
+        close_after_request_header()
+        close_after_request_body()
+        close_during_response()

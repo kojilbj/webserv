@@ -13,8 +13,8 @@ namespace Wbsv
 	{
 	public:
 		ConfCtx(const std::string& protoName)
-			: name(protoName) { };
-		virtual ~ConfCtx() { };
+			: name(protoName){};
+		virtual ~ConfCtx(){};
 		virtual std::string getName()
 		{
 			return name;
@@ -30,6 +30,5 @@ namespace Wbsv
 
 #include "Listening.hpp"
 #include "Webserv.hpp"
-
 
 #endif

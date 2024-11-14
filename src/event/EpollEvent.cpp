@@ -85,10 +85,11 @@ void Epoll::timeOutHandler(Webserv& ws)
 				delete *it;
 				Http* h = reinterpret_cast<Http*>(p);
 				h->wevReady = true;
-				h->statusLine = "HTTP/1.1 408 Request Timeout\r\n";
-				h->headerOut = "\r\n";
-				h->messageBodyOut = h->defaultErrorPages["408"];
-				h->revHandler = &Http::finalizeRequest;
+				int rv = h->createResponse("408");
+				if (rv == AGAIN)
+					h->revHandler = &Http::coreRunPhase;
+				else
+					h->revHandler = &Http::finalizeRequest;
 				data_t data;
 				data.p = p;
 				ev->addEvent(h->c.cfd, data, ConnectionFd, MOD);
@@ -120,10 +121,11 @@ void Epoll::timeOutHandler(Webserv& ws)
 				delete *it;
 				Http* h = reinterpret_cast<Http*>(upstream->p);
 				h->wevReady = true;
-				h->statusLine = "HTTP/1.1 502 Bad Gateway\r\n";
-				h->headerOut = "\r\n";
-				h->messageBodyOut = h->defaultErrorPages["502"];
-				h->revHandler = &Http::finalizeRequest;
+				int rv = h->createResponse("502");
+				if (rv == AGAIN)
+					h->revHandler = &Http::coreRunPhase;
+				else
+					h->revHandler = &Http::finalizeRequest;
 				h->c.lastReadTime = std::time(NULL);
 				data_t data;
 				data.p = upstream->p;

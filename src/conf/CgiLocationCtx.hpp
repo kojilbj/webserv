@@ -19,11 +19,11 @@ namespace Wbsv
 		CgiLocationCtx& operator=(const CgiLocationCtx& other);
 		~CgiLocationCtx();
 
-		void setCgiIndex(const std::string& cgiIndex);
+		void setIndex(const std::string& cgiIndex);
 		void setStore(const std::string& path);
-		void setCgiParam(const std::string& key, const std::string& path);
-		const std::string& getCgiIndex(void) const;
-		const std::map<std::string, std::string>& getCgiParam(void) const;
+		void setParam(const std::string& key, const std::string& path);
+		const std::string& getIndex(void) const;
+		std::map<std::string, std::string>& getParam(void);
 		const std::string& getStore(void) const;
 		int contentHandler(Http& h);
 

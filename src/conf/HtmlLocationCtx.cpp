@@ -26,14 +26,9 @@ static int autoindexHandler(Http& h, std::string& dirname)
 	std::cout << "autoindexHandler" << std::endl;
 	DIR* dirp = opendir(dirname.c_str());
 	if (!dirp)
-	{
-		h.statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
-		h.headerOut = "\r\n";
-		return DONE;
-	}
+		return h.createResponse("500");
 	struct dirent* dp;
 	h.statusLine = "HTTP/1.1 200 OK\r\n";
-	h.headerOut += "\r\n";
 	h.messageBodyOut += "<html>\n<head>\n<title>Index of " + h.getUri() +
 						"</title></head>\n<body>\n<h1>Index of " + h.getUri() +
 						"</h1>\n<hr><pre>\n";
@@ -74,6 +69,7 @@ static int autoindexHandler(Http& h, std::string& dirname)
 
 int HtmlLocationCtx::contentHandler(Http& h)
 {
+	printLog(LOG_DEBUG, "HtmlLocationCtx::contentHandler");
 	std::string fullPath = root_;
 	std::string uri = h.getUri();
 	fullPath += uri;
@@ -82,21 +78,11 @@ int HtmlLocationCtx::contentHandler(Http& h)
 		switch (h.getMethod())
 		{
 		case POST:
-			h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
-			h.headerOut = "\r\n";
-			h.messageBodyOut = h.defaultErrorPages["403"];
-			return DONE;
+			return h.createResponse("403");
 		case DELETE:
 			if (std::remove(fullPath.c_str()) < 0)
-			{
-				h.statusLine = "HTTP/1.1 404 Not Found\r\n";
-				h.headerOut = "\r\n";
-				h.messageBodyOut = h.defaultErrorPages["404"];
-				return DONE;
-			}
-			h.statusLine = "HTTP/1.1 204 No Content\r\n";
-			h.headerOut = "\r\n";
-			return DONE;
+				return h.createResponse("404");
+			return h.createResponse("204");
 		default: // GET
 			std::string fullPathWithIndex = fullPath + index_;
 			int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
@@ -104,15 +90,17 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			{
 				if (!autoindex)
 				{
-					h.statusLine = "HTTP/1.1 404 Not Found\r\n";
-					h.headerOut = "\r\n";
-					h.messageBodyOut = h.defaultErrorPages["404"];
+					if (!h.notFound)
+						return h.createResponse("404");
+					// if notFound == true, loop infinite.
+					h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
+					h.messageBodyOut = h.defaultErrorPages["403"];
 					return DONE;
 				}
 				return autoindexHandler(h, fullPath);
 			}
-			h.statusLine = "HTTP/1.1 200 OK\r\n";
-			h.headerOut = "\r\n";
+			if (!h.internalRedirect)
+				h.statusLine = "HTTP/1.1 200 OK\r\n";
 			h.setFd(fd);
 		}
 	}
@@ -121,32 +109,17 @@ int HtmlLocationCtx::contentHandler(Http& h)
 		switch (h.getMethod())
 		{
 		case POST:
-			h.statusLine = "HTTP/1.1 405 Not Allowed\r\n";
-			h.headerOut = "\r\n";
-			h.messageBodyOut = h.defaultErrorPages["405"];
-			return DONE;
+			return h.createResponse("405");
 		case DELETE:
 			if (std::remove(fullPath.c_str()) < 0)
-			{
-				h.statusLine = "HTTP/1.1 404 Not Found\r\n";
-				h.headerOut = "\r\n";
-				h.messageBodyOut = h.defaultErrorPages["404"];
-				return DONE;
-			}
-			h.statusLine = "HTTP/1.1 204 No Content\r\n";
-			h.headerOut = "\r\n";
-			return DONE;
+				return h.createResponse("404");
+			return h.createResponse("204");
 		default:
 			int fd = open(fullPath.c_str(), O_RDONLY);
 			if (fd == -1)
-			{
-				h.statusLine = "HTTP/1.1 404 Not Found\r\n";
-				h.headerOut = "\r\n";
-				h.messageBodyOut = h.defaultErrorPages["404"];
-				return DONE;
-			}
-			h.statusLine = "HTTP/1.1 200 OK\r\n";
-			h.headerOut = "\r\n";
+				return h.createResponse("404");
+			if (!h.internalRedirect)
+				h.statusLine = "HTTP/1.1 200 OK\r\n";
 			h.setFd(fd);
 		}
 	}
