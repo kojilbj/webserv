@@ -44,9 +44,9 @@ static int autoindexHandler(Http& h, std::string& dirname)
 		if (stat(fullPath.c_str(), &sb) == -1)
 			break;
 		// get last modified time of directory or file.
-		char buf[20];
-		std::memset(buf, 0, 20);
-		std::strftime(buf, 19, "%d-%m-%Y %H:%M", std::localtime(&sb.st_mtime));
+		char buf[80];
+		std::memset(buf, 0, 80);
+		std::strftime(buf, 80, "%d-%m-%Y %H:%M", std::localtime(&sb.st_mtime));
 
 		if (dp->d_type == DT_DIR)
 			dirTmp += "/";
@@ -64,6 +64,10 @@ static int autoindexHandler(Http& h, std::string& dirname)
 	}
 	closedir(dirp);
 	h.messageBodyOut += "</pre><hr>\n</body>\n</html>";
+	std::stringstream size;
+	size << h.messageBodyOut;
+	h.headerOut += "Content-Type: text/html\r\n";
+	h.headerOut += "Content-Length: " + size.str() + "\r\n";
 	return DONE;
 }
 
@@ -95,12 +99,35 @@ int HtmlLocationCtx::contentHandler(Http& h)
 					// if notFound == true, loop infinite.
 					h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
 					h.messageBodyOut = h.defaultErrorPages["403"];
+					std::stringstream size;
+					size << h.messageBodyOut;
+					h.headerOut += "Content-Type: text/html\r\n";
+					h.headerOut += "Content-Length: " + size.str() + "\r\n";
 					return DONE;
 				}
 				return autoindexHandler(h, fullPath);
 			}
 			if (!h.internalRedirect)
 				h.statusLine = "HTTP/1.1 200 OK\r\n";
+			size_t pos = fullPathWithIndex.rfind(".");
+			if (pos == string::npos)
+				h.headerOut += "Content-Type: text/plain\r\n";
+			else
+			{
+				std::string ext(fullPathWithIndex.substr(pos + 1));
+				if (ext == "html")
+					h.headerOut += "Content-Type: text/html\r\n";
+				else if (ext == "png")
+					h.headerOut += "Content-Type: image/png\r\n";
+				else if (ext == "jpeg")
+					h.headerOut += "Content-Type: image/jpeg\r\n";
+			}
+			struct stat st;
+			if (stat(fullPathWithIndex.c_str(), &st) == -1)
+				return h.createResponse("500");
+			std::stringstream size;
+			size << st.st_size;
+			h.headerOut += "Content-Length: " + size.str() + "\r\n";
 			h.setFd(fd);
 		}
 	}
@@ -117,9 +144,39 @@ int HtmlLocationCtx::contentHandler(Http& h)
 		default:
 			int fd = open(fullPath.c_str(), O_RDONLY);
 			if (fd == -1)
-				return h.createResponse("404");
+			{
+				if (!h.notFound)
+					return h.createResponse("404");
+				// if notFound == true, loop infinite.
+				h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
+				h.messageBodyOut = h.defaultErrorPages["403"];
+				std::stringstream size;
+				size << h.messageBodyOut;
+				h.headerOut += "Content-Type: text/html\r\n";
+				h.headerOut += "Content-Length: " + size.str() + "\r\n";
+				return DONE;
+			}
 			if (!h.internalRedirect)
 				h.statusLine = "HTTP/1.1 200 OK\r\n";
+			size_t pos = fullPath.rfind(".");
+			if (pos == string::npos)
+				h.headerOut += "Content-Type: text/plain\r\n";
+			else
+			{
+				std::string ext(fullPath.substr(pos + 1));
+				if (ext == "html")
+					h.headerOut += "Content-Type: text/html\r\n";
+				else if (ext == "png")
+					h.headerOut += "Content-Type: image/png\r\n";
+				else if (ext == "jpeg")
+					h.headerOut += "Content-Type: image/jpeg\r\n";
+			}
+			struct stat st;
+			if (stat(fullPath.c_str(), &st) == -1)
+				return h.createResponse("500");
+			std::stringstream size;
+			size << st.st_size;
+			h.headerOut += "Content-Length: " + size.str() + "\r\n";
 			h.setFd(fd);
 		}
 	}

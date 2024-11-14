@@ -24,6 +24,7 @@ namespace Wbsv
 			, alreadyWrite_(false)
 			, requestBodyFd_(-1)
 			, responseBodyFd_(-1)
+			, headerLen_(0)
 		{ }
 		int invokeRevHandler();
 		int readFd;
@@ -40,6 +41,7 @@ namespace Wbsv
 		bool alreadyWrite_;
 		int requestBodyFd_;
 		int responseBodyFd_;
+		size_t headerLen_;
 	};
 } // namespace Wbsv
 

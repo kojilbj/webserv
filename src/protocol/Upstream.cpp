@@ -9,9 +9,7 @@ int Upstream::invokeRevHandler()
 
 int Upstream::sendRequestBody()
 {
-#ifdef DEBUG
-	std::cout << "Upstream::sendRequestBody()" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Upstream::sendRequestBody");
 	Http* h = reinterpret_cast<Http*>(p);
 	if (!alreadyWrite_)
 	{
@@ -70,9 +68,7 @@ int Upstream::sendRequestBody()
 
 int Upstream::recvResponseBody()
 {
-#ifdef DEBUG
-	std::cout << "Upstream::recvResponseBody()" << std::endl;
-#endif
+	printLog(LOG_DEBUG, "Upstream::recvResponseBody");
 	Http* h = reinterpret_cast<Http*>(p);
 	if (!alreadyRead_)
 	{
@@ -92,6 +88,19 @@ int Upstream::recvResponseBody()
 	{
 		close(responseBodyFd_);
 		int nextFd = open(h->responseBodyFileName_.c_str(), O_RDONLY);
+		struct stat st;
+		if (stat(h->responseBodyFileName_.c_str(), &st) == -1)
+		{
+			int rv = h->createResponse("500");
+			if (rv == AGAIN)
+				h->revHandler = &Http::coreRunPhase;
+			else
+				h->revHandler = &Http::finalizeRequest;
+			return ERROR;
+		}
+		std::stringstream size;
+		size << (st.st_size - headerLen_);
+		h->headerOut += "Content-Length: " + size.str() + "\r\n";
 		h->setFd(nextFd);
 		h->wevReady = true;
 		h->statusLine = "HTTP/1.1 200 OK\r\n";
@@ -99,8 +108,8 @@ int Upstream::recvResponseBody()
 		return OK;
 	}
 	int bufSize = 1024;
-	char buf[1024];
-	std::memset(buf, 0, bufSize);
+	char buf[bufSize + 1];
+	std::memset(buf, 0, bufSize + 1);
 	ssize_t readnum = read(readFd, buf, bufSize);
 	lastReadTime = std::time(NULL);
 	if (readnum == -1)
@@ -125,11 +134,32 @@ int Upstream::recvResponseBody()
 				h->revHandler = &Http::finalizeRequest;
 			return ERROR;
 		}
+		struct stat st;
+		if (stat(h->responseBodyFileName_.c_str(), &st) == -1)
+		{
+			int rv = h->createResponse("500");
+			if (rv == AGAIN)
+				h->revHandler = &Http::coreRunPhase;
+			else
+				h->revHandler = &Http::finalizeRequest;
+			return ERROR;
+		}
+		std::stringstream size;
+		size << (st.st_size - headerLen_);
+		h->headerOut += "Content-Length: " + size.str() + "\r\n";
 		h->setFd(nextFd);
 		h->wevReady = true;
 		h->statusLine = "HTTP/1.1 200 OK\r\n";
 		h->revHandler = &Http::finalizeRequest;
 		return OK;
+	}
+	// assumeing headerLen < 1024 ...
+	if (headerLen_ == 0)
+	{
+		std::string tmp(buf);
+		size_t pos = tmp.find("\r\n\r\n");
+		if (pos != string::npos)
+			headerLen_ = pos + 4;
 	}
 	ssize_t writenum = write(responseBodyFd_, buf, readnum);
 	if (writenum == -1)

@@ -103,6 +103,8 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 								  << std::endl;
 						std::cout << std::setw(20) << std::left
 								  << "\t\t\tindex: " << clc->getIndex() << std::endl;
+						std::cout << std::setw(20) << std::left
+								  << "\t\t\tstore: " << clc->getStore() << std::endl;
 					}
 					else if ((rlc = dynamic_cast<ReturnLocationCtx*>(*lit)))
 					{

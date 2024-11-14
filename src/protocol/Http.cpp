@@ -210,14 +210,6 @@ int Http::createResponse(const std::string& code)
 		if (codes[i] == code)
 			break;
 	}
-	headerOut += "Server: webserv/1.0\r\n";
-	char now[80];
-	std::memset(now, 0, sizeof(now));
-	std::time_t rawtime = std::time(NULL);
-	std::strftime(now, 80, "%c", std::localtime(&rawtime));
-	headerOut += "Date: ";
-	headerOut += now;
-	headerOut += "\r\n";
 	ErrorPages e = vserverCtx_->getErrorPages();
 	switch (i)
 	{
@@ -280,6 +272,10 @@ int Http::createResponse(const std::string& code)
 		return AGAIN;
 	}
 	messageBodyOut = defaultErrorPages[code];
+	std::stringstream len;
+	len << messageBodyOut.size();
+	headerOut += "Content-Type: text/html\r\n";
+	headerOut += "Content-Length: " + len.str() + "\r\n";
 	return DONE;
 }
 
@@ -1277,9 +1273,20 @@ int Http::finalizeRequest()
 		pos = 0;
 		responseState = statusLineDone;
 		return AGAIN;
-	case statusLineDone:
+	case statusLineDone: {
 		headerOut += "Server: webserv/1.0\r\n";
-		headerOut += "\r\n";
+		if (!continueRequest_ && statusLine != "HTTP/1.1 500 Internal Server Error\r\n") // 503
+		{
+			char now[80];
+			std::memset(now, 0, sizeof(now));
+			std::time_t rawtime = std::time(NULL);
+			std::strftime(now, 80, "%c", std::localtime(&rawtime));
+			headerOut += "Date: ";
+			headerOut += now;
+			headerOut += "\r\n";
+		}
+		if (!upstream)
+			headerOut += "\r\n";
 		writenum = write(c.cfd, headerOut.c_str(), headerOut.size());
 		c.lastReadTime = std::time(NULL);
 #ifdef DEBUG
@@ -1298,6 +1305,7 @@ int Http::finalizeRequest()
 		}
 		responseState = headerOutDone;
 		return AGAIN;
+	}
 	case headerOutDoing:
 		writenum = write(c.cfd, headerOut.c_str() + pos, headerOut.size() - pos);
 		c.lastReadTime = std::time(NULL);
@@ -1345,7 +1353,7 @@ int Http::finalizeRequest()
 						  << std::endl;
 				std::cout << "readnum from regular file: " << readnum << std::endl;
 				std::cout << "writenum to client: " << writenum << std::endl;
-				// std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
+				std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)
