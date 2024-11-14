@@ -122,6 +122,7 @@ ConfCtx* ConfParse::createCtx(const std::string& ctxName)
 {
 	ConfCtx* ctx;
 
+	ctx = NULL;
 	if (ctxName == "http")
 		ctx = new HttpConfCtx();
 	//if (ctxName == "mail") ctx = new MailConfCtx();
