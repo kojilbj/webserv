@@ -78,7 +78,8 @@ bool ConfParse::inspectStructure(const std::string& name,
 								 const std::string& parentBlock,
 								 std::map<std::string, std::vector<std::string> > confRelatives)
 {
-	decltype(confRelatives)::iterator parentIt;
+	// decltype(confRelatives)::iterator parentIt;
+	std::map<std::string, std::vector<std::string> >::iterator parentIt;
 	std::vector<std::string> childs;
 	std::vector<std::string>::iterator childIt;
 
@@ -173,7 +174,7 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 			if (blockStack.top() == "location")
 			{
 				serverInfo->locations.push_back(*locationInfo);
-				// delete は serverInfoのdeleteで行われるようにする
+				delete locationInfo;
 			}
 			blockStack.pop();
 		}
@@ -219,7 +220,7 @@ std::vector<ConfCtx*> ConfParse::confParse(const std::string& confFileName)
 	std::map<std::string, std::vector<std::string> > confRelatives;
 	std::vector<ConfCtx*> ctxs;
 
-	confFile.open(confFileName, std::ios::in);
+	confFile.open(confFileName.c_str(), std::ios::in);
 	if (!confFile.is_open())
 		throw std::invalid_argument("No Such File: " + confFileName);
 	tokens = confTokenizer(confFile);

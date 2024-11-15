@@ -10,9 +10,7 @@ bool ConfParseUtil::isStatusCode(int code)
 
 bool ConfParseUtil::isStatusCode(const std::string& code)
 {
-	if (std::all_of(code.begin(), code.end(), ::isdigit) == false)
-		return false;
-	if (*code.begin() == '0')
+	if (!isAllDigit(code) || isHeadZero(code))
 		return false;
 	return isStatusCode(std::atoi(code.c_str()));
 }
@@ -137,7 +135,9 @@ bool ConfParseUtil::isValidIPAddress(const std::string& ip)
 	strs = split(ip, '.');
 	for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
 	{
-		if (std::all_of(it->begin(), it->end(), ::isdigit) == false)
+		if (!isAllDigit(*it))
+			return false;
+		if (!std::atoi(it->c_str()) == 0 && ConfParseUtil::isHeadZero(ip))
 			return false;
 		if (std::atoi(it->c_str()) > 255)
 			return false;
@@ -149,7 +149,7 @@ bool ConfParseUtil::isValidPort(const std::string& port)
 {
 	int portNumber;
 
-	if (std::all_of(port.begin(), port.end(), ::isdigit) == false)
+	if (!isAllDigit(port) || isHeadZero(port))
 		return false;
 	portNumber = std::atoi(port.c_str());
 	if (!(0 < portNumber && portNumber < 65536))
@@ -170,7 +170,7 @@ bool ConfParseUtil::isValidErrorNumber(const std::string& errorNumber)
 
 	if (errorNumber.find(' ') != std::string::npos)
 		return false;
-	if (std::all_of(errorNumber.begin(), errorNumber.end(), ::isdigit) == false)
+	if (!isAllDigit(errorNumber) || isHeadZero(errorNumber))
 		return false;
 	number = std::atoi(errorNumber.c_str());
 	if (!(400 <= number && number < 600))
@@ -229,10 +229,9 @@ std::vector<std::string> ConfParseUtil::split(std::ifstream& file, char c)
 std::vector<std::string> ConfParseUtil::split(const std::string& str, char c)
 {
 	std::string buff;
-	std::stringstream sstr;
+	std::stringstream sstr(str);
 	std::vector<std::string> tokens;
 
-	sstr = std::stringstream(str);
 	while (std::getline(sstr, buff, c))
 	{
 		if (!buff.empty())
@@ -243,3 +242,49 @@ std::vector<std::string> ConfParseUtil::split(const std::string& str, char c)
 	}
 	return tokens;
 }
+
+bool ConfParseUtil::isAllDigit(const std::string& str, std::string::const_iterator endIt)
+{
+	if (str.empty())
+		return false;
+	for (std::string::const_iterator it = str.begin(); it != endIt; it++)
+	{
+		if (!std::isdigit(*it))
+			return false;
+	}
+	return true;
+}
+
+bool ConfParseUtil::isAllDigit(const std::string& str)
+{
+	if (str.empty())
+		return false;
+	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
+	{
+		if (!std::isdigit(*it))
+			return false;
+	}
+	return true;
+}
+
+bool ConfParseUtil::isHeadZero(const std::string& str)
+{
+	if (str.empty())
+		return false;
+	if (*str.begin() == '0')
+		return true;
+	else
+		return false;
+}
+
+// size_t ConfParseUtil::toSizeT(const std::string& str)
+// {
+// 	size_t num;
+
+// 	num = 0;
+// 	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
+// 	{
+// 		if (it == str.begin() && *it == '-')
+// 			;
+// 	}
+// }

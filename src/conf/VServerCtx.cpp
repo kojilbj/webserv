@@ -59,7 +59,19 @@ void VServerCtx::addLocation(LocationCtx* location)
 	std::cout << "VServerCtx addlocation Called" << std::endl;
 #endif
 	if (location != NULL)
+	{
+		if (!locationCtxs_.empty())
+		{
+			for (std::vector<LocationCtx*>::const_iterator it = locationCtxs_.begin();
+				 it != locationCtxs_.end();
+				 it++)
+			{
+				if ((*it)->getPath() == location->getPath())
+					throw std::logic_error("Error Duplicate Path: " + location->getPath());
+			}
+		}
 		locationCtxs_.push_back(location);
+	}
 }
 
 void VServerCtx::addLocation(std::vector<LocationCtx*> location)
@@ -208,21 +220,26 @@ void VServerCtx::setClientMaxBodySize(const std::string& clientMaxBodySize)
 #endif
 	size_t size;
 
-	if (std::all_of(clientMaxBodySize.begin(), (clientMaxBodySize.end() - 1), ::isdigit) == false)
+	if (ConfParseUtil::isHeadZero(clientMaxBodySize))
 		throw std::logic_error("Error Invalid Client Max Body Size: " + clientMaxBodySize);
-	else if (!(clientMaxBodySize.back() == 'k' || clientMaxBodySize.back() == 'm' ||
-			   clientMaxBodySize.back() == 'g'))
+	if (!ConfParseUtil::isAllDigit(clientMaxBodySize, clientMaxBodySize.end() - 1))
 		throw std::logic_error("Error Invalhid Client Max Body Size: " + clientMaxBodySize);
+	if (!std::isdigit(*clientMaxBodySize.end() - 1))
+	{
+		if (!(*(clientMaxBodySize.end() - 1) == 'k' || *(clientMaxBodySize.end() - 1) == 'm' ||
+			  *(clientMaxBodySize.end() - 1) == 'g'))
+			throw std::logic_error("Error Invalhid Client Max Body Size: " + clientMaxBodySize);
+	}
 	size = std::atoi(clientMaxBodySize.c_str());
 	if (size < 1)
 		throw std::logic_error("Error Invalid Client Max Body Size: " + clientMaxBodySize);
-	if (clientMaxBodySize.back() == 'k')
+	if (*(clientMaxBodySize.end() - 1) == 'k')
 		size *= 1024;
-	if (clientMaxBodySize.back() == 'm')
+	if (*(clientMaxBodySize.end() - 1) == 'm')
 		size *= 1024 * 1024;
-	if (clientMaxBodySize.back() == 'g')
+	if (*(clientMaxBodySize.end() - 1) == 'g')
 		size *= 1024 * 1024 * 1024;
-	clientMaxBodySize_ = size;
+	setClientMaxBodySize(size);
 }
 
 void VServerCtx::setClientMaxBodySize(size_t clientMaxBodySize)
@@ -230,7 +247,6 @@ void VServerCtx::setClientMaxBodySize(size_t clientMaxBodySize)
 #ifdef DEBUG
 	std::cout << "VServerCtx setClientBodySize Called" << std::endl;
 #endif
-	std::cout << clientMaxBodySize << std::endl;
 	if (clientMaxBodySize < 1)
 		throw std::logic_error("Error Invalid Client Max Body Size: " +
 							   ConfParseUtil::intToString(clientMaxBodySize));
@@ -244,8 +260,8 @@ void VServerCtx::addErrorPage(const std::string& errorNumber, const std::string&
 #endif
 	if (path.find(' ') != std::string::npos)
 		throw std::logic_error("Error Invalid Path: " + path);
-	if (errorNumber.find(' ') != std::string::npos ||
-		std::all_of(errorNumber.begin(), errorNumber.end(), ::isdigit) == false)
+	if (errorNumber.find(' ') != std::string::npos || !ConfParseUtil::isAllDigit(errorNumber) ||
+		ConfParseUtil::isHeadZero(errorNumber))
 		throw std::logic_error("Error Invalid Error Number: " + errorNumber);
 	errorPages_.addErrorPage(path, errorNumber);
 }
