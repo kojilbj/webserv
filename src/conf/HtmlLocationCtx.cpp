@@ -71,8 +71,32 @@ static int autoindexHandler(Http& h, std::string& dirname)
 	return DONE;
 }
 
-int haveRightAccess(std::string& path)
+static int haveRightAccess(std::string& path, int method)
 {
+	if (method == DELETE)
+	{
+		for (size_t i = 0; i < path.size(); i++)
+		{
+			// directory
+			if (path[i] == '/')
+			{
+				std::string dir(path.substr(0, i + 1));
+				if (access(dir.c_str(), F_OK) == -1)
+					return F_KO;
+				if (access(dir.c_str(), W_OK) == -1)
+				{
+					std::cout << "W_KO: " << path.substr(0, i + 1) << std::endl;
+					return WX_KO;
+				}
+				if (access(dir.c_str(), X_OK) == -1)
+				{
+					std::cout << "X_KO: " << path.substr(0, i + 1) << std::endl;
+					return WX_KO;
+				}
+			}
+		}
+		return FRWX_OK;
+	}
 	for (size_t i = 0; i < path.size(); i++)
 	{
 		// directory
@@ -90,7 +114,7 @@ int haveRightAccess(std::string& path)
 		return F_KO;
 	if (access(path.c_str(), R_OK) == -1)
 		return R_KO;
-	return FRX_OK;
+	return FRWX_OK;
 }
 
 int HtmlLocationCtx::contentHandler(Http& h)
@@ -104,9 +128,9 @@ int HtmlLocationCtx::contentHandler(Http& h)
 	{
 		std::string fullPathWithIndex = fullPath + index_;
 		int rv = 0;
-		if ((rv = haveRightAccess(fullPathWithIndex)) != FRX_OK)
+		if ((rv = haveRightAccess(fullPathWithIndex, h.getMethod())) != FRWX_OK)
 		{
-			if (!autoindex)
+			if (!autoindex || h.getMethod() == DELETE)
 			{
 				if (!h.forbidden)
 					return h.createResponse("403");
@@ -126,7 +150,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			return h.createResponse("403");
 		case DELETE:
 			if (std::remove(fullPath.c_str()) < 0)
-				return h.createResponse("404");
+				return h.createResponse("500");
 			return h.createResponse("204");
 		default: // GET
 			int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
@@ -134,7 +158,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			{
 				if (!autoindex)
 				{
-					// Don't use h.createRespons(), it cause infinite loop, when error_page 500 specified.
+					// Don't use h.createResponse(), it cause infinite loop, when error_page 500 specified.
 					h.statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
 					h.messageBodyOut = h.defaultErrorPages["500"];
 					std::stringstream size;
@@ -172,7 +196,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 	else
 	{
 		int rv = 0;
-		if ((rv = haveRightAccess(fullPath)) != FRX_OK)
+		if ((rv = haveRightAccess(fullPath, h.getMethod())) != FRWX_OK)
 		{
 			if (rv == F_KO)
 			{
@@ -210,7 +234,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			int fd = open(fullPath.c_str(), O_RDONLY);
 			if (fd == -1)
 			{
-				// Don't use h.createRespons(), it cause infinite loop, when error_page 500 specified.
+				// Don't use h.createResponse(), it cause infinite loop, when error_page 500 specified.
 				h.statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
 				h.messageBodyOut = h.defaultErrorPages["500"];
 				std::stringstream size;

@@ -142,30 +142,47 @@ static size_t maxParamLen(std::map<std::string, std::string>& param)
 	return max;
 }
 
+static int haveRightAccess(std::string& path)
+{
+	for (size_t i = 0; i < path.size(); i++)
+	{
+		// directory
+		if (path[i] == '/')
+		{
+			std::string dir(path.substr(0, i + 1));
+			if (access(dir.c_str(), F_OK) == -1)
+				return F_KO;
+			if (access(dir.c_str(), R_OK | X_OK) == -1)
+				return RX_KO;
+		}
+	}
+	// file
+	if (access(path.c_str(), F_OK) == -1)
+		return F_KO;
+	if (access(path.c_str(), R_OK | X_OK) == -1)
+		return RX_KO;
+	return FRX_OK;
+}
+
 int CgiLocationCtx::contentHandler(Http& h)
 {
-	std::string scriptFilename = param_["SCRIPT_FILENAME"];
-	std::string pathInfoVar = "$cgi_path_info";
-	std::string scriptName;
-	size_t pos = scriptFilename.find(pathInfoVar);
-	if (pos != string::npos)
-		scriptName = scriptFilename.substr(0, pos);
-	else
-		scriptName = scriptFilename;
-	if (access(scriptName.c_str(), F_OK | R_OK) == -1)
-	{
-		h.messageBodyOut = "File not found.\n";
-		return h.createResponse("404");
-	}
-
 	std::string scriptFileNameTmp = param_["SCRIPT_FILENAME"];
 	parseUri(h, param_, index_, store_);
 	headerIn2Param(h, param_);
-	struct stat st;
-	if (stat(param_["SCRIPT_FILENAME"].c_str(), &st) == -1)
-		return h.createResponse("500");
-	if (!(st.st_mode & S_IROTH))
-		return h.createResponse("500");
+	int rv = haveRightAccess(param_["SCRIPT_FILENAME"]);
+	if (rv != FRX_OK)
+	{
+		if (rv == F_KO)
+		{
+			h.messageBodyOut = "File not found.\r";
+			return h.createResponse("404");
+		}
+		else // RX_KO
+		{
+			h.messageBodyOut = "Access denied.\r";
+			return h.createResponse("403");
+		}
+	}
 #ifdef DEBUG
 	std::cout << "Cgi contentHandler" << std::endl;
 	std::map<std::string, std::string>::iterator itDebug = param_.begin();

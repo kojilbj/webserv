@@ -6,6 +6,20 @@
 
 namespace Wbsv
 {
+	enum
+	{
+		FRWX_OK,
+		FRX_OK,
+		F_KO,
+		R_KO,
+		X_KO,
+		RX_KO,
+		WX_KO
+	};
+	enum
+	{
+	};
+
 	class Http;
 
 	class LocationCtx
