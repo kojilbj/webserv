@@ -1,5 +1,4 @@
 <?php
-var_dump($_FILES);
 if (isset($_SERVER['HTTP_UPLOADDIR']))
 {
     // for webserv
@@ -10,7 +9,7 @@ else
 {
     // for nginx
     echo "uploading from nginx\n";
-    $uploaddir = "/root/webserv/test/uploaded_images/";
+    $uploaddir = "/home/kisobe/webserv/test/uploaded_images/";
     $uploadfile = $uploaddir . basename($_FILES['image']['name']);
 }
 
