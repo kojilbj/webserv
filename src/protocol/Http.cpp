@@ -4,6 +4,7 @@ using namespace Wbsv;
 
 Http::Http()
 	: notFound(false)
+	, forbidden(false)
 	, internalRedirect(false)
 	, completelyRead(true)
 	, clientHeaderSize(1024)
@@ -35,7 +36,7 @@ Http::Http()
 							   "Request</title></head>\r\n<body>\r\n<center><h1>400 Bad "
 							   "Request</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["403"] = "<html>\r\n<head><title>403 Forbidden"
-							   "</title></head>\r\n<body>\r\n<center><h1>400 Forbidden"
+							   "</title></head>\r\n<body>\r\n<center><h1>403 Forbidden"
 							   "</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["404"] = "<html><html>\r\n<head><title>404 Not "
 							   "Found</title></head>\r\n<body>\r\n<center><h1>404 Not "
@@ -223,7 +224,8 @@ int Http::createResponse(const std::string& code)
 		statusLine = "HTTP/1.1 400 Bad Request\r\n";
 		break;
 	case 3:
-		statusLine = "HTTP/1.1 403 Bad Request\r\n";
+		statusLine = "HTTP/1.1 403 Forbidden\r\n";
+		forbidden = true;
 		break;
 	case 4:
 		statusLine = "HTTP/1.1 404 Not Found\r\n";

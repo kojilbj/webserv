@@ -71,21 +71,55 @@ static int autoindexHandler(Http& h, std::string& dirname)
 	return DONE;
 }
 
+int haveRightAccess(std::string& path)
+{
+	for (size_t i = 0; i < path.size(); i++)
+	{
+		// directory
+		if (path[i] == '/')
+		{
+			std::string dir(path.substr(0, i + 1));
+			if (access(dir.c_str(), F_OK) == -1)
+				return F_KO;
+			if (access(dir.c_str(), X_OK) == -1)
+				return X_KO;
+		}
+	}
+	// file
+	if (access(path.c_str(), F_OK) == -1)
+		return F_KO;
+	if (access(path.c_str(), R_OK) == -1)
+		return R_KO;
+	return FRX_OK;
+}
+
 int HtmlLocationCtx::contentHandler(Http& h)
 {
+
 	printLog(LOG_DEBUG, "HtmlLocationCtx::contentHandler");
-	if (access(root_.c_str(), F_OK) == -1)
-		return h.createResponse("404");
-	struct stat st;
-	if (stat(root_.c_str(), &st) == -1)
-		return h.createResponse("500");
-	if (!(st.st_mode & S_IROTH))
-		return h.createResponse("403");
 	std::string fullPath = root_;
 	std::string uri = h.getUri();
 	fullPath += uri;
 	if (uri[uri.size() - 1] == '/')
 	{
+		std::string fullPathWithIndex = fullPath + index_;
+		int rv = 0;
+		if ((rv = haveRightAccess(fullPathWithIndex)) != FRX_OK)
+		{
+			if (!autoindex)
+			{
+				if (!h.forbidden)
+					return h.createResponse("403");
+				// if forbidden == true, it may cause loop infinite.
+				h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
+				h.messageBodyOut = h.defaultErrorPages["403"];
+				std::stringstream size;
+				size << h.messageBodyOut;
+				h.headerOut += "Content-Type: text/html\r\n";
+				h.headerOut += "Content-Length: " + size.str() + "\r\n";
+				return DONE;
+			}
+		}
 		switch (h.getMethod())
 		{
 		case POST:
@@ -95,17 +129,14 @@ int HtmlLocationCtx::contentHandler(Http& h)
 				return h.createResponse("404");
 			return h.createResponse("204");
 		default: // GET
-			std::string fullPathWithIndex = fullPath + index_;
 			int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
 			if (fd == -1)
 			{
 				if (!autoindex)
 				{
-					if (!h.notFound)
-						return h.createResponse("404");
-					// if notFound == true, loop infinite.
-					h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
-					h.messageBodyOut = h.defaultErrorPages["403"];
+					// Don't use h.createRespons(), it cause infinite loop, when error_page 500 specified.
+					h.statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
+					h.messageBodyOut = h.defaultErrorPages["500"];
 					std::stringstream size;
 					size << h.messageBodyOut;
 					h.headerOut += "Content-Type: text/html\r\n";
@@ -140,6 +171,33 @@ int HtmlLocationCtx::contentHandler(Http& h)
 	}
 	else
 	{
+		int rv = 0;
+		if ((rv = haveRightAccess(fullPath)) != FRX_OK)
+		{
+			if (rv == F_KO)
+			{
+				if (!h.notFound)
+					return h.createResponse("404");
+				// if notFound == true, it may cause loop infinite.
+				h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
+				h.messageBodyOut = h.defaultErrorPages["403"];
+				std::stringstream size;
+				size << h.messageBodyOut;
+				h.headerOut += "Content-Type: text/html\r\n";
+				h.headerOut += "Content-Length: " + size.str() + "\r\n";
+				return DONE;
+			}
+			if (!h.forbidden)
+				return h.createResponse("403");
+			// if forbidden == true, it may cause loop infinite.
+			h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
+			h.messageBodyOut = h.defaultErrorPages["403"];
+			std::stringstream size;
+			size << h.messageBodyOut;
+			h.headerOut += "Content-Type: text/html\r\n";
+			h.headerOut += "Content-Length: " + size.str() + "\r\n";
+			return DONE;
+		}
 		switch (h.getMethod())
 		{
 		case POST:
@@ -152,11 +210,9 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			int fd = open(fullPath.c_str(), O_RDONLY);
 			if (fd == -1)
 			{
-				if (!h.notFound)
-					return h.createResponse("404");
-				// if notFound == true, loop infinite.
-				h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
-				h.messageBodyOut = h.defaultErrorPages["403"];
+				// Don't use h.createRespons(), it cause infinite loop, when error_page 500 specified.
+				h.statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
+				h.messageBodyOut = h.defaultErrorPages["500"];
 				std::stringstream size;
 				size << h.messageBodyOut;
 				h.headerOut += "Content-Type: text/html\r\n";

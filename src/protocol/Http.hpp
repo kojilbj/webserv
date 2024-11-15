@@ -131,6 +131,7 @@ namespace Wbsv
 
 		// Error
 		bool notFound;
+		bool forbidden;
 		bool internalRedirect;
 		map<string, string> defaultErrorPages;
 		bool completelyRead;

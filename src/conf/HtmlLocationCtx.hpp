@@ -9,6 +9,14 @@
 
 namespace Wbsv
 {
+	enum
+	{
+		FRX_OK,
+		F_KO,
+		R_KO,
+		X_KO
+	};
+
 	class Http;
 
 	class HtmlLocationCtx : public LocationCtx
