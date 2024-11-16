@@ -65,7 +65,7 @@ static int autoindexHandler(Http& h, std::string& dirname)
 	closedir(dirp);
 	h.messageBodyOut += "</pre><hr>\n</body>\n</html>";
 	std::stringstream size;
-	size << h.messageBodyOut;
+	size << h.messageBodyOut.size();
 	h.headerOut += "Content-Type: text/html\r\n";
 	h.headerOut += "Content-Length: " + size.str() + "\r\n";
 	return DONE;
@@ -104,7 +104,7 @@ static int haveRightAccess(std::string& path, int method)
 		{
 			std::string dir(path.substr(0, i + 1));
 			if (access(dir.c_str(), F_OK) == -1)
-				return F_KO;
+				return D_KO;
 			if (access(dir.c_str(), X_OK) == -1)
 				return X_KO;
 		}
@@ -130,9 +130,13 @@ int HtmlLocationCtx::contentHandler(Http& h)
 		int rv = 0;
 		if ((rv = haveRightAccess(fullPathWithIndex, h.getMethod())) != FRWX_OK)
 		{
-			if (!autoindex || h.getMethod() == DELETE)
+			if (!autoindex || h.getMethod() == DELETE || rv == X_KO ||
+				rv ==
+					D_KO) // even if autoindex == true, X_KO (dir does not have execute permission) means forbidden.
 			{
-				if (!h.forbidden)
+				if (rv == D_KO && !h.notFound)
+					return h.createResponse("404");
+				else if (!h.forbidden)
 					return h.createResponse("403");
 				// if forbidden == true, it may cause loop infinite.
 				h.statusLine = "HTTP/1.1 403 Forbidden\r\n";

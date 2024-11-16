@@ -11,6 +11,7 @@ namespace Wbsv
 		FRWX_OK,
 		FRX_OK,
 		F_KO,
+		D_KO,
 		R_KO,
 		X_KO,
 		RX_KO,

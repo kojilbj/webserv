@@ -50,6 +50,9 @@ Http::Http()
 	defaultErrorPages["408"] = "<html>\r\n<head><title>408 Request "
 							   "Timeout</title></head>\r\n<body>\r\n<center><h1>408 Request "
 							   "Timeout</h1></center>\r\n</body>\r\n</html>\r\n";
+	defaultErrorPages["409"] = "<html>\r\n<head><title>409 Conflict"
+							   "</title></head>\r\n<body>\r\n<center><h1>409 Conflict"
+							   "</h1></center>\r\n</body>\r\n</html>\r\n";
 	defaultErrorPages["413"] = "<html>\r\n<head><title>413 Request "
 							   "Entity Too Large</title></head>\r\n<body>\r\n<center><h1>413 "
 							   "Request Entity Too Large</h1></center>\r\n</body>\r\n</html>\r\n";
@@ -196,6 +199,7 @@ int Http::createResponse(const std::string& code)
 							 "405",
 							 "406",
 							 "408",
+							 "409",
 							 "413",
 							 "414",
 							 "415",
@@ -263,27 +267,30 @@ int Http::createResponse(const std::string& code)
 		statusLine = "HTTP/1.1 408 Request Timeout\r\n";
 		break;
 	case 8:
-		statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
+		statusLine = "HTTP/1.1 409 Conflict\r\n";
 		break;
 	case 9:
-		statusLine = "HTTP/1.1 414 Request-Line Too Long\r\n";
+		statusLine = "HTTP/1.1 413 Request Entity Too Large\r\n";
 		break;
 	case 10:
-		statusLine = "HTTP/1.1 415 Unsupported Media Type\r\n";
+		statusLine = "HTTP/1.1 414 Request-Line Too Long\r\n";
 		break;
 	case 11:
-		statusLine = "HTTP/1.1 417 Expectation Failed\r\n";
+		statusLine = "HTTP/1.1 415 Unsupported Media Type\r\n";
 		break;
 	case 12:
-		statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
+		statusLine = "HTTP/1.1 417 Expectation Failed\r\n";
 		break;
 	case 13:
-		statusLine = "HTTP/1.1 501 Not Implemented\r\n";
+		statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
 		break;
 	case 14:
-		statusLine = "HTTP/1.1 502 Bad Gateway\r\n";
+		statusLine = "HTTP/1.1 501 Not Implemented\r\n";
 		break;
 	case 15:
+		statusLine = "HTTP/1.1 502 Bad Gateway\r\n";
+		break;
+	case 16:
 		statusLine = "HTTP/1.1 505 HTTP Version Not Supported\r\n";
 		break;
 	}
@@ -953,7 +960,8 @@ int Http::processRequest()
 			std::string tmpExt(".reqBody");
 			std::time_t now = std::time(NULL);
 			requestBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
-			requestBodyFileFd_ = open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT);
+			requestBodyFileFd_ =
+				open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 			if (requestBodyFileFd_ == -1)
 			{
 				if (createResponse("500") == AGAIN)
@@ -1117,7 +1125,8 @@ int Http::processRequest()
 			std::string tmpExt(".reqBody");
 			std::time_t now = std::time(NULL);
 			requestBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
-			requestBodyFileFd_ = open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT);
+			requestBodyFileFd_ =
+				open(requestBodyFileName_.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 			if (requestBodyFileFd_ == -1)
 			{
 				if (createResponse("500") == AGAIN)

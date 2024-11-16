@@ -17,6 +17,7 @@ namespace Wbsv
 			: readFd(0)
 			, writeFd(0)
 			, peerClosed(false)
+			, in(false)
 			, p(NULL)
 			, lastReadTime(-1)
 			, revHandler_(&Upstream::sendRequestBody)
@@ -30,6 +31,7 @@ namespace Wbsv
 		int readFd;
 		int writeFd;
 		bool peerClosed;
+		bool in;
 		Protocol* p;
 		time_t lastReadTime;
 

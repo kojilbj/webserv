@@ -53,6 +53,11 @@ int Upstream::sendRequestBody()
 		return OK;
 	}
 	ssize_t writenum = write(writeFd, buf, readnum);
+#ifdef DEBUG
+	std::stringstream num;
+	num << writenum;
+	printLog(LOG_DEBUG, num.str() + " byte is written");
+#endif
 	lastReadTime = std::time(NULL);
 	if (writenum == -1)
 	{
@@ -77,14 +82,15 @@ int Upstream::recvResponseBody()
 		std::string tmpExt(".resBody");
 		std::time_t now = std::time(NULL);
 		h->responseBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
-		responseBodyFd_ = open(h->responseBodyFileName_.c_str(), O_WRONLY | O_CREAT);
+		responseBodyFd_ =
+			open(h->responseBodyFileName_.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 		if (responseBodyFd_ == -1)
 		{
 			h->revHandler = &Http::finalizeRequest;
 			return ERROR;
 		}
 	}
-	if (peerClosed)
+	if (peerClosed && !in)
 	{
 		close(responseBodyFd_);
 		int nextFd = open(h->responseBodyFileName_.c_str(), O_RDONLY);

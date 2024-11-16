@@ -159,8 +159,8 @@ static int haveRightAccess(std::string& path)
 	// file
 	if (access(path.c_str(), F_OK) == -1)
 		return F_KO;
-	if (access(path.c_str(), R_OK | X_OK) == -1)
-		return RX_KO;
+	// if (access(path.c_str(), R_OK | X_OK) == -1)
+	// 	return RX_KO;
 	return FRX_OK;
 }
 
@@ -174,12 +174,14 @@ int CgiLocationCtx::contentHandler(Http& h)
 	{
 		if (rv == F_KO)
 		{
-			h.messageBodyOut = "File not found.\r";
+			h.messageBodyOut = "File not found.\n";
+			param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
 			return h.createResponse("404");
 		}
 		else // RX_KO
 		{
-			h.messageBodyOut = "Access denied.\r";
+			h.messageBodyOut = "Access denied.\n";
+			param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
 			return h.createResponse("403");
 		}
 	}
@@ -221,12 +223,16 @@ int CgiLocationCtx::contentHandler(Http& h)
 	// fd to send from parent to child.
 	int p2cFd[2];
 	if (pipe(p2cFd) < 0)
+	{
+		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
 		return h.createResponse("500");
+	}
 	int c2pFd[2];
 	if (pipe(c2pFd) < 0)
 	{
 		close(p2cFd[0]);
 		close(p2cFd[1]);
+		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
 		return h.createResponse("500");
 	}
 	int pid = fork();
@@ -237,6 +243,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 		close(p2cFd[1]);
 		close(c2pFd[0]);
 		close(c2pFd[1]);
+		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
 		return h.createResponse("500");
 	}
 	if (pid == 0)

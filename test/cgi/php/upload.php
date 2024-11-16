@@ -2,13 +2,13 @@
 if (isset($_SERVER['HTTP_UPLOADDIR']))
 {
     // for webserv
-    echo "uploading from webserv\n";
+    echo "<pre>uploading from webserv\n</pre>";
     $uploadfile = $_SERVER['HTTP_UPLOADDIR'] . basename($_FILES['image']['name']);
 }
 else
 {
     // for nginx
-    echo "uploading from nginx\n";
+    echo "<pre>uploading from nginx\n</pre>";
     $uploaddir = "/home/kisobe/webserv/test/uploaded_images/";
     $uploadfile = $uploaddir . basename($_FILES['image']['name']);
 }

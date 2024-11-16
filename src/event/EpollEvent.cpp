@@ -342,7 +342,10 @@ void Epoll::processEvents(Webserv& ws)
 			{
 				if (eventResult[i].events & (EPOLLHUP | EPOLLERR))
 					upstream->peerClosed = true;
+				if (eventResult[i].events & EPOLLIN)
+					upstream->in = true;
 				int rv = upstream->invokeRevHandler();
+				upstream->in = false;
 				if (rv == OK)
 				{
 					printLog(LOG_DEBUG, "upstream revHandler returned OK, close connection");
