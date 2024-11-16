@@ -72,6 +72,7 @@ void VServerCtx::addLocation(LocationCtx* location)
 		}
 		locationCtxs_.push_back(location);
 	}
+	sortLocationAsc();
 }
 
 void VServerCtx::addLocation(std::vector<LocationCtx*> location)
@@ -171,6 +172,36 @@ void VServerCtx::addLocation(std::vector<struct ConfParseUtil::SLocation> locati
 	{
 		addLocation(*it);
 	}
+}
+
+bool VServerCtx::deeperNestAsc(const LocationCtx* l1, const LocationCtx* l2)
+{
+	std::vector<std::string> s1;
+	std::vector<std::string> s2;
+
+	s1 = ConfParseUtil::split(l1->getPath(), '/');
+	s2 = ConfParseUtil::split(l2->getPath(), '/');
+	return s1.size() < s2.size();
+}
+
+bool VServerCtx::deeperNestDsc(const LocationCtx* l1, const LocationCtx* l2)
+{
+	std::vector<std::string> s1;
+	std::vector<std::string> s2;
+
+	s1 = ConfParseUtil::split(l1->getPath(), '/');
+	s2 = ConfParseUtil::split(l2->getPath(), '/');
+	return s1.size() > s2.size();
+}
+
+void VServerCtx::sortLocationAsc(void)
+{
+	std::sort(locationCtxs_.begin(), locationCtxs_.end(), deeperNestAsc);
+}
+
+void VServerCtx::sortLocationDsc(void)
+{
+	std::sort(locationCtxs_.begin(), locationCtxs_.end(), deeperNestDsc);
 }
 
 void VServerCtx::setServerName(const std::string& serverName)

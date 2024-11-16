@@ -90,7 +90,7 @@ bool ConfParseUtil::isServerErrortCode(const std::string& statusCode)
 	return isServerErrortCode(std::atoi(statusCode.c_str()));
 }
 
-int ConfParseUtil::countSpace(const std::string& line)
+int ConfParseUtil::count(const std::string& line, char c)
 {
 	int count;
 	std::string::const_iterator it;
@@ -99,23 +99,7 @@ int ConfParseUtil::countSpace(const std::string& line)
 	count = 0;
 	while (it != line.end())
 	{
-		if (*it == ' ')
-			count++;
-		it++;
-	}
-	return count;
-}
-
-int ConfParseUtil::countDot(const std::string& line)
-{
-	int count;
-	std::string::const_iterator it;
-
-	it = line.begin();
-	count = 0;
-	while (it != line.end())
-	{
-		if (*it == '.')
+		if (*it == c)
 			count++;
 		it++;
 	}
@@ -128,9 +112,9 @@ bool ConfParseUtil::isValidIPAddress(const std::string& ip)
 
 	if (ip == "localhost")
 		return true;
-	if (countSpace(ip) != 0)
+	if (count(ip, ' ') != 0)
 		return false;
-	if (countDot(ip) != 3)
+	if (count(ip, '.') != 3)
 		return false;
 	strs = split(ip, '.');
 	for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)

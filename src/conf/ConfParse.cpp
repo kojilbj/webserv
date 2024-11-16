@@ -206,7 +206,7 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 				//serverブロックが終わった時にクラスにaddする。その時にVServerの形成を行う
 			}
 			// Iteratorを値の分進める
-			it += ConfParseUtil::countSpace(keyValue(it, tokens));
+			it += ConfParseUtil::count(keyValue(it, tokens), ' ');
 		}
 		it++;
 	}

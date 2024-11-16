@@ -18,8 +18,7 @@ namespace ConfParseUtil
 	std::vector<std::string> split(const std::string& str);
 	std::vector<std::string> split(std::ifstream& file, char c);
 
-	int countSpace(const std::string& line);
-	int countDot(const std::string& line);
+	int count(const std::string& line, char c);
 
 	bool isValidIPAddress(const std::string& ip);
 

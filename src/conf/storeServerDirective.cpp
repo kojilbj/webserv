@@ -6,7 +6,7 @@ void storeListen(struct ConfParseUtil::SServer& serverInfo, const std::string& v
 	std::string listenPort;
 	std::string listenIP;
 
-	if (ConfParseUtil::countSpace(value) != 0)
+	if (ConfParseUtil::count(value, ' ') != 0)
 		throw std::logic_error("Syntax Error: " + value);
 	if (value.find(':') != std::string::npos)
 	{
@@ -33,7 +33,7 @@ void storeServerName(struct ConfParseUtil::SServer& serverInfo, const std::strin
 
 void storeClientMaxBodySize(struct ConfParseUtil::SServer& serverInfo, const std::string& value)
 {
-	if (ConfParseUtil::countSpace(value) != 0)
+	if (ConfParseUtil::count(value, ' ') != 0)
 		throw std::logic_error("Syntax Error: " + value);
 	serverInfo.clientMaxBodySize = value;
 }
@@ -43,7 +43,7 @@ void storeErrorPage(struct ConfParseUtil::SServer& serverInfo, const std::string
 	std::string errorNum;
 	std::string path;
 
-	if (ConfParseUtil::countSpace(value) != 1)
+	if (ConfParseUtil::count(value, ' ') != 1)
 		throw std::logic_error("Syntax Error: " + value);
 	errorNum = value.substr(0, value.find(" "));
 	path = value.substr(value.find(" ") + 1);

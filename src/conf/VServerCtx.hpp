@@ -30,6 +30,9 @@ namespace Wbsv
 		void addLocation(const std::vector<LocationCtx*> locations);
 		void addLocation(std::vector<struct ConfParseUtil::SLocation> locations);
 		void addLocation(struct ConfParseUtil::SLocation locations);
+		//sort by nest depth of path
+		void sortLocationAsc(void);
+		void sortLocationDsc(void);
 
 		void setServerName(const std::string& serverName);
 		void addServerName(const std::string& serverName);
@@ -67,6 +70,8 @@ namespace Wbsv
 		}
 
 	private:
+		static bool deeperNestAsc(const LocationCtx* l1, const LocationCtx* l2);
+		static bool deeperNestDsc(const LocationCtx* l1, const LocationCtx* l2);
 		bool defaultServer_;
 		std::vector<std::string> serverNames_;
 		ErrorPages errorPages_;
