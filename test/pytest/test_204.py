@@ -20,25 +20,33 @@ def delete_file():
     assert w_res.headers["Date"]
     assert os.access(PATH + FILE1, os.F_OK) == os.access(PATH + FILE2, os.F_OK)
 
-def delete_dir():
-    PATH = test_responses.ROOT + "/uploaded_images/"
-    # DIR1 = "test1"
-    DIR2 = "test2"
-    # os.mkdir(PATH + DIR1)
-    os.mkdir(PATH + DIR2)
-    # w_res = requests.delete(test_responses.WEBSERV_URL + "/uploaded_images/" + DIR1)
-    # time.sleep(1)
-    n_res = requests.delete(test_responses.NGINX_URL + "/uploaded_images/" + DIR2)
-    print(n_res.headers)
-    print(n_res.content)
-    # assert w_res.status_code == n_res.status_code 
-    assert requests.codes.conflict == n_res.status_code 
-    # assert "webserv/1.0" in w_res.headers["Server"]
-    # assert w_res.headers["Date"]
-    # assert os.access(PATH + DIR1, os.F_OK) == os.access(PATH + DIR2, os.F_OK)
+# def delete_dir():
+#     PATH = test_responses.ROOT + "/uploaded_images/"
+#     w_res = requests.delete(test_responses.WEBSERV_URL + "/uploaded_images/")
+#     assert w_res.status_code == requests.codes.no_content
+#     assert os.access(PATH, os.F_OK) == False
+#     os.mkdir(PATH)
+#     n_res = requests.delete(test_responses.NGINX_URL + "/uploaded_images/")
+#     assert w_res.status_code == n_res.status_code 
+#     assert "webserv/1.0" in w_res.headers["Server"]
+#     assert w_res.headers["Date"]
+#     assert os.access(PATH, os.F_OK) == False
+#     os.mkdir(PATH)
 
-def No_Content_request():
-    pass
+# def delete_dir():
+#     PATH = test_responses.ROOT + "/uploaded_images/"
+#     DIR1 = "test1"
+#     DIR2 = "test2"
+#     os.mkdir(PATH + DIR1)
+#     os.mkdir(PATH + DIR2)
+#     w_res = requests.delete(test_responses.WEBSERV_URL + "/uploaded_images/" + DIR1)
+#     n_res = requests.delete(test_responses.NGINX_URL + "/uploaded_images/" + DIR2)
+#     assert w_res.status_code == n_res.status_code 
+#     assert "webserv/1.0" in w_res.headers["Server"]
+#     assert w_res.headers["Date"]
+#     assert os.access(PATH + DIR1, os.F_OK) == os.access(PATH + DIR2, os.F_OK)
+
+def No_Content_response():
     delete_file()
     # delete_dir()
 

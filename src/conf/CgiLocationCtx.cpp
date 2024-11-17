@@ -213,7 +213,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 	std::string arg1;
 	// if (param["PATH_INFO"].find(".php") != string::npos)
 	// {
-	pathname = "/home/kisobe/.brew/bin/php-cgi";
+	// pathname = "/home/kisobe/.brew/bin/php-cgi";
+	pathname = "/usr/bin/php-cgi";
 	arg1 = param_["PATH_INFO"];
 	// }
 	char* argv[3];

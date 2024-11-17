@@ -85,7 +85,18 @@ def chmod_upload_php():
     # os.rename(test_responses.ROOT + "cgi" + "/php/tmp.php", PATH)
     os.chmod(PATH, 0o755)
 
-def OK_request():
+def delete_request_to_upload_php():
+    UPLOAD = "/php/upload.php"
+    w_res = requests.delete(test_responses.WEBSERV_URL + UPLOAD)
+    n_res = requests.delete(test_responses.NGINX_URL + UPLOAD)
+    assert w_res.status_code == n_res.status_code 
+    assert "webserv/1.0" in w_res.headers["Server"]
+    assert w_res.headers["Date"]
+    assert w_res.headers["Content-Type"] == n_res.headers["Content-Type"]
+    assert b"uploading from webserv" in w_res.content
+    assert b"Possible file upload attack!" in w_res.content
+
+def OK_response():
     index_html_request()
     upload_html_request()
     upload_php_request()
@@ -93,3 +104,4 @@ def OK_request():
     signup_html_request()
     autoindex_request()
     chmod_upload_php()
+    delete_request_to_upload_php()

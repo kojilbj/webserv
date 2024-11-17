@@ -38,7 +38,7 @@ def absent_php_request():
     assert w_res.headers["Content-Type"] in n_res.headers["Content-Type"]
     assert w_res.content == n_res.content
 
-def Not_Found_request():
+def Not_Found_response():
     absent_file_request()
     rename_html_dirname()
     absent_php_request()

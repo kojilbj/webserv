@@ -7,6 +7,9 @@ int Access::handler(Http& h)
 	(void)h;
 	printLog(LOG_DEBUG, "Access::handler");
 	LocationCtx* lc = h.getLocationCtx();
+	// cgi accept any method
+	if (dynamic_cast<CgiLocationCtx*>(lc))
+		return OK;
 	switch (h.getMethod())
 	{
 	case GET:

@@ -92,103 +92,6 @@ int Http::invokeRevHandler()
 	return (this->*(revHandler))();
 }
 
-void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
-{
-	printLog(LOG_DEBUG, "Http::selectServerCtx");
-	std::vector<ConfCtx*>::iterator it;
-
-	for (it = cfs->begin(); it != cfs->end(); it++)
-	{
-		ConfCtx* ctx = *it;
-		if (ctx->getName() == "HTTP")
-		{
-			HttpConfCtx* hc = reinterpret_cast<HttpConfCtx*>(ctx);
-			std::vector<ServerCtx>::iterator sit;
-			for (sit = hc->getServerCtxs().begin(); sit != hc->getServerCtxs().end(); sit++)
-			{
-				struct addrinfo hints;
-				struct addrinfo* result;
-				std::memset(&hints, 0, sizeof(struct addrinfo));
-				/* you can use SOCK_DGRAM if add StreamConfCtx, but not HttpConfCtx */
-				hints.ai_flags = AI_NUMERICSERV;
-				hints.ai_socktype = SOCK_STREAM;
-				hints.ai_family = AF_INET;
-				hints.ai_canonname = NULL;
-				hints.ai_addr = NULL;
-				hints.ai_next = NULL;
-				std::pair<string, string> listen = sit->getListen();
-				if (getaddrinfo(listen.first.c_str(), listen.second.c_str(), &hints, &result) != 0)
-				{
-					std::cerr << "getaddrinfo: " << strerror(errno) << std::endl;
-					exit(1);
-				}
-				struct sockaddr_in* addrIn = (struct sockaddr_in*)result->ai_addr;
-				if (addrIn->sin_port == ls->sockaddrIn.sin_port &&
-					addrIn->sin_addr.s_addr == ls->sockaddrIn.sin_addr.s_addr)
-				{
-					serverCtx = &(*sit);
-					c.serverCtx = serverCtx;
-				}
-				freeaddrinfo(result);
-			}
-		}
-	}
-	std::vector<VServerCtx>* vserverCtxs = serverCtx->getVServerCtxs();
-	std::vector<VServerCtx>::iterator vsit = vserverCtxs->begin();
-	for (; vsit != vserverCtxs->end(); vsit++)
-	{
-		if (vsit->getDefaultServer())
-		{
-			vserverCtx_ = &(*vsit);
-			break;
-		}
-	}
-}
-
-void Http::selectVServerCtx(ServerCtx* serverCtx, string host)
-{
-	printLog(LOG_DEBUG, "Http::selectVServerCtx");
-	std::vector<VServerCtx>* v = serverCtx->getVServerCtxs();
-	std::vector<VServerCtx>::iterator it;
-	std::vector<VServerCtx>::iterator defaultServer;
-	for (it = v->begin(); it != v->end(); it++)
-	{
-		if (it->getServerNames()[0] == host)
-		{
-			vserverCtx_ = &(*it);
-			printLog(LOG_DEBUG, "Host: " + host + " is selected");
-			return;
-		}
-		if (it->getDefaultServer())
-			defaultServer = it;
-	}
-	printLog(LOG_DEBUG, "Default server is selected");
-	vserverCtx_ = &(*defaultServer);
-}
-
-int Http::waitRequestHandler()
-{
-	printLog(LOG_DEBUG, "Http::waitRequestHandler");
-	// wevReady = true;
-	char tmp[clientHeaderSize + 1];
-	std::memset(tmp, 0, clientHeaderSize + 1);
-	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
-	c.lastReadTime = std::time(NULL);
-#ifdef DEBUG
-	std::stringstream num;
-	num << readnum;
-	printLog(LOG_DEBUG, num.str() + " byte is read");
-#endif
-	if (readnum <= 0)
-		return ERROR;
-	alreadyRead = true;
-	if (readnum == clientHeaderSize)
-		ready = true;
-	string buf(tmp, readnum);
-	headerIn += buf;
-	return processRequestLine();
-}
-
 int Http::createResponse(const std::string& code)
 {
 	std::string codes[17] = {"200",
@@ -310,6 +213,103 @@ int Http::createResponse(const std::string& code)
 	headerOut += "Content-Type: text/html\r\n";
 	headerOut += "Content-Length: " + len.str() + "\r\n";
 	return DONE;
+}
+
+void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
+{
+	printLog(LOG_DEBUG, "Http::selectServerCtx");
+	std::vector<ConfCtx*>::iterator it;
+
+	for (it = cfs->begin(); it != cfs->end(); it++)
+	{
+		ConfCtx* ctx = *it;
+		if (ctx->getName() == "HTTP")
+		{
+			HttpConfCtx* hc = reinterpret_cast<HttpConfCtx*>(ctx);
+			std::vector<ServerCtx>::iterator sit;
+			for (sit = hc->getServerCtxs().begin(); sit != hc->getServerCtxs().end(); sit++)
+			{
+				struct addrinfo hints;
+				struct addrinfo* result;
+				std::memset(&hints, 0, sizeof(struct addrinfo));
+				/* you can use SOCK_DGRAM if add StreamConfCtx, but not HttpConfCtx */
+				hints.ai_flags = AI_NUMERICSERV;
+				hints.ai_socktype = SOCK_STREAM;
+				hints.ai_family = AF_INET;
+				hints.ai_canonname = NULL;
+				hints.ai_addr = NULL;
+				hints.ai_next = NULL;
+				std::pair<string, string> listen = sit->getListen();
+				if (getaddrinfo(listen.first.c_str(), listen.second.c_str(), &hints, &result) != 0)
+				{
+					std::cerr << "getaddrinfo: " << strerror(errno) << std::endl;
+					exit(1);
+				}
+				struct sockaddr_in* addrIn = (struct sockaddr_in*)result->ai_addr;
+				if (addrIn->sin_port == ls->sockaddrIn.sin_port &&
+					addrIn->sin_addr.s_addr == ls->sockaddrIn.sin_addr.s_addr)
+				{
+					serverCtx = &(*sit);
+					c.serverCtx = serverCtx;
+				}
+				freeaddrinfo(result);
+			}
+		}
+	}
+	std::vector<VServerCtx>* vserverCtxs = serverCtx->getVServerCtxs();
+	std::vector<VServerCtx>::iterator vsit = vserverCtxs->begin();
+	for (; vsit != vserverCtxs->end(); vsit++)
+	{
+		if (vsit->getDefaultServer())
+		{
+			vserverCtx_ = &(*vsit);
+			break;
+		}
+	}
+}
+
+void Http::selectVServerCtx(ServerCtx* serverCtx, string host)
+{
+	printLog(LOG_DEBUG, "Http::selectVServerCtx");
+	std::vector<VServerCtx>* v = serverCtx->getVServerCtxs();
+	std::vector<VServerCtx>::iterator it;
+	std::vector<VServerCtx>::iterator defaultServer;
+	for (it = v->begin(); it != v->end(); it++)
+	{
+		if (it->getServerNames()[0] == host)
+		{
+			vserverCtx_ = &(*it);
+			printLog(LOG_DEBUG, "Host: " + host + " is selected");
+			return;
+		}
+		if (it->getDefaultServer())
+			defaultServer = it;
+	}
+	printLog(LOG_DEBUG, "Default server is selected");
+	vserverCtx_ = &(*defaultServer);
+}
+
+int Http::waitRequestHandler()
+{
+	printLog(LOG_DEBUG, "Http::waitRequestHandler");
+	// wevReady = true;
+	char tmp[clientHeaderSize + 1];
+	std::memset(tmp, 0, clientHeaderSize + 1);
+	ssize_t readnum = recv(c.cfd, tmp, clientHeaderSize, 0);
+	c.lastReadTime = std::time(NULL);
+#ifdef DEBUG
+	std::stringstream num;
+	num << readnum;
+	printLog(LOG_DEBUG, num.str() + " byte is read");
+#endif
+	if (readnum <= 0)
+		return ERROR;
+	alreadyRead = true;
+	if (readnum == clientHeaderSize)
+		ready = true;
+	string buf(tmp, readnum);
+	headerIn += buf;
+	return processRequestLine();
 }
 
 int Http::processRequestLine()
@@ -653,7 +653,8 @@ int Http::parseRequestLine()
 		case VERSION_MAJOR:
 			if (!std::isdigit(headerIn[pos]))
 				return INVALID_VERSION;
-			// 505 VERSION_NOT_SUPPORTED
+			if (headerIn[pos] != '1')
+				return INVALID_VERSION;
 			major = headerIn[pos] - '0';
 			state = VERSION_POINT;
 			break;
@@ -665,7 +666,8 @@ int Http::parseRequestLine()
 		case VERSION_MINOR:
 			if (!std::isdigit(headerIn[pos]))
 				return INVALID_VERSION;
-			// 505 VERSION_NOT_SUPPORTED
+			if (headerIn[pos] != '1')
+				return INVALID_VERSION;
 			minor = headerIn[pos] - '0';
 			state = END_CR;
 			break;
@@ -1541,6 +1543,7 @@ int Http::readDiscardedRequest()
 	char buf[bufSize];
 	std::memset(buf, 0, bufSize);
 	ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
+	std::cout << readnum << std::endl;
 	if (readnum == -1 || readnum == 0 || readnum < bufSize)
 		return OK;
 	revHandler = &Http::readDiscardedRequest;

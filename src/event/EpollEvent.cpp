@@ -81,8 +81,9 @@ void Epoll::timeOutHandler(Webserv& ws)
 				// close(p->c.cfd);
 				// ws.getFreeList()->remove(p);
 				// delete p;
+				struct eventData* tmp = *it;
 				freeList.remove(*it);
-				delete *it;
+				delete tmp;
 				Http* h = reinterpret_cast<Http*>(p);
 				h->wevReady = true;
 				int rv = h->createResponse("408");

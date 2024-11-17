@@ -1,8 +1,9 @@
 import socket
 import time
 
-HOST = "127.0.0.1"
+HOST = "172.17.0.2"
 PORT = 8080
+NGINX_PORT = 8000
 
 def close_soon():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

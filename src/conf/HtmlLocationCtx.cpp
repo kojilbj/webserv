@@ -75,25 +75,28 @@ static int haveRightAccess(std::string& path, int method)
 {
 	if (method == DELETE)
 	{
+		int slashPos = 0;
 		for (size_t i = 0; i < path.size(); i++)
 		{
 			// directory
 			if (path[i] == '/')
 			{
+				slashPos = i;
 				std::string dir(path.substr(0, i + 1));
 				if (access(dir.c_str(), F_OK) == -1)
 					return F_KO;
-				// if (access(dir.c_str(), W_OK) == -1)
-				// {
-				//	std::cout << "W_KO: " << path.substr(0, i + 1) << std::endl;
-				//	return WX_KO;
-				// }
 				if (access(dir.c_str(), X_OK) == -1)
 				{
 					std::cout << "X_KO: " << path.substr(0, i + 1) << std::endl;
 					return WX_KO;
 				}
 			}
+		}
+		std::string dir(path.substr(0, slashPos + 1));
+		if (access(dir.c_str(), W_OK) == -1)
+		{
+			std::cout << "W_KO: " << path.substr(0, slashPos + 1) << std::endl;
+			return WX_KO;
 		}
 		return FRWX_OK;
 	}
@@ -151,7 +154,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 		switch (h.getMethod())
 		{
 		case POST:
-			return h.createResponse("403");
+			return h.createResponse("405");
 		case DELETE:
 			if (std::remove(fullPath.c_str()) < 0)
 				return h.createResponse("500");

@@ -29,7 +29,7 @@ def chmod_html_dir():
     assert b"403 Forbidden" in w_res.content
     os.chmod(PATH, 0o755)
 
-def Forbidden_request():
+def Forbidden_response():
     chmod_index_html()
     chmod_html_dir()
 
