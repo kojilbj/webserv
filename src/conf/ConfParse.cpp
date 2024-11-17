@@ -120,7 +120,7 @@ std::string ConfParse::keyValue(std::vector<std::string>::const_iterator it,
 //http以外のブロックを追加するときはここに処理を追加していく
 ConfCtx* ConfParse::createCtx(const std::string& ctxName)
 {
-	ConfCtx* ctx;
+	ConfCtx* ctx = NULL;
 
 	if (ctxName == "http")
 		ctx = new HttpConfCtx();

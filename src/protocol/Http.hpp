@@ -164,7 +164,7 @@ namespace Wbsv
 		// regular file fd to send to the client as message body
 		int fd_;
 		int requestBodyFileFd_;
-		int responseBodyFileFd_;
+		// int responseBodyFileFd_;
 		int bodyLen_;
 		int otherThanChunkDataSize_;
 		size_t chunkSize_;

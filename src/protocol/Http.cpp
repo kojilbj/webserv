@@ -23,7 +23,7 @@ Http::Http()
 	, continueRequest_(false)
 	, fd_(-1)
 	, requestBodyFileFd_(-1)
-	, responseBodyFileFd_(-1)
+	// , responseBodyFileFd_(-1)
 	, otherThanChunkDataSize_(0)
 	, chunkSize_(0)
 	, countChunkData_(0)
@@ -191,7 +191,7 @@ int Http::waitRequestHandler()
 
 int Http::createResponse(const std::string& code)
 {
-	std::string codes[16] = {"200",
+	std::string codes[17] = {"200",
 							 "204",
 							 "400",
 							 "403",
@@ -1388,7 +1388,7 @@ int Http::finalizeRequest()
 						  << std::endl;
 				std::cout << "readnum from regular file: " << readnum << std::endl;
 				std::cout << "writenum to client: " << writenum << std::endl;
-				// std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
+				std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)

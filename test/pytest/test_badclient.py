@@ -1,8 +1,8 @@
 import socket
 import time
 
-HOST = "172.17.0.2"
-PORT = 80
+HOST = "127.0.0.1"
+PORT = 8080
 
 def close_soon():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
