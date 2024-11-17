@@ -17,9 +17,6 @@ namespace Wbsv
 		RX_KO,
 		WX_KO
 	};
-	enum
-	{
-	};
 
 	class Http;
 

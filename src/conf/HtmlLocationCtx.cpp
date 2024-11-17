@@ -83,11 +83,11 @@ static int haveRightAccess(std::string& path, int method)
 				std::string dir(path.substr(0, i + 1));
 				if (access(dir.c_str(), F_OK) == -1)
 					return F_KO;
-				if (access(dir.c_str(), W_OK) == -1)
-				{
-					std::cout << "W_KO: " << path.substr(0, i + 1) << std::endl;
-					return WX_KO;
-				}
+				// if (access(dir.c_str(), W_OK) == -1)
+				// {
+				//	std::cout << "W_KO: " << path.substr(0, i + 1) << std::endl;
+				//	return WX_KO;
+				// }
 				if (access(dir.c_str(), X_OK) == -1)
 				{
 					std::cout << "X_KO: " << path.substr(0, i + 1) << std::endl;

@@ -1,4 +1,4 @@
-#ifndef EPOLLEVNET_HPP
+#ifndef EPOLLEVENT_HPP
 #	define EPOLLEVENT_HPP
 
 #	include "Connection.hpp"
