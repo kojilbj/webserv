@@ -1,6 +1,7 @@
 import test_100
 import test_200
 import test_204
+import test_301
 import test_400
 import test_403
 import test_404
@@ -27,6 +28,7 @@ def test_responses():
         test_100.Continue_response()
         test_200.OK_response()
         test_204.No_Content_response()
+        test_301.Moved_Permanently()
         test_400.Bad_request_response()
         test_403.Forbidden_response()
         test_404.Not_Found_response()

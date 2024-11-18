@@ -209,22 +209,22 @@ void Epoll::processEvents(Webserv& ws)
 				printLog(LOG_DEBUG, "EPOLLIN");
 			if (eventResult[i].events & EPOLLOUT)
 				printLog(LOG_DEBUG, "EPOLLOUT");
-			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-				printLog(LOG_DEBUG, "EPOLLRDHUP | EPOLLHUP | EPOLLERR");
+			if (eventResult[i].events & EPOLLRDHUP)
+				printLog(LOG_DEBUG, "EPOLLRDHUP");
+			if (eventResult[i].events & EPOLLHUP)
+				printLog(LOG_DEBUG, "EPOLLHUP");
+			if (eventResult[i].events & EPOLLERR)
+				printLog(LOG_DEBUG, "EPOLLERR");
 #endif
-			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-			{
-				printLog(LOG_DEBUG, "EPOLLRDHUP | EPOLLHUP | EPOLLERR returned, close connection");
-				close(p->c.cfd);
-				ws.getFreeList()->remove(p);
-				delete p;
-			}
-			else if ((eventResult[i].events & EPOLLIN))
+			if ((eventResult[i].events & EPOLLIN))
 			{
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
-					printLog(LOG_DEBUG, "revHandler returned OK, close connection");
+					std::stringstream fd;
+					fd << p->c.cfd;
+					printLog(LOG_DEBUG,
+							 "revHandler returned OK, close connection (" + fd.str() + ")");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -251,11 +251,25 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else
 				{
-					printLog(LOG_DEBUG, "revHandler returned ERROR, close connection");
+					std::stringstream fd;
+					fd << p->c.cfd;
+					printLog(LOG_DEBUG,
+							 "revHandler returned ERROR, close connection (" + fd.str() + ")");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
 				}
+			}
+			else if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+			{
+				std::stringstream fd;
+				fd << p->c.cfd;
+				printLog(LOG_DEBUG,
+						 "EPOLLRDHUP | EPOLLHUP | EPOLLERR returned, close connection (" +
+							 fd.str() + ")");
+				close(p->c.cfd);
+				ws.getFreeList()->remove(p);
+				delete p;
 			}
 			else if (eventResult[i].events & EPOLLOUT)
 			{
@@ -265,7 +279,10 @@ void Epoll::processEvents(Webserv& ws)
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
-					printLog(LOG_DEBUG, "revHandler returned OK, close connection");
+					std::stringstream fd;
+					fd << p->c.cfd;
+					printLog(LOG_DEBUG,
+							 "revHandler returned OK, close connection (" + fd.str() + ")");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -279,7 +296,10 @@ void Epoll::processEvents(Webserv& ws)
 				}
 				else
 				{
-					printLog(LOG_DEBUG, "revHandler returned ERROR, close connection");
+					std::stringstream fd;
+					fd << p->c.cfd;
+					printLog(LOG_DEBUG,
+							 "revHandler returned ERROR, close connection (" + fd.str() + ")");
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -345,6 +365,12 @@ void Epoll::processEvents(Webserv& ws)
 					upstream->peerClosed = true;
 				if (eventResult[i].events & EPOLLIN)
 					upstream->in = true;
+				if (upstream->getResponseBodyFd() != -1)
+				{
+					close(upstream->getResponseBodyFd());
+					Http* h = reinterpret_cast<Http*>(upstream->p);
+					std::remove(h->requestBodyFileName_.c_str());
+				}
 				int rv = upstream->invokeRevHandler();
 				upstream->in = false;
 				if (rv == OK)

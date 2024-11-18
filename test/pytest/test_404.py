@@ -50,9 +50,20 @@ def absent_php_with_post_request():
     assert w_res.headers["Content-Type"] in n_res.headers["Content-Type"]
     assert w_res.content == n_res.content
 
+def error_page():
+    headers1 = {"Host": "webserv"}
+    headers2 = {"Host": "nginx"}
+    INDEX = "/absent.html"
+    w_res = requests.get(test_responses.WEBSERV_URL + INDEX, headers=headers1)
+    n_res = requests.get(test_responses.NGINX_URL + INDEX, headers=headers2)
+    assert w_res.status_code == n_res.status_code
+    assert "webserv/1.0" in w_res.headers["Server"]
+    assert w_res.headers["Date"]
+    assert w_res.content == n_res.content
+
 def Not_Found_response():
     absent_file_request()
     rename_html_dirname()
     absent_php_with_get_request()
     absent_php_with_post_request()
-
+    error_page()

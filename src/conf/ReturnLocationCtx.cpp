@@ -5,7 +5,7 @@ using namespace Wbsv;
 ReturnLocationCtx::ReturnLocationCtx()
 	: LocationCtx()
 {
-	redirectCodeDict_["301"] = "Moved Parmanently";
+	redirectCodeDict_["301"] = "Moved Permanently";
 	redirectCodeDict_["302"] = "Moved Temporarily";
 	redirectCodeDict_["303"] = "See Other";
 	redirectCodeDict_["307"] = "Temporary Redirect";

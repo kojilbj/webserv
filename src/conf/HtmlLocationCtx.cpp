@@ -161,6 +161,11 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			return h.createResponse("204");
 		default: // GET
 			int fd = open(fullPathWithIndex.c_str(), O_RDONLY);
+#ifdef DEBUG
+			std::stringstream tmp;
+			tmp << fd;
+			printLog(LOG_DEBUG, "file for response is opened (" + tmp.str() + ")");
+#endif
 			if (fd == -1)
 			{
 				if (!autoindex)
@@ -239,6 +244,11 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			return h.createResponse("204");
 		default:
 			int fd = open(fullPath.c_str(), O_RDONLY);
+#ifdef DEBUG
+			std::stringstream tmp;
+			tmp << fd;
+			printLog(LOG_DEBUG, "file for response is opened (" + tmp.str() + ")");
+#endif
 			if (fd == -1)
 			{
 				// Don't use h.createResponse(), it cause infinite loop, when error_page 500 specified.

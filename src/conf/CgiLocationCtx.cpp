@@ -172,6 +172,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 	int rv = haveRightAccess(param_["SCRIPT_FILENAME"]);
 	if (rv != FRX_OK)
 	{
+		std::remove(h.requestBodyFileName_.c_str());
 		if (rv == F_KO)
 		{
 			h.messageBodyOut = "File not found.\n";
@@ -225,12 +226,14 @@ int CgiLocationCtx::contentHandler(Http& h)
 	int p2cFd[2];
 	if (pipe(p2cFd) < 0)
 	{
+		std::remove(h.requestBodyFileName_.c_str());
 		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
 		return h.createResponse("500");
 	}
 	int c2pFd[2];
 	if (pipe(c2pFd) < 0)
 	{
+		std::remove(h.requestBodyFileName_.c_str());
 		close(p2cFd[0]);
 		close(p2cFd[1]);
 		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
@@ -240,6 +243,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 	if (pid < 0)
 	{
 		// Internal Server Error;
+		std::remove(h.requestBodyFileName_.c_str());
 		close(p2cFd[0]);
 		close(p2cFd[1]);
 		close(c2pFd[0]);

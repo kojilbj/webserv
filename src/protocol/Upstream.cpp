@@ -24,6 +24,8 @@ int Upstream::sendRequestBody()
 	if (peerClosed)
 	{
 		close(requestBodyFd_);
+		requestBodyFd_ = -1;
+		std::remove(h->requestBodyFileName_.c_str());
 		h->wevReady = true;
 		int rv = h->createResponse("502");
 		if (rv == AGAIN)
@@ -38,6 +40,9 @@ int Upstream::sendRequestBody()
 	ssize_t readnum = read(requestBodyFd_, buf, bufSize);
 	if (readnum == -1)
 	{
+		close(requestBodyFd_);
+		requestBodyFd_ = -1;
+		std::remove(h->requestBodyFileName_.c_str());
 		int rv = h->createResponse("500");
 		if (rv == AGAIN)
 			h->revHandler = &Http::coreRunPhase;
@@ -48,6 +53,7 @@ int Upstream::sendRequestBody()
 	if (readnum == 0)
 	{
 		close(requestBodyFd_);
+		requestBodyFd_ = -1;
 		std::remove(h->requestBodyFileName_.c_str());
 		revHandler_ = &Upstream::recvResponseBody;
 		return OK;
@@ -61,6 +67,9 @@ int Upstream::sendRequestBody()
 	lastReadTime = std::time(NULL);
 	if (writenum == -1)
 	{
+		close(requestBodyFd_);
+		requestBodyFd_ = -1;
+		std::remove(h->requestBodyFileName_.c_str());
 		int rv = h->createResponse("500");
 		if (rv == AGAIN)
 			h->revHandler = &Http::coreRunPhase;

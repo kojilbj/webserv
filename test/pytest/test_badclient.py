@@ -11,6 +11,14 @@ def close_soon():
         s.close()
     time.sleep(0.1)
 
+def close_after_1s():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(b"GET / HTTP/1.1\r\n\r\n")
+        time.sleep(1)
+        s.close()
+    time.sleep(0.1)
+
 def close_after_request_line():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
@@ -53,6 +61,7 @@ def close_during_response():
 def test_badclient():
     for i in range(5):
         close_soon()
+        close_after_1s()
         close_after_request_line()
         close_after_request_header()
         close_after_request_body()

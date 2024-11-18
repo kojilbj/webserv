@@ -28,6 +28,10 @@ namespace Wbsv
 			, headerLen_(0)
 		{ }
 		int invokeRevHandler();
+		int getResponseBodyFd()
+		{
+			return responseBodyFd_;
+		}
 		int readFd;
 		int writeFd;
 		bool peerClosed;

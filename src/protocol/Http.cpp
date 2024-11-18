@@ -1282,7 +1282,11 @@ int Http::finalizeRequest()
 		std::cout << "-----------------------------------------" << std::endl;
 #endif
 		if (writenum == -1)
+		{
+			if (fd_ != -1)
+				close(fd_);
 			return ERROR;
+		}
 		if ((size_t)writenum < statusLine.size())
 		{
 			responseState = statusLineDoing;
@@ -1301,7 +1305,11 @@ int Http::finalizeRequest()
 		std::cout << "-----------------------------------------" << std::endl;
 #endif
 		if (writenum == -1)
+		{
+			if (fd_ != -1)
+				close(fd_);
 			return ERROR;
+		}
 		if ((size_t)writenum < statusLine.size() - pos)
 		{
 			pos += writenum;
@@ -1333,7 +1341,11 @@ int Http::finalizeRequest()
 		std::cout << "-----------------------------------------" << std::endl;
 #endif
 		if (writenum == -1)
+		{
+			if (fd_ != -1)
+				close(fd_);
 			return ERROR;
+		}
 		if ((size_t)writenum < headerOut.size())
 		{
 			responseState = headerOutDoing;
@@ -1353,7 +1365,11 @@ int Http::finalizeRequest()
 		std::cout << "-----------------------------------------" << std::endl;
 #endif
 		if (writenum == -1)
+		{
+			if (fd_ != -1)
+				close(fd_);
 			return ERROR;
+		}
 		if ((size_t)writenum < headerOut.size() - pos)
 		{
 			pos += writenum;
@@ -1370,12 +1386,17 @@ int Http::finalizeRequest()
 				ssize_t readnum = read(fd_, responseBodyBuf_, sizeof(responseBodyBuf_));
 				if (readnum == -1)
 				{
-					std::cout << "Server Internal Error" << std::endl;
+					close(fd_);
 					return ERROR;
 				}
 				if (readnum == 0)
 				{
-					printLog(LOG_DEBUG, "regular file completely read");
+#ifdef DEBUG
+					std::stringstream fd;
+					fd << fd_;
+					printLog(LOG_DEBUG,
+							 "regular file completely read, close file (" + fd.str() + ")");
+#endif
 					close(fd_);
 					if (!responseBodyFileName_.empty())
 						std::remove(responseBodyFileName_.c_str());
@@ -1394,7 +1415,10 @@ int Http::finalizeRequest()
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)
+				{
+					close(fd_);
 					return ERROR;
+				}
 				// if (writenum < readnum || writenum == 1024)
 				// {
 				responseState = messageBodyDoing;
@@ -1440,12 +1464,17 @@ int Http::finalizeRequest()
 				ssize_t readnum = read(fd_, responseBodyBuf_, sizeof(responseBodyBuf_));
 				if (readnum == -1)
 				{
-					std::cout << "Server Internal Error" << std::endl;
+					close(fd_);
 					return ERROR;
 				}
 				if (readnum == 0)
 				{
-					printLog(LOG_DEBUG, "regular file completely read");
+#ifdef DEBUG
+					std::stringstream fd;
+					fd << fd_;
+					printLog(LOG_DEBUG,
+							 "regular file completely read, close file (" + fd.str() + ")");
+#endif
 					close(fd_);
 					if (!responseBodyFileName_.empty())
 						std::remove(responseBodyFileName_.c_str());
@@ -1463,7 +1492,10 @@ int Http::finalizeRequest()
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)
+				{
+					close(fd_);
 					return ERROR;
+				}
 				// if (writenum < readnum || writenum == 1024)
 				// {
 				if (writenum < readnum)
@@ -1485,7 +1517,10 @@ int Http::finalizeRequest()
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)
+				{
+					close(fd_);
 					return ERROR;
+				}
 				// if (writenum < sizeof(responseBodyBuf_) - pos || pos + writenum == 1024)
 				// {
 				pos += writenum;

@@ -3,9 +3,7 @@ import test_responses
 import requests
 
 def Request_entity_too_large_response():
-    # for webserv
     headers1 = {"Host": "webserv"}
-    # for nginx
     headers2 = {"Host": "nginx"}
     STR = "a" * 2000
     w_res = requests.get(test_responses.WEBSERV_URL, headers=headers1, data=STR)
