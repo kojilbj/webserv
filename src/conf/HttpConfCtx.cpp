@@ -48,7 +48,6 @@ void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 			ls.socktype = result->ai_socktype;
 			ls.socklen = result->ai_addrlen;
 			std::memcpy(&ls.sockaddrIn, result->ai_addr, sizeof(struct sockaddr_in));
-			ls.backlog = 10;
 			freeaddrinfo(result);
 		}
 		lss->push_back(ls);

@@ -75,6 +75,9 @@ void printConf(std::vector<Wbsv::ConfCtx*>* confCtxs)
 				std::cout << std::setw(20) << std::left
 						  << "\t\tserver_name: " << vsit->getServerNames()[0] << std::endl;
 				std::cout << std::setw(20) << std::left
+						  << "\t\tclient_max_body_size: " << vsit->getClientMaxBodySize()
+						  << std::endl;
+				std::cout << std::setw(20) << std::left
 						  << "\t\tlocationConf (size: " << vsit->getLocationCtxs()->size()
 						  << "):" << std::endl;
 				std::vector<LocationCtx*>::const_iterator lit;

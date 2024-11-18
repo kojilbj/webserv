@@ -3,7 +3,7 @@
 using namespace Wbsv;
 
 Listening::Listening()
-	: sfd(-1), family(0), socktype(0), socklen(0), backlog(10)
+	: sfd(-1), family(0), socktype(0), socklen(0), backlog(511)
 {
 	std::memset(&sockaddrIn, 0, sizeof(struct sockaddr_in));
 }
