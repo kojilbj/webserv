@@ -11,6 +11,7 @@ import test_413
 import test_414
 import test_417
 import test_501
+import test_502
 
 WEBSERV_URL = "http://172.17.0.2:8080"
 NGINX_URL = "http://172.17.0.2:8000"
@@ -42,5 +43,5 @@ def test_responses():
         test_417.Expectation_failed_response()
         # test_500.Internal_server_error_response()
         test_501.Not_implemented_response()
-        # test_502.Bad_gateway_response()
+        test_502.Bad_gateway_response()
         # test_505.Http_version_not_supported_response()

@@ -77,6 +77,7 @@ void Epoll::timeOutHandler(Webserv& ws)
 			// default client_request_timeout is 10s
 			if (p->c.lastReadTime != -1 && std::time(NULL) - p->c.lastReadTime >= 10)
 			{
+				printLog(LOG_DEBUG, "timeout");
 				timeout = true;
 				// close(p->c.cfd);
 				// ws.getFreeList()->remove(p);
@@ -114,6 +115,7 @@ void Epoll::timeOutHandler(Webserv& ws)
 			// default client_request_timeout is 10s
 			if (upstream->lastReadTime != -1 && std::time(NULL) - upstream->lastReadTime >= 10)
 			{
+				printLog(LOG_DEBUG, "timeout");
 				timeout = true;
 				if (upstream->writeFd != -1)
 					close(upstream->writeFd);
@@ -365,9 +367,10 @@ void Epoll::processEvents(Webserv& ws)
 					upstream->peerClosed = true;
 				if (eventResult[i].events & EPOLLIN)
 					upstream->in = true;
-				if (upstream->getResponseBodyFd() != -1)
+				if (upstream->getRequestBodyFd() != -1)
 				{
-					close(upstream->getResponseBodyFd());
+					close(upstream->getRequestBodyFd());
+					upstream->setRequestBodyFd(-1);
 					Http* h = reinterpret_cast<Http*>(upstream->p);
 					std::remove(h->requestBodyFileName_.c_str());
 				}

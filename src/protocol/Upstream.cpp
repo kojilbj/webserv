@@ -10,6 +10,7 @@ int Upstream::invokeRevHandler()
 int Upstream::sendRequestBody()
 {
 	printLog(LOG_DEBUG, "Upstream::sendRequestBody");
+	lastReadTime = std::time(NULL);
 	Http* h = reinterpret_cast<Http*>(p);
 	if (!alreadyWrite_)
 	{
@@ -43,6 +44,7 @@ int Upstream::sendRequestBody()
 		close(requestBodyFd_);
 		requestBodyFd_ = -1;
 		std::remove(h->requestBodyFileName_.c_str());
+		h->wevReady = true;
 		int rv = h->createResponse("500");
 		if (rv == AGAIN)
 			h->revHandler = &Http::coreRunPhase;
@@ -70,6 +72,7 @@ int Upstream::sendRequestBody()
 		close(requestBodyFd_);
 		requestBodyFd_ = -1;
 		std::remove(h->requestBodyFileName_.c_str());
+		h->wevReady = true;
 		int rv = h->createResponse("500");
 		if (rv == AGAIN)
 			h->revHandler = &Http::coreRunPhase;
@@ -95,12 +98,18 @@ int Upstream::recvResponseBody()
 			open(h->responseBodyFileName_.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 		if (responseBodyFd_ == -1)
 		{
-			h->revHandler = &Http::finalizeRequest;
+			h->wevReady = true;
+			int rv = h->createResponse("500");
+			if (rv == AGAIN)
+				h->revHandler = &Http::coreRunPhase;
+			else
+				h->revHandler = &Http::finalizeRequest;
 			return ERROR;
 		}
 	}
 	if (peerClosed && !in)
 	{
+		h->wevReady = true;
 		close(responseBodyFd_);
 		int nextFd = open(h->responseBodyFileName_.c_str(), O_RDONLY);
 		struct stat st;
@@ -134,6 +143,7 @@ int Upstream::recvResponseBody()
 	lastReadTime = std::time(NULL);
 	if (readnum == -1)
 	{
+		h->wevReady = true;
 		int rv = h->createResponse("500");
 		if (rv == AGAIN)
 			h->revHandler = &Http::coreRunPhase;
@@ -143,6 +153,7 @@ int Upstream::recvResponseBody()
 	}
 	if (readnum == 0)
 	{
+		h->wevReady = true;
 		close(responseBodyFd_);
 		int nextFd = open(h->responseBodyFileName_.c_str(), O_RDONLY);
 		if (nextFd == -1)
@@ -168,7 +179,6 @@ int Upstream::recvResponseBody()
 		size << (st.st_size - headerLen_);
 		h->headerOut += "Content-Length: " + size.str() + "\r\n";
 		h->setFd(nextFd);
-		h->wevReady = true;
 		h->statusLine = "HTTP/1.1 200 OK\r\n";
 		h->revHandler = &Http::finalizeRequest;
 		return OK;
@@ -182,8 +192,14 @@ int Upstream::recvResponseBody()
 			headerLen_ = pos + 4;
 	}
 	ssize_t writenum = write(responseBodyFd_, buf, readnum);
+#ifdef DEBUG
+	std::stringstream wnum;
+	wnum << writenum;
+	printLog(LOG_DEBUG, wnum.str() + " byte is written");
+#endif
 	if (writenum == -1)
 	{
+		h->wevReady = true;
 		int rv = h->createResponse("500");
 		if (rv == AGAIN)
 			h->revHandler = &Http::coreRunPhase;

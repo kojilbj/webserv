@@ -28,9 +28,13 @@ namespace Wbsv
 			, headerLen_(0)
 		{ }
 		int invokeRevHandler();
-		int getResponseBodyFd()
+		int getRequestBodyFd()
 		{
-			return responseBodyFd_;
+			return requestBodyFd_;
+		}
+		void setRequestBodyFd(int fd)
+		{
+			requestBodyFd_ = fd;
 		}
 		int readFd;
 		int writeFd;

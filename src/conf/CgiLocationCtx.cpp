@@ -111,9 +111,13 @@ static void headerIn2Param(Http& h, std::map<std::string, std::string>& param)
 	it = headersIn.find("Content-Type");
 	if (it != headersIn.end())
 		param["CONTENT_TYPE"] = headersIn["Content-Type"];
+	else
+		param["CONTENT_TYPE"] = "text/plain";
 	it = headersIn.find("Content-Length");
 	if (it != headersIn.end())
 		param["CONTENT_LENGTH"] = headersIn["Content-Length"];
+	else
+		param["CONTENT_LENGTH"] = "0";
 	it = headersIn.find("Cookie");
 	if (it != headersIn.end())
 		param["HTTP_COOKIE"] = headersIn["Cookie"];
