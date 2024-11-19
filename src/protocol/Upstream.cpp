@@ -15,17 +15,17 @@ int Upstream::sendRequestBody()
 	if (!alreadyWrite_)
 	{
 		alreadyWrite_ = true;
-		requestBodyFd_ = open(h->requestBodyFileName_.c_str(), O_RDONLY);
-		if (requestBodyFd_ == -1)
+		int requestBodyFd = open(h->requestBodyFileName_.c_str(), O_RDONLY);
+		if (requestBodyFd == -1)
 		{
 			revHandler_ = &Upstream::recvResponseBody;
 			return OK;
 		}
+		h->setRequestBodyFileFd(requestBodyFd);
 	}
 	if (peerClosed)
 	{
-		close(requestBodyFd_);
-		requestBodyFd_ = -1;
+		h->closeRequestBodyFileFd();
 		std::remove(h->requestBodyFileName_.c_str());
 		h->wevReady = true;
 		int rv = h->createResponse("502");
@@ -38,11 +38,10 @@ int Upstream::sendRequestBody()
 	int bufSize = 1024;
 	char buf[1024];
 	std::memset(buf, 0, bufSize);
-	ssize_t readnum = read(requestBodyFd_, buf, bufSize);
+	ssize_t readnum = read(h->getRequestBodyFileFd(), buf, bufSize);
 	if (readnum == -1)
 	{
-		close(requestBodyFd_);
-		requestBodyFd_ = -1;
+		h->closeRequestBodyFileFd();
 		std::remove(h->requestBodyFileName_.c_str());
 		h->wevReady = true;
 		int rv = h->createResponse("500");
@@ -54,8 +53,7 @@ int Upstream::sendRequestBody()
 	}
 	if (readnum == 0)
 	{
-		close(requestBodyFd_);
-		requestBodyFd_ = -1;
+		h->closeRequestBodyFileFd();
 		std::remove(h->requestBodyFileName_.c_str());
 		revHandler_ = &Upstream::recvResponseBody;
 		return OK;
@@ -69,8 +67,7 @@ int Upstream::sendRequestBody()
 	lastReadTime = std::time(NULL);
 	if (writenum == -1)
 	{
-		close(requestBodyFd_);
-		requestBodyFd_ = -1;
+		h->closeRequestBodyFileFd();
 		std::remove(h->requestBodyFileName_.c_str());
 		h->wevReady = true;
 		int rv = h->createResponse("500");
@@ -94,9 +91,9 @@ int Upstream::recvResponseBody()
 		std::string tmpExt(".resBody");
 		std::time_t now = std::time(NULL);
 		h->responseBodyFileName_ = tmpDir + std::asctime(std::localtime(&now)) + tmpExt;
-		responseBodyFd_ =
+		int responseBodyFd =
 			open(h->responseBodyFileName_.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
-		if (responseBodyFd_ == -1)
+		if (responseBodyFd == -1)
 		{
 			h->wevReady = true;
 			int rv = h->createResponse("500");
@@ -106,12 +103,22 @@ int Upstream::recvResponseBody()
 				h->revHandler = &Http::finalizeRequest;
 			return ERROR;
 		}
+		h->setResponseBodyFileFd(responseBodyFd);
 	}
 	if (peerClosed && !in)
 	{
 		h->wevReady = true;
-		close(responseBodyFd_);
+		h->closeResponseBodyFileFd();
 		int nextFd = open(h->responseBodyFileName_.c_str(), O_RDONLY);
+		if (nextFd == -1)
+		{
+			int rv = h->createResponse("500");
+			if (rv == AGAIN)
+				h->revHandler = &Http::coreRunPhase;
+			else
+				h->revHandler = &Http::finalizeRequest;
+			return ERROR;
+		}
 		struct stat st;
 		if (stat(h->responseBodyFileName_.c_str(), &st) == -1)
 		{
@@ -154,7 +161,7 @@ int Upstream::recvResponseBody()
 	if (readnum == 0)
 	{
 		h->wevReady = true;
-		close(responseBodyFd_);
+		h->closeResponseBodyFileFd();
 		int nextFd = open(h->responseBodyFileName_.c_str(), O_RDONLY);
 		if (nextFd == -1)
 		{
@@ -191,7 +198,7 @@ int Upstream::recvResponseBody()
 		if (pos != string::npos)
 			headerLen_ = pos + 4;
 	}
-	ssize_t writenum = write(responseBodyFd_, buf, readnum);
+	ssize_t writenum = write(h->getResponseBodyFileFd(), buf, readnum);
 #ifdef DEBUG
 	std::stringstream wnum;
 	wnum << writenum;

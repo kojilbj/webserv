@@ -276,6 +276,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
 		if (param_.find("HTTP_COOKIE") != param_.end())
 			param_.erase("HTTP_COOKIE");
+		h.setChildPid(pid);
 		h.upstream = new Upstream;
 		h.upstream->writeFd = p2cFd[1];
 		h.upstream->readFd = c2pFd[0];

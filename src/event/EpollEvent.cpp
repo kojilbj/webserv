@@ -123,6 +123,7 @@ void Epoll::timeOutHandler(Webserv& ws)
 				freeList.remove(*it);
 				delete *it;
 				Http* h = reinterpret_cast<Http*>(upstream->p);
+				kill(h->getChildPid(), SIGKILL);
 				h->wevReady = true;
 				int rv = h->createResponse("502");
 				if (rv == AGAIN)
@@ -132,6 +133,8 @@ void Epoll::timeOutHandler(Webserv& ws)
 				h->c.lastReadTime = std::time(NULL);
 				data_t data;
 				data.p = upstream->p;
+				delete data.p->upstream;
+				data.p->upstream = NULL;
 				ev->addEvent(h->c.cfd, data, ConnectionFd, MOD);
 				it = freeList.begin();
 			}
@@ -160,6 +163,7 @@ void Epoll::processEventsLoop(Webserv& ws)
 
 void Epoll::processEvents(Webserv& ws)
 {
+	static int count = 0;
 	int maxEvents = 5;
 	struct epoll_event eventResult[maxEvents];
 	printLog(LOG_DEBUG, "waiting for next events ...");
@@ -227,6 +231,20 @@ void Epoll::processEvents(Webserv& ws)
 					fd << p->c.cfd;
 					printLog(LOG_DEBUG,
 							 "revHandler returned OK, close connection (" + fd.str() + ")");
+					Http* h = reinterpret_cast<Http*>(p);
+					if (h->getRequestBodyFileFd() != -1)
+						h->closeRequestBodyFileFd();
+					if (access(h->requestBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->requestBodyFileName_.c_str());
+					if (h->getResponseBodyFileFd() != -1)
+						h->closeResponseBodyFileFd();
+					if (access(h->responseBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->responseBodyFileName_.c_str());
+#ifdef DEBUG
+					std::stringstream ss;
+					ss << ++count;
+					printLog(LOG_DEBUG, "num of closed connection so far: " + ss.str());
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -257,6 +275,20 @@ void Epoll::processEvents(Webserv& ws)
 					fd << p->c.cfd;
 					printLog(LOG_DEBUG,
 							 "revHandler returned ERROR, close connection (" + fd.str() + ")");
+					Http* h = reinterpret_cast<Http*>(p);
+					if (h->getRequestBodyFileFd() != -1)
+						h->closeRequestBodyFileFd();
+					if (access(h->requestBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->requestBodyFileName_.c_str());
+					if (h->getResponseBodyFileFd() != -1)
+						h->closeResponseBodyFileFd();
+					if (access(h->responseBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->responseBodyFileName_.c_str());
+#ifdef DEBUG
+					std::stringstream ss;
+					ss << ++count;
+					printLog(LOG_DEBUG, "num of closed connection so far: " + ss.str());
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -269,6 +301,20 @@ void Epoll::processEvents(Webserv& ws)
 				printLog(LOG_DEBUG,
 						 "EPOLLRDHUP | EPOLLHUP | EPOLLERR returned, close connection (" +
 							 fd.str() + ")");
+				Http* h = reinterpret_cast<Http*>(p);
+				if (h->getRequestBodyFileFd() != -1)
+					h->closeRequestBodyFileFd();
+				if (access(h->requestBodyFileName_.c_str(), F_OK) != -1)
+					std::remove(h->requestBodyFileName_.c_str());
+				if (h->getResponseBodyFileFd() != -1)
+					h->closeResponseBodyFileFd();
+				if (access(h->responseBodyFileName_.c_str(), F_OK) != -1)
+					std::remove(h->responseBodyFileName_.c_str());
+#ifdef DEBUG
+				std::stringstream ss;
+				ss << ++count;
+				printLog(LOG_DEBUG, "num of closed connection so far: " + ss.str());
+#endif
 				close(p->c.cfd);
 				ws.getFreeList()->remove(p);
 				delete p;
@@ -285,6 +331,20 @@ void Epoll::processEvents(Webserv& ws)
 					fd << p->c.cfd;
 					printLog(LOG_DEBUG,
 							 "revHandler returned OK, close connection (" + fd.str() + ")");
+					Http* h = reinterpret_cast<Http*>(p);
+					if (h->getRequestBodyFileFd() != -1)
+						h->closeRequestBodyFileFd();
+					if (access(h->requestBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->requestBodyFileName_.c_str());
+					if (h->getResponseBodyFileFd() != -1)
+						h->closeResponseBodyFileFd();
+					if (access(h->responseBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->responseBodyFileName_.c_str());
+#ifdef DEBUG
+					std::stringstream ss;
+					ss << ++count;
+					printLog(LOG_DEBUG, "num of closed connection so far: " + ss.str());
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -302,6 +362,20 @@ void Epoll::processEvents(Webserv& ws)
 					fd << p->c.cfd;
 					printLog(LOG_DEBUG,
 							 "revHandler returned ERROR, close connection (" + fd.str() + ")");
+					Http* h = reinterpret_cast<Http*>(p);
+					if (h->getRequestBodyFileFd() != -1)
+						h->closeRequestBodyFileFd();
+					if (access(h->requestBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->requestBodyFileName_.c_str());
+					if (h->getResponseBodyFileFd() != -1)
+						h->closeResponseBodyFileFd();
+					if (access(h->responseBodyFileName_.c_str(), F_OK) != -1)
+						std::remove(h->responseBodyFileName_.c_str());
+#ifdef DEBUG
+					std::stringstream ss;
+					ss << ++count;
+					printLog(LOG_DEBUG, "num of closed connection so far: " + ss.str());
+#endif
 					close(p->c.cfd);
 					ws.getFreeList()->remove(p);
 					delete p;
@@ -367,13 +441,13 @@ void Epoll::processEvents(Webserv& ws)
 					upstream->peerClosed = true;
 				if (eventResult[i].events & EPOLLIN)
 					upstream->in = true;
-				if (upstream->getRequestBodyFd() != -1)
-				{
-					close(upstream->getRequestBodyFd());
-					upstream->setRequestBodyFd(-1);
-					Http* h = reinterpret_cast<Http*>(upstream->p);
-					std::remove(h->requestBodyFileName_.c_str());
-				}
+				// if (upstream->getRequestBodyFd() != -1)
+				// {
+				// 	close(upstream->getRequestBodyFd());
+				// 	upstream->setRequestBodyFd(-1);
+				// 	Http* h = reinterpret_cast<Http*>(upstream->p);
+				// 	std::remove(h->requestBodyFileName_.c_str());
+				// }
 				int rv = upstream->invokeRevHandler();
 				upstream->in = false;
 				if (rv == OK)
@@ -409,7 +483,7 @@ void Epoll::processEvents(Webserv& ws)
 		else
 		{
 #ifdef DEBUG
-			std::cerr << "unknown event occured: " << ed->type << std::endl;
+			std::cerr << "unknown event occured" << std::endl;
 #endif
 			break;
 		}

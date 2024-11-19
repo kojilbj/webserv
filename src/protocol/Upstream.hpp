@@ -23,19 +23,19 @@ namespace Wbsv
 			, revHandler_(&Upstream::sendRequestBody)
 			, alreadyRead_(false)
 			, alreadyWrite_(false)
-			, requestBodyFd_(-1)
-			, responseBodyFd_(-1)
+			// , requestBodyFd_(-1)
+			// , responseBodyFd_(-1)
 			, headerLen_(0)
 		{ }
 		int invokeRevHandler();
-		int getRequestBodyFd()
-		{
-			return requestBodyFd_;
-		}
-		void setRequestBodyFd(int fd)
-		{
-			requestBodyFd_ = fd;
-		}
+		// int getRequestBodyFd()
+		// {
+		// 	return requestBodyFd_;
+		// }
+		// void setRequestBodyFd(int fd)
+		// {
+		// 	requestBodyFd_ = fd;
+		// }
 		int readFd;
 		int writeFd;
 		bool peerClosed;
@@ -49,8 +49,8 @@ namespace Wbsv
 		int recvResponseBody();
 		bool alreadyRead_;
 		bool alreadyWrite_;
-		int requestBodyFd_;
-		int responseBodyFd_;
+		// int requestBodyFd_;
+		// int responseBodyFd_;
 		size_t headerLen_;
 	};
 } // namespace Wbsv

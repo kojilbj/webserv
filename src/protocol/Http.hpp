@@ -115,6 +115,14 @@ namespace Wbsv
 		// Upstream handlers
 		int processUpstream();
 		int emptyHandler();
+		void setChildPid(int pid)
+		{
+			childPid_ = pid;
+		}
+		int getChildPid()
+		{
+			return childPid_;
+		}
 
 		/* Response handlers */
 		int createResponse(const std::string&);
@@ -126,6 +134,38 @@ namespace Wbsv
 		string statusLine;
 		string headerOut;
 		string messageBodyOut;
+
+		// file
+		int getRequestBodyFileFd()
+		{
+			return requestBodyFileFd_;
+		}
+		int getResponseBodyFileFd()
+		{
+			return responseBodyFileFd_;
+		}
+		void setRequestBodyFileFd(const int fd)
+		{
+			requestBodyFileFd_ = fd;
+		}
+		void setResponseBodyFileFd(const int fd)
+		{
+			responseBodyFileFd_ = fd;
+		}
+		void closeRequestBodyFileFd()
+		{
+			if (requestBodyFileFd_ == -1)
+				throw std::string("Warning: you are going to close closed connection !!!\n");
+			close(requestBodyFileFd_);
+			requestBodyFileFd_ = -1;
+		}
+		void closeResponseBodyFileFd()
+		{
+			if (responseBodyFileFd_ == -1)
+				throw std::string("Warning: you are going to close closed connection !!!\n");
+			close(responseBodyFileFd_);
+			responseBodyFileFd_ = -1;
+		}
 		std::string requestBodyFileName_;
 		std::string responseBodyFileName_;
 
@@ -163,8 +203,9 @@ namespace Wbsv
 		bool continueRequest_;
 		// regular file fd to send to the client as message body
 		int fd_;
+		int childPid_;
 		int requestBodyFileFd_;
-		// int responseBodyFileFd_;
+		int responseBodyFileFd_;
 		int bodyLen_;
 		int otherThanChunkDataSize_;
 		size_t chunkSize_;

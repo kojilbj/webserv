@@ -22,8 +22,9 @@ Http::Http()
 	, responseState(0)
 	, continueRequest_(false)
 	, fd_(-1)
+	, childPid_(-1)
 	, requestBodyFileFd_(-1)
-	// , responseBodyFileFd_(-1)
+	, responseBodyFileFd_(-1)
 	, otherThanChunkDataSize_(0)
 	, chunkSize_(0)
 	, countChunkData_(0)
@@ -1001,8 +1002,7 @@ int Http::processRequest()
 					break;
 				else if (rv == ERROR) // ERROR
 				{
-					close(requestBodyFileFd_);
-					requestBodyFileFd_ = -1;
+					closeRequestBodyFileFd();
 					std::remove(requestBodyFileName_.c_str());
 					if (createResponse("400") == AGAIN)
 						return coreRunPhase();
@@ -1016,8 +1016,7 @@ int Http::processRequest()
 #endif
 				if (writenum < 0)
 				{
-					close(requestBodyFileFd_);
-					requestBodyFileFd_ = -1;
+					closeRequestBodyFileFd();
 					std::remove(requestBodyFileName_.c_str());
 					if (createResponse("500") == AGAIN)
 						return coreRunPhase();
@@ -1036,8 +1035,7 @@ int Http::processRequest()
 			struct stat st;
 			if (stat(requestBodyFileName_.c_str(), &st) == -1)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				if (createResponse("500") == AGAIN)
 					return coreRunPhase();
@@ -1046,8 +1044,7 @@ int Http::processRequest()
 			ssize_t readnum = recv(c.cfd, chunkedRequestBuf_, clientHeaderSize, 0); // 1024
 			if (readnum <= 0)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				return ERROR;
 			}
@@ -1055,8 +1052,7 @@ int Http::processRequest()
 				ready = true;
 			if ((size_t)(st.st_size + readnum) > vserverCtx_->getClientMaxBodySize())
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				if (createResponse("413") == AGAIN)
 					return coreRunPhase();
@@ -1079,8 +1075,7 @@ int Http::processRequest()
 #endif
 			if (rv == ERROR)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				if (createResponse("400") == AGAIN)
 					return coreRunPhase();
@@ -1095,8 +1090,7 @@ int Http::processRequest()
 #endif
 			if (writenum < 0)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				if (createResponse("500") == AGAIN)
 					return coreRunPhase();
@@ -1110,8 +1104,7 @@ int Http::processRequest()
 				return AGAIN;
 			}
 		}
-		close(requestBodyFileFd_);
-		requestBodyFileFd_ = -1;
+		closeRequestBodyFileFd();
 		struct stat st;
 		if (stat(requestBodyFileName_.c_str(), &st) == -1)
 		{
@@ -1152,8 +1145,7 @@ int Http::processRequest()
 #endif
 			if (writenum == -1)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				if (createResponse("500") == AGAIN)
 					return coreRunPhase();
@@ -1170,8 +1162,7 @@ int Http::processRequest()
 			struct stat st;
 			if (stat(requestBodyFileName_.c_str(), &st) == -1)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				if (createResponse("500") == AGAIN)
 					return coreRunPhase();
@@ -1190,8 +1181,7 @@ int Http::processRequest()
 			c.lastReadTime = std::time(NULL);
 			if (readnum <= 0)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				return ERROR;
 			}
@@ -1202,8 +1192,7 @@ int Http::processRequest()
 				writenum = write(requestBodyFileFd_, buf, readnum);
 			if (writenum == -1)
 			{
-				close(requestBodyFileFd_);
-				requestBodyFileFd_ = -1;
+				closeRequestBodyFileFd();
 				std::remove(requestBodyFileName_.c_str());
 				if (createResponse("500") == AGAIN)
 					return coreRunPhase();
@@ -1220,8 +1209,7 @@ int Http::processRequest()
 			else
 				ready = false;
 		}
-		close(requestBodyFileFd_);
-		requestBodyFileFd_ = -1;
+		closeRequestBodyFileFd();
 	}
 	alreadyRead = true;
 	return coreRunPhase();
@@ -1264,12 +1252,12 @@ int Http::finalizeRequest()
 {
 	printLog(LOG_DEBUG, "Http::finalizeRequest");
 	wevReady = true;
-	if (requestBodyFileFd_ != -1)
-	{
-		close(requestBodyFileFd_);
-		requestBodyFileFd_ = -1;
-		std::remove(requestBodyFileName_.c_str());
-	}
+	// if (requestBodyFileFd_ != -1)
+	// {
+	// 	close(requestBodyFileFd_);
+	// 	requestBodyFileFd_ = -1;
+	// 	std::remove(requestBodyFileName_.c_str());
+	// }
 	revHandler = &Http::finalizeRequest;
 	// it may be not needed
 	if (!alreadyWrite)

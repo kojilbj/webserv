@@ -90,10 +90,30 @@ void Webserv::openListeningSocket()
 
 void Webserv::acceptEvent(Listening* ls)
 {
-	struct sockaddr_in sockaddrIn;
-	socklen_t socklen = sizeof(struct sockaddr_in);
+	struct sockaddr_in claddr;
+	socklen_t addrlen = sizeof(struct sockaddr_in);
 
-	int cfd = accept(ls->sfd, (struct sockaddr*)&sockaddrIn, &socklen);
+	int cfd = accept(ls->sfd, (struct sockaddr*)&claddr, &addrlen);
+#ifdef DEBUG
+	char host[NI_MAXHOST];
+	char service[NI_MAXSERV];
+	std::memset(host, 0, NI_MAXHOST);
+	std::memset(service, 0, NI_MAXSERV);
+	if (getnameinfo((struct sockaddr*)&claddr,
+					addrlen,
+					host,
+					NI_MAXHOST,
+					service,
+					NI_MAXSERV,
+					NI_NUMERICSERV) != 0)
+		std::cout << "getnameinfo failed" << std::endl;
+	else
+		std::cout << "host: " << host << ", port: " << service << std::endl;
+	static int count = 0;
+	std::stringstream ss;
+	ss << ++count;
+	printLog(LOG_DEBUG, "num of accepted connection so far: " + ss.str());
+#endif
 	if (cfd == -1)
 	{
 		std::cerr << "accept: " << strerror(errno) << std::endl;
@@ -111,7 +131,7 @@ void Webserv::acceptEvent(Listening* ls)
 		p->initPhaseHandler();
 		Connection* c = &p->c;
 		c->ls = ls;
-		c->setAcceptRev(cfd, &sockaddrIn, socklen);
+		c->setAcceptRev(cfd, &claddr, addrlen);
 		data_t data;
 		data.p = p;
 		ev->addEvent(cfd, data, ConnectionFd, ADD);
