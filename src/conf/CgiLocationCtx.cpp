@@ -198,6 +198,29 @@ int CgiLocationCtx::contentHandler(Http& h)
 		std::cout << "{ " << itDebug->first << " : " << itDebug->second << " }" << std::endl;
 	}
 #endif
+	size_t pos = param_["SCRIPT_FILENAME"].rfind(".");
+	if (pos == string::npos)
+	{
+		std::remove(h.requestBodyFileName_.c_str());
+		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
+		return h.createResponse("502");
+	}
+	std::string pathname;
+	std::string ext(param_["SCRIPT_FILENAME"].substr(pos + 1));
+	if (ext == "php")
+	{
+		// pathname = "/home/kisobe/.brew/bin/php-cgi";
+		pathname = "/usr/bin/php-cgi";
+	}
+	else if (ext == "py")
+		pathname = "/usr/bin/python3";
+	else
+	{
+		std::remove(h.requestBodyFileName_.c_str());
+		param_["SCRIPT_FILENAME"] = scriptFileNameTmp;
+		return h.createResponse("502");
+	}
+
 	char environData[param_.size()][maxParamLen(param_) + 1];
 	std::memset(environData, 0, sizeof(environData));
 	std::map<std::string, std::string>::iterator it = param_.begin();
@@ -214,14 +237,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 	}
 	environPtrs[i] = NULL;
 	char** environ = environPtrs;
-	std::string pathname;
-	std::string arg1;
-	// if (param["PATH_INFO"].find(".php") != string::npos)
-	// {
-	// pathname = "/home/kisobe/.brew/bin/php-cgi";
-	pathname = "/usr/bin/php-cgi";
-	arg1 = param_["PATH_INFO"];
-	// }
+	std::string arg1 = param_["PATH_INFO"];
 	char* argv[3];
 	argv[0] = const_cast<char*>(pathname.c_str());
 	argv[1] = const_cast<char*>(arg1.c_str());
