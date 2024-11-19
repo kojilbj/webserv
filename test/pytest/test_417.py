@@ -2,7 +2,7 @@ import test_responses
 
 import requests
 
-def Expectation_failed_response():
+def test_Expectation_failed_response():
     headers = {"Expect": "Please Continue, please ... T_T"}
     w_res = requests.get(test_responses.WEBSERV_URL, headers=headers)
     n_res = requests.get(test_responses.NGINX_URL, headers=headers)

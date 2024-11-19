@@ -2,7 +2,7 @@ import test_responses
 
 import requests
 
-def Moved_Permanently():
+def test_Moved_Permanently():
     RETURN = "/redirect"
     w_res = requests.get(test_responses.WEBSERV_URL + RETURN)
     n_res = requests.get(test_responses.NGINX_URL + RETURN)

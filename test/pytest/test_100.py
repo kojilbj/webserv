@@ -10,5 +10,5 @@ def continue_when_get_request():
     assert w_res.status_code == n_res.status_code 
     assert w_res.content == n_res.content
 
-def Continue_response():
+def test_Continue_response():
     continue_when_get_request()

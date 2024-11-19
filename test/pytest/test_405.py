@@ -46,7 +46,7 @@ def delete_request_to_upload_html():
     assert w_res.headers["Allow"]
     assert b"405 Not Allowed" in w_res.content
 
-def Not_allowed_response(): 
+def test_Not_allowed_response(): 
     post_request_to_index_html()
     delete_request_to_index_html()
     post_request_to_upload_html()

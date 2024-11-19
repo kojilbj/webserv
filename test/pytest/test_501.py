@@ -2,7 +2,7 @@ import test_responses
 
 import requests
 
-def Not_implemented_response():
+def test_Not_implemented_response():
     headers = {"Transfer-Encoding": "identity"}
     w_res = requests.get(test_responses.WEBSERV_URL, headers=headers)
     n_res = requests.get(test_responses.NGINX_URL, headers=headers)

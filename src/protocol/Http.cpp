@@ -593,35 +593,35 @@ int Http::parseRequestLine()
 				start = pos + 1;
 				break;
 			}
-			else if (headerIn[pos] == '/')
-			{
-				if (headerIn[pos - 1] == '/')
-					return INVALID_URI;
-				break;
-			}
-			switch (headerIn[pos])
-			{
-			case ':':
-			case '@':
-			case '&':
-			case '=':
-			case '+':
-			case '$':
-			case ',':
-			case '-':
-			case '_':
-			case '.':
-			case '!':
-			case '~':
-			case '*':
-			case '\'':
-			case '(':
-			case ')':
-			case ';': // it may be out of rules
-				break;
-			default:
-				return INVALID_URI;
-			}
+			// else if (headerIn[pos] == '/')
+			// {
+			// 	if (headerIn[pos - 1] == '/')
+			// 		return INVALID_URI;
+			// 	break;
+			// }
+			// switch (headerIn[pos])
+			// {
+			// case ':':
+			// case '@':
+			// case '&':
+			// case '=':
+			// case '+':
+			// case '$':
+			// case ',':
+			// case '-':
+			// case '_':
+			// case '.':
+			// case '!':
+			// case '~':
+			// case '*':
+			// case '\'':
+			// case '(':
+			// case ')':
+			// case ';': // it may be out of rules
+			// 	break;
+			// default:
+			// 	return INVALID_URI;
+			// }
 			break;
 		case VERSION_H:
 			if (headerIn[pos] != 'H')

@@ -42,7 +42,7 @@ def too_long_header():
     assert w_res.headers["Date"]
     assert b"400 Bad Request" in w_res.content
 
-def Bad_request_response():
+def test_Bad_request_response():
     imcomplete_request()
     unsupported_version()
     too_long_header()

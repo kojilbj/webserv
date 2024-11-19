@@ -190,13 +190,18 @@ int Upstream::recvResponseBody()
 		h->revHandler = &Http::finalizeRequest;
 		return OK;
 	}
-	// assumeing headerLen < 1024 ...
+	// assuming headerLen < 1024 ...
 	if (headerLen_ == 0)
 	{
 		std::string tmp(buf);
 		size_t pos = tmp.find("\r\n\r\n");
 		if (pos != string::npos)
+		{
 			headerLen_ = pos + 4;
+			std::stringstream ss;
+			ss << headerLen_;
+			printLog(LOG_DEBUG, "Header length included in cgi response body is " + ss.str());
+		}
 	}
 	ssize_t writenum = write(h->getResponseBodyFileFd(), buf, readnum);
 #ifdef DEBUG

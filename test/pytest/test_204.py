@@ -37,6 +37,6 @@ def delete_chmod_file():
     assert w_res.headers["Date"]
     assert os.access(PATH + FILE1, os.F_OK) == os.access(PATH + FILE2, os.F_OK)
 
-def No_Content_response():
+def test_No_Content_response():
     delete_file()
     delete_chmod_file()

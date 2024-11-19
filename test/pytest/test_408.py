@@ -12,5 +12,5 @@ def invalid_content_length():
     assert w_res.headers["Date"]
     assert b"408 Request Timeout" in w_res.content
 
-def Request_timeout_response():
+def test_Request_timeout_response():
     invalid_content_length()

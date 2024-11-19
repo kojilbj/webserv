@@ -211,7 +211,7 @@ def private_index_php_without_cookie():
     assert b"Invalid credentials!" in w_res.content
     assert b"Invalid credentials!" in n_res.content
 
-def OK_response():
+def test_OK_response():
     index_html_request()
     upload_html_request()
     upload_php_request()

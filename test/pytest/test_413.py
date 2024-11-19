@@ -2,7 +2,7 @@ import test_responses
 
 import requests
 
-def Request_entity_too_large_response():
+def test_Request_entity_too_large_response():
     headers1 = {"Host": "webserv"}
     headers2 = {"Host": "nginx"}
     STR = "a" * 2000

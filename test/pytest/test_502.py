@@ -12,5 +12,5 @@ def bad_php():
     assert w_res.headers["Date"]
     assert b"502 Bad Gateway" in w_res.content
 
-def Bad_gateway_response():
+def test_Bad_gateway_response():
     bad_php()

@@ -2,7 +2,7 @@ import test_responses
 
 import requests
 
-def Request_line_too_long_response():
+def test_Request_line_too_long_response():
     LONG_STR = "x" * 10000
     w_res = requests.get(test_responses.WEBSERV_URL + "/" + LONG_STR)
     n_res = requests.get(test_responses.NGINX_URL + "/" + LONG_STR)

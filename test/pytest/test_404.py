@@ -61,7 +61,7 @@ def error_page():
     assert w_res.headers["Date"]
     assert w_res.content == n_res.content
 
-def Not_Found_response():
+def test_Not_Found_response():
     absent_file_request()
     rename_html_dirname()
     absent_php_with_get_request()

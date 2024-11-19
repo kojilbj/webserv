@@ -280,6 +280,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 		h.upstream = new Upstream;
 		h.upstream->writeFd = p2cFd[1];
 		h.upstream->readFd = c2pFd[0];
+		fcntl(h.upstream->writeFd, F_SETFL, fcntl(h.upstream->writeFd, F_GETFL) | O_NONBLOCK);
+		fcntl(h.upstream->readFd, F_SETFL, fcntl(h.upstream->readFd, F_GETFL) | O_NONBLOCK);
 		h.upstream->p = reinterpret_cast<Protocol*>(&h);
 		// int fd = open(h.getRequestBodyFileName().c_str(), O_RDONLY);
 		// for (;;)

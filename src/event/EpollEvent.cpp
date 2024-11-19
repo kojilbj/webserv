@@ -15,7 +15,7 @@ Epoll::~Epoll() { }
 
 void Epoll::init(Webserv& ws)
 {
-	ep = epoll_create(ws.getListenings()->size());
+	ep = epoll_create(1024); //ws.getListenings()->size() * 100);
 	if (ep == -1)
 	{
 		std::cerr << "epoll_create: " << strerror(errno) << std::endl;
@@ -63,8 +63,11 @@ void Epoll::timeOutHandler(Webserv& ws)
 			std::stringstream fd;
 			fd << p->c.cfd;
 			if (p->c.lastReadTime == -1)
+			{
+				p->c.lastReadTime = std::time(NULL);
 				printLog(LOG_DEBUG,
 						 "connection fd (" + fd.str() + ") has 10 seconds left by timeout");
+			}
 			else
 			{
 				std::stringstream left;
@@ -222,7 +225,32 @@ void Epoll::processEvents(Webserv& ws)
 			if (eventResult[i].events & EPOLLERR)
 				printLog(LOG_DEBUG, "EPOLLERR");
 #endif
-			if ((eventResult[i].events & EPOLLIN))
+			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+			{
+				std::stringstream fd;
+				fd << p->c.cfd;
+				printLog(LOG_DEBUG,
+						 "EPOLLRDHUP | EPOLLHUP | EPOLLERR returned, close connection (" +
+							 fd.str() + ")");
+				Http* h = reinterpret_cast<Http*>(p);
+				if (h->getRequestBodyFileFd() != -1)
+					h->closeRequestBodyFileFd();
+				if (access(h->requestBodyFileName_.c_str(), F_OK) != -1)
+					std::remove(h->requestBodyFileName_.c_str());
+				if (h->getResponseBodyFileFd() != -1)
+					h->closeResponseBodyFileFd();
+				if (access(h->responseBodyFileName_.c_str(), F_OK) != -1)
+					std::remove(h->responseBodyFileName_.c_str());
+#ifdef DEBUG
+				std::stringstream ss;
+				ss << ++count;
+				printLog(LOG_DEBUG, "num of closed connection so far: " + ss.str());
+#endif
+				close(p->c.cfd);
+				ws.getFreeList()->remove(p);
+				delete p;
+			}
+			else if ((eventResult[i].events & EPOLLIN))
 			{
 				int rv = p->invokeRevHandler();
 				if (rv == OK)
@@ -293,31 +321,6 @@ void Epoll::processEvents(Webserv& ws)
 					ws.getFreeList()->remove(p);
 					delete p;
 				}
-			}
-			else if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-			{
-				std::stringstream fd;
-				fd << p->c.cfd;
-				printLog(LOG_DEBUG,
-						 "EPOLLRDHUP | EPOLLHUP | EPOLLERR returned, close connection (" +
-							 fd.str() + ")");
-				Http* h = reinterpret_cast<Http*>(p);
-				if (h->getRequestBodyFileFd() != -1)
-					h->closeRequestBodyFileFd();
-				if (access(h->requestBodyFileName_.c_str(), F_OK) != -1)
-					std::remove(h->requestBodyFileName_.c_str());
-				if (h->getResponseBodyFileFd() != -1)
-					h->closeResponseBodyFileFd();
-				if (access(h->responseBodyFileName_.c_str(), F_OK) != -1)
-					std::remove(h->responseBodyFileName_.c_str());
-#ifdef DEBUG
-				std::stringstream ss;
-				ss << ++count;
-				printLog(LOG_DEBUG, "num of closed connection so far: " + ss.str());
-#endif
-				close(p->c.cfd);
-				ws.getFreeList()->remove(p);
-				delete p;
 			}
 			else if (eventResult[i].events & EPOLLOUT)
 			{

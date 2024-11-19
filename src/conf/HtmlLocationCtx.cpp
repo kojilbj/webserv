@@ -210,7 +210,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 		int rv = 0;
 		if ((rv = haveRightAccess(fullPath, h.getMethod())) != FRWX_OK)
 		{
-			if (rv == F_KO)
+			if (rv == F_KO || rv == D_KO)
 			{
 				if (!h.notFound)
 					return h.createResponse("404");

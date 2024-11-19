@@ -88,7 +88,7 @@ def chmod_dir_of_dir_of_delete_content():
     os.remove(PATH + URI1)
     os.remove(PATH + URI2)
 
-def Forbidden_response():
+def test_Forbidden_response():
     chmod_index_html()
     chmod_html_dir()
     chmod_test_dir()

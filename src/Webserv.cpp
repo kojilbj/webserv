@@ -99,16 +99,9 @@ void Webserv::acceptEvent(Listening* ls)
 	char service[NI_MAXSERV];
 	std::memset(host, 0, NI_MAXHOST);
 	std::memset(service, 0, NI_MAXSERV);
-	if (getnameinfo((struct sockaddr*)&claddr,
-					addrlen,
-					host,
-					NI_MAXHOST,
-					service,
-					NI_MAXSERV,
-					NI_NUMERICSERV) != 0)
-		std::cout << "getnameinfo failed" << std::endl;
-	else
-		std::cout << "host: " << host << ", port: " << service << std::endl;
+	getnameinfo(
+		(struct sockaddr*)&claddr, addrlen, host, NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV);
+	printLog(LOG_DEBUG, "accepted client (" + std::string(host) + ":" + std::string(service) + ")");
 	static int count = 0;
 	std::stringstream ss;
 	ss << ++count;
