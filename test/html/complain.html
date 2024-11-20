@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Complain</title>
+  </head>
+  <body>
+    <h1>Complain about everything in your life</h1>
+    <form action="/python/complain.py" enctype="multipart/form-data">
+      <h3>If you can complain in one shot ...</h3>
+      <input type="text" name="complain"><br>
+      <input type="submit" value="complain"></p>
+    </form>
+    <hr>
+    <form action="/python/upload.py" method="post" enctype="multipart/form-data">
+      <h3>If you have a lot to complain</h3>
+      <input type="file" name="file"><br>
+      <input type="submit" value="Upload file"></p>
+    </form>
+    </body>
+</html>
