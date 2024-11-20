@@ -31,6 +31,8 @@ void ReturnLocationCtx::setRedirect(const std::string& redirect)
 	std::vector<std::string> strs;
 
 	strs = ConfParseUtil::split(redirect, ' ');
+	if (strs.size() < 2)
+		throw std::logic_error("Error Invalid Return: " + redirect);
 	for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
 	{
 		if (it == strs.begin())

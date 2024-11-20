@@ -1,6 +1,7 @@
 #ifndef ERRORPAGES_HPP
 #define ERRORPAGES_HPP
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>

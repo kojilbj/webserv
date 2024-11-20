@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -17,8 +18,7 @@ namespace ConfParseUtil
 	std::vector<std::string> split(const std::string& str);
 	std::vector<std::string> split(std::ifstream& file, char c);
 
-	int countSpace(const std::string& line);
-	int countDot(const std::string& line);
+	int count(const std::string& line, char c);
 
 	bool isValidIPAddress(const std::string& ip);
 
@@ -46,7 +46,12 @@ namespace ConfParseUtil
 	bool isServerErrortCode(int statusCode);
 	bool isServerErrortCode(const std::string& statusCode);
 
+	bool isAllDigit(const std::string& str, std::string::const_iterator it);
+	bool isAllDigit(const std::string& str);
+	bool isHeadZero(const std::string& str);
+
 	std::string intToString(int i);
+	size_t toSizeT(const std::string& str);
 
 	//LocationCtxは種類があるため判別のために初期値はいれない
 	struct SLocation

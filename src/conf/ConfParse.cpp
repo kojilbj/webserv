@@ -78,7 +78,8 @@ bool ConfParse::inspectStructure(const std::string& name,
 								 const std::string& parentBlock,
 								 std::map<std::string, std::vector<std::string> > confRelatives)
 {
-	decltype(confRelatives)::iterator parentIt;
+	// decltype(confRelatives)::iterator parentIt;
+	std::map<std::string, std::vector<std::string> >::iterator parentIt;
 	std::vector<std::string> childs;
 	std::vector<std::string>::iterator childIt;
 
@@ -122,6 +123,7 @@ ConfCtx* ConfParse::createCtx(const std::string& ctxName)
 {
 	ConfCtx* ctx = NULL;
 
+	ctx = NULL;
 	if (ctxName == "http")
 		ctx = new HttpConfCtx();
 	//if (ctxName == "mail") ctx = new MailConfCtx();
@@ -205,7 +207,7 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 				//serverブロックが終わった時にクラスにaddする。その時にVServerの形成を行う
 			}
 			// Iteratorを値の分進める
-			it += ConfParseUtil::countSpace(keyValue(it, tokens));
+			it += ConfParseUtil::count(keyValue(it, tokens), ' ');
 		}
 		it++;
 	}
@@ -219,7 +221,7 @@ std::vector<ConfCtx*> ConfParse::confParse(const std::string& confFileName)
 	std::map<std::string, std::vector<std::string> > confRelatives;
 	std::vector<ConfCtx*> ctxs;
 
-	confFile.open(confFileName, std::ios::in);
+	confFile.open(confFileName.c_str(), std::ios::in);
 	if (!confFile.is_open())
 		throw std::invalid_argument("No Such File: " + confFileName);
 	tokens = confTokenizer(confFile);

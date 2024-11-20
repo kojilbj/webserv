@@ -11,9 +11,12 @@ Webserv::Webserv()
 Webserv::~Webserv()
 {
 	std::vector<ConfCtx*>::iterator it;
-	for (it = (*confCtxs_).begin(); it != (*confCtxs_).end(); it++)
+	if (confCtxs_ && !confCtxs_->empty())
 	{
-		delete *it;
+		for (it = (*confCtxs_).begin(); it != (*confCtxs_).end(); it++)
+		{
+			delete *it;
+		}
 	}
 	// delete confCtxs_;
 	delete listenings_;

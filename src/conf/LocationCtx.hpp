@@ -35,7 +35,7 @@ namespace Wbsv
 			autoindex = other.autoindex;
 			return *this;
 		}
-		virtual ~LocationCtx(){};
+		virtual ~LocationCtx() { };
 		virtual int contentHandler(Http&) = 0;
 
 		void setPath(const std::string& path);
@@ -48,9 +48,11 @@ namespace Wbsv
 
 		const std::string& getPath(void) const;
 		int getLimitExcept(void) const;
+
 		bool allowGet(void) const;
 		bool allowPost(void) const;
 		bool allowDelete(void) const;
+
 		bool isAutoIndex(void) const;
 
 	protected:
