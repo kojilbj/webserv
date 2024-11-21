@@ -212,8 +212,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 		// pathname = "/home/kisobe/.brew/bin/php-cgi";
 		pathname = "/usr/bin/php-cgi";
 	}
-	else if (ext == "py")
-		pathname = "/usr/bin/python3";
+	// else if (ext == "py")
+	// 	pathname = "/usr/bin/python3";
 	else
 	{
 		std::remove(h.requestBodyFileName_.c_str());

@@ -95,6 +95,28 @@ def test20():
     URI = "/%2"
     do_request(URI)
 
+def test21():
+    w_headers = {"Host": "webserv"}
+    n_headers = {"Host": "nginx"}
+    URI = "/uploaded_images/penguin.png"
+    w_res = requests.get(test_responses.WEBSERV_URL + URI, headers=w_headers)
+    n_res = requests.get(test_responses.NGINX_URL + URI, headers=n_headers)
+    assert w_res.status_code == n_res.status_code 
+    assert "webserv/1.0" in w_res.headers["Server"]
+    assert w_res.headers["Date"]
+    assert w_res.headers["Content-Type"] == n_res.headers["Content-Type"]
+
+def test22():
+    w_headers = {"Host": "webserv"}
+    n_headers = {"Host": "nginx"}
+    URI = "/php/upload.c"
+    w_res = requests.post(test_responses.WEBSERV_URL + URI, headers=w_headers)
+    n_res = requests.post(test_responses.NGINX_URL + URI, headers=n_headers)
+    assert requests.codes.bad_gateway == w_res.status_code 
+    assert "webserv/1.0" in w_res.headers["Server"]
+    assert w_res.headers["Date"]
+    assert w_res.headers["Content-Type"] in n_res.headers["Content-Type"]
+
 def test_various_url():
     test1()
     test2()
@@ -116,3 +138,5 @@ def test_various_url():
     test18()
     test19()
     test20()
+    test21()
+    test22()
