@@ -51,9 +51,6 @@ $(OBJS): | $(OBJDIR)
 $(OBJDIR):
 	mkdir $(OBJDIR)
 
-DEBUG: CXXFLAGS += -DDEBUG
-DEBUG: $(NAME)
-
 clean:
 	rm -rf $(OBJS)
 
