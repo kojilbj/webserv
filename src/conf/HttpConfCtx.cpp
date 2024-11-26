@@ -70,7 +70,7 @@ void HttpConfCtx::addServer(struct ConfParseUtil::SServer serverInfo)
 	if (serverInfo.listenIP.empty())
 		serverInfo.listenIP = "0.0.0.0";
 	if (serverInfo.listenIP == "localhost")
-		serverInfo.listenIP = "127.0.0.1";
+		serverInfo.listenIP = ConfParseUtil::ipv4NameResolution("localhost");
 	if (serverInfo.listenPort.empty())
 		serverInfo.listenPort = "80";
 	for (std::vector<ServerCtx>::iterator it = serverCtxs_.begin(); it != serverCtxs_.end(); it++)

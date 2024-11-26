@@ -92,7 +92,7 @@ bool ConfParse::inspectStructure(const std::string& name,
 			return true;
 		childIt++;
 	}
-	throw std::logic_error("Unavailable Block: " + name);
+	throw InvalidContextException("Invalid Context: " + name + " in " + parentBlock);
 	return false;
 }
 
@@ -125,8 +125,10 @@ ConfCtx* ConfParse::createCtx(const std::string& ctxName)
 
 	ctx = NULL;
 	if (ctxName == "http")
+	{
+		// throw DuplicatedDirectiveException("Duplicated Context: " + ctxName);
 		ctx = new HttpConfCtx();
-	//if (ctxName == "mail") ctx = new MailConfCtx();
+	}
 	return ctx;
 }
 
@@ -144,14 +146,16 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 	std::string directiveValue;
 	std::vector<ConfCtx*> ctxs;
 	HttpConfCtx* httpCtx;
-	struct ConfParseUtil::SServer* serverInfo;
-	struct ConfParseUtil::SLocation* locationInfo;
+	struct ConfParseUtil::SServer serverInfo;
+	struct ConfParseUtil::SLocation locationInfo;
 	bool isPushed;
 
 	it = tokens.begin();
 	blockStack.push("_");
-	serverInfo = NULL;
-	locationInfo = NULL;
+	// serverInfo = NULL;
+	// locationInfo = NULL;
+	bzero(&serverInfo, sizeof(serverInfo));
+	bzero(&locationInfo, sizeof(locationInfo));
 	//ブロックはblockStackに積んでいって、構造解析を行う。
 	//スタックにする理由は構造の解析を行うため、セマンティック解析はsetter()に情報を入れる前/後に行うことにする
 	while (it != tokens.end())
@@ -168,13 +172,15 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 			{
 				//serverInfoにstoreした情報をServerクラスに入れていく
 				httpCtx = dynamic_cast<HttpConfCtx*>(ctxs.back());
-				store2Server(*httpCtx, *serverInfo);
-				delete serverInfo;
+				store2Server(*httpCtx, serverInfo);
+				// delete serverInfo;
+				bzero(&serverInfo, sizeof(serverInfo));
 			}
 			if (blockStack.top() == "location")
 			{
-				serverInfo->locations.push_back(*locationInfo);
-				delete locationInfo;
+				serverInfo.locations.push_back(locationInfo);
+				bzero(&locationInfo, sizeof(locationInfo));
+				// delete locationInfo;
 			}
 			blockStack.pop();
 		}
@@ -185,11 +191,13 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 			ctxs.push_back(createCtx(blockStack.top()));
 		if (blockStack.top() == "server" && isPushed)
 		{
-			serverInfo = new struct ConfParseUtil::SServer;
+			// serverInfo = new struct ConfParseUtil::SServer;
+			;
 		}
 		if (blockStack.top() == "location" && isPushed)
 		{
-			locationInfo = new struct ConfParseUtil::SLocation;
+			// locationInfo = new struct ConfParseUtil::SLocation;
+			;
 		}
 		//ディレクティブはstackには積まれない
 		if (isPushed == false)
@@ -197,12 +205,14 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 			directiveValue = keyValue(it, tokens);
 			if (!directiveValue.empty())
 			{
+				if (directiveValue.find(' ') == std::string::npos)
+					throw NoValueException("No Value: " + directiveValue);
 				//ここで一旦構造体に情報を詰め込んでおく
 				if (blockStack.top() == "server")
-					storeServerDirective(*serverInfo, directiveValue);
+					storeServerDirective(serverInfo, directiveValue);
 				//多分Locatinoで行くのは無理だからstructuer作る必要がある
 				if (blockStack.top() == "location")
-					storeLocationDirective(*locationInfo, directiveValue);
+					storeLocationDirective(locationInfo, directiveValue);
 				//serverブロックが終わった時にクラスにaddする。その時にVServerの形成を行う
 			}
 			// Iteratorを値の分進める
@@ -210,6 +220,8 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 		}
 		it++;
 	}
+	if (blockStack.size() != 1)
+		throw UnclosedBraceException("Unclosed Brace " + blockStack.top());
 	return ctxs;
 }
 
@@ -222,10 +234,14 @@ std::vector<ConfCtx*> ConfParse::confParse(const std::string& confFileName)
 
 	confFile.open(confFileName.c_str(), std::ios::in);
 	if (!confFile.is_open())
-		throw std::invalid_argument("No Such File: " + confFileName);
+		throw NoExistFileException("No Such File: " + confFileName);
 	tokens = confTokenizer(confFile);
+	if (tokens.empty())
+		throw EmptyFileException(confFileName + " is Empty.");
 	confRelatives = mapConfRelative();
 	ctxs = parser(tokens, confRelatives);
+	if (ctxs.empty())
+		throw NotEnoughInfoFileException("Not Enough Infomation in " + confFileName);
 	return ctxs;
 }
 

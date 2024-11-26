@@ -82,14 +82,17 @@ void ServerCtx::setListenPort(const std::string& listenPort)
 
 void ServerCtx::setListenIP(const std::string& listenIP)
 {
-	if (ConfParseUtil::isValidIPAddress(listenIP) == false)
-		throw std::logic_error("Error Invalid IP: " + listenIP);
+	std::string ip;
+
+	ip = listenIP;
+	//ここで名前解決をする その後に有効なのかをチェックする
 	if (listenIP == "localhost")
 	{
-		listenIP_ = "127.0.0.1";
-		return;
+		ip = ConfParseUtil::ipv4NameResolution("localhost");
 	}
-	listenIP_ = listenIP;
+	if (ConfParseUtil::isValidIPAddress(ip) == false)
+		throw std::logic_error("Error Invalid IP: " + listenIP);
+	listenIP_ = ip;
 }
 
 ServerCtx& ServerCtx::operator=(const ServerCtx& other)

@@ -2,6 +2,7 @@
 #define CONFPARSE_HPP
 
 #include "ConfCtx.hpp"
+#include "ConfExceptions.hpp"
 #include "ConfParseUtil.hpp"
 #include "HttpConfCtx.hpp"
 #include "storeDirective.hpp"
@@ -13,7 +14,6 @@
 
 namespace Wbsv
 {
-
 	class ConfParse
 	{
 	public:
@@ -43,6 +43,5 @@ namespace Wbsv
 		parser(const std::vector<std::string>& tokens,
 			   const std::map<std::string, std::vector<std::string> > confRelatives);
 	};
-
 }; // namespace Wbsv
 #endif
