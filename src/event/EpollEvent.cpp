@@ -166,7 +166,7 @@ void Epoll::processEventsLoop(Webserv& ws)
 
 void Epoll::processEvents(Webserv& ws)
 {
-	static int count = 0;
+	// static int count = 0;
 	int maxEvents = 5;
 	struct epoll_event eventResult[maxEvents];
 	printLog(LOG_DEBUG, "waiting for next events ...");

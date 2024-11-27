@@ -124,7 +124,7 @@ bool ConfParseUtil::isValidIPAddress(const std::string& ip)
 	{
 		if (!isAllDigit(*it))
 			return false;
-		if (!std::atoi(it->c_str()) == 0 && ConfParseUtil::isHeadZero(ip))
+		if (!(std::atoi(it->c_str()) == 0) && ConfParseUtil::isHeadZero(ip))
 			return false;
 		if (std::atoi(it->c_str()) > 255)
 			return false;
