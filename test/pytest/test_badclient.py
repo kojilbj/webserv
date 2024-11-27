@@ -1,7 +1,7 @@
 import socket
 import time
 
-HOST = "172.17.0.2"
+HOST = "127.0.0.1"
 PORT = 8080
 NGINX_PORT = 8000
 
