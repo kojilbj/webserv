@@ -2,6 +2,7 @@
 #define SETDIRECTIVE_HPP
 
 #include "CgiLocationCtx.hpp"
+#include "ConfParse.hpp"
 #include "ConfParseUtil.hpp"
 #include "HtmlLocationCtx.hpp"
 #include "HttpConfCtx.hpp"

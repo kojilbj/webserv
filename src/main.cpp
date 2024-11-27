@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
 {
 	std::string confFileName;
 	if (argc < 2)
-		confFileName = "test/conf/default.conf";
+		confFileName = "default.conf";
 	else
 		confFileName = argv[1];
 	// HttpConfCtx* httpCtx = NULL;
@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
 		// if (httpCtx != NULL)
 		// 	printHttpConfCtx(*httpCtx);
 		ws.setConfCtxs(&ctx);
-		// printConf(ws.getConfCtxs());
+		printConf(ws.getConfCtxs());
 		/* initialize 'ws' elements with values got by configuration file */
 		/* ex. */
 		/* listenings[i].addr = addr; */

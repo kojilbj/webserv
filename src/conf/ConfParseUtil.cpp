@@ -1,4 +1,7 @@
 #include "ConfParseUtil.hpp"
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 bool ConfParseUtil::isStatusCode(int code)
 {
@@ -261,14 +264,31 @@ bool ConfParseUtil::isHeadZero(const std::string& str)
 		return false;
 }
 
-// size_t ConfParseUtil::toSizeT(const std::string& str)
-// {
-// 	size_t num;
+std::string ConfParseUtil::ipv4NameResolution(const std::string& hostName)
+{
+	struct addrinfo hints = {};
+	struct addrinfo* res;
+	int status;
+	struct sockaddr_in* ipv4;
+	unsigned char* bytes;
+	std::string ret;
 
-// 	num = 0;
-// 	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
-// 	{
-// 		if (it == str.begin() && *it == '-')
-// 			;
-// 	}
-// }
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	status = getaddrinfo(hostName.c_str(), NULL, &hints, &res);
+	if (status != 0)
+	{
+		freeaddrinfo(res);
+		throw std::runtime_error("Error getaddrinfo ");
+	}
+	ipv4 = (struct sockaddr_in*)res->ai_addr;
+	bytes = (unsigned char*)&(ipv4->sin_addr.s_addr);
+	for (int i = 0; i < 4; i++)
+	{
+		ret += std::string(intToString(bytes[i]));
+		if (i != 3)
+			ret += ".";
+	}
+	freeaddrinfo(res);
+	return ret;
+}

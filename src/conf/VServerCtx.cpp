@@ -67,7 +67,8 @@ void VServerCtx::addLocation(LocationCtx* location)
 				 it++)
 			{
 				if ((*it)->getPath() == location->getPath())
-					throw std::logic_error("Error Duplicate Path: " + location->getPath());
+					throw DuplicatedLocationException("Error Duplicate Path: " +
+													  location->getPath());
 			}
 		}
 		locationCtxs_.push_back(location);
@@ -102,6 +103,7 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 		if (!location.limitExcept.empty())
 		{
 			std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
+			cgiLocationCtx->setLimitExcept(0);
 			for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
 			{
 				cgiLocationCtx->addLimitExcept(*it);
@@ -122,13 +124,14 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 		}
 		addLocation(cgiLocationCtx);
 	}
-	else if (!location.return_.empty())
+	else if (!location.redirect.empty())
 	{
 		returnLocationCtx = new ReturnLocationCtx();
 		if (!location.path.empty())
 			returnLocationCtx->setPath(location.path);
 		if (!location.limitExcept.empty())
 		{
+			returnLocationCtx->setLimitExcept(0);
 			std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
 			for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
 			{
@@ -137,8 +140,8 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 		}
 		if (!location.limitExcept.empty())
 			returnLocationCtx->setLimitExcept(location.limitExcept);
-		if (!location.return_.empty())
-			returnLocationCtx->setRedirect(location.return_);
+		if (!location.redirect.empty())
+			returnLocationCtx->setRedirect(location.redirect);
 		addLocation(returnLocationCtx);
 	}
 	else
@@ -150,6 +153,7 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 			htmlLocationCtx->setAutoIndex(location.autoIndex);
 		if (!location.limitExcept.empty())
 		{
+			htmlLocationCtx->setLimitExcept(0);
 			std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
 			for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
 			{
@@ -209,11 +213,11 @@ void VServerCtx::setServerName(const std::string& serverName)
 	if (serverName.find(' ') != std::string::npos)
 		throw std::logic_error("Error Invalid Server Name: " + serverName);
 	serverNames_.clear();
-	if (serverName == "localhost")
-	{
-		serverNames_.push_back("127.0.0.1");
-		return;
-	}
+	// if (serverName == "localhost")
+	// {
+	// 	serverNames_.push_back("127.0.0.1");
+	// 	return;
+	// }
 	serverNames_.push_back(serverName);
 }
 
@@ -225,11 +229,11 @@ void VServerCtx::addServerName(const std::string& serverName)
 #endif
 	if (serverName.find(' ') != std::string::npos)
 		throw std::logic_error("Error Invalid Server Name: " + serverName);
-	if (serverName == "localhost")
-	{
-		serverNames_.push_back("127.0.0.1");
-		return;
-	}
+	// if (serverName == "localhost")
+	// {
+	// 	serverNames_.push_back("127.0.0.1");
+	// 	return;
+	// }
 	serverNames_.push_back(serverName);
 }
 

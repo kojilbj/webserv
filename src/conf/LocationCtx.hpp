@@ -24,7 +24,7 @@ namespace Wbsv
 	{
 	public:
 		LocationCtx()
-			: limitExcept(3), autoindex(false){};
+			: limitExcept(3), autoindex(false) { };
 		LocationCtx(const LocationCtx& other)
 			: path(other.path), limitExcept(other.limitExcept), autoindex(other.autoindex)
 		{ }
@@ -39,10 +39,13 @@ namespace Wbsv
 		virtual int contentHandler(Http&) = 0;
 
 		void setPath(const std::string& path);
+
 		void setLimitExcept(int auth);
 		void setLimitExcept(const std::string& auth);
+
 		void addLimitExcept(int auth);
 		void addLimitExcept(const std::string& auth);
+
 		void setAutoIndex(bool isOn);
 		void setAutoIndex(const std::string& autoIndex);
 

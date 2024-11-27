@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "CgiLocationCtx.hpp"
+#include "ConfExceptions.hpp"
 #include "ConfParseUtil.hpp"
 #include "ErrorPages.hpp"
 #include "HtmlLocationCtx.hpp"

@@ -1,6 +1,6 @@
-NAME = webserv
+NAME = CONF_TEST 
 
-CORE_SRCS = main.cpp\
+CORE_SRCS = gtest_main.cpp\
 	   Webserv.cpp\
 	   Listening.cpp\
 	   Connection.cpp\
@@ -34,16 +34,17 @@ SRCS = $(CORE_SRCS) $(CONF_SRCS) $(EVENT_SRCS) $(PROTO_SRCS)
 OBJDIR = objs
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 CXX = c++
-INCLUDEDIRS = -Isrc -Isrc/conf -Isrc/event -Isrc/protocol -Isrc/protocol/phase
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 $(INCLUDEDIRS) 
+INCLUDEDIRS = -I../../src -I../../src/conf -I../../src/event -I../../src/protocol -I../../src/protocol/phase
+CXXFLAGS = -Wall -Wextra -Werror -std=c++14 -pthread $(INCLUDEDIRS) 
+LDFLAGS=-lgtest -lgtest_main
 
-VPATH = src:src/conf:src/event:src/protocol:src/protocol/phase
+VPATH = ../../src:../../src/conf:../../src/event:../../src/protocol:../../src/protocol/phase
 
 $(OBJDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
 
 all: $(NAME)
 
@@ -51,6 +52,9 @@ $(OBJS): | $(OBJDIR)
 
 $(OBJDIR):
 	mkdir $(OBJDIR)
+
+DEBUG: CXXFLAGS += -DDEBUG
+DEBUG: $(NAME)
 
 clean:
 	rm -rf $(OBJS)

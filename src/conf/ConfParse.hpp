@@ -2,6 +2,7 @@
 #define CONFPARSE_HPP
 
 #include "ConfCtx.hpp"
+#include "ConfExceptions.hpp"
 #include "ConfParseUtil.hpp"
 #include "HttpConfCtx.hpp"
 #include "storeDirective.hpp"
@@ -13,7 +14,6 @@
 
 namespace Wbsv
 {
-
 	class ConfParse
 	{
 	public:
@@ -38,11 +38,12 @@ namespace Wbsv
 		static ConfCtx* createCtx(const std::string& ctxName);
 
 		static void store2Server(HttpConfCtx& httpCtx, const ConfParseUtil::SServer& serverInfo);
+		static void serverBzero(struct ConfParseUtil::SServer& serverInfo);
+		static void locationBzero(struct ConfParseUtil::SLocation& locationInfo);
 
 		static std::vector<ConfCtx*>
 		parser(const std::vector<std::string>& tokens,
 			   const std::map<std::string, std::vector<std::string> > confRelatives);
 	};
-
 }; // namespace Wbsv
 #endif

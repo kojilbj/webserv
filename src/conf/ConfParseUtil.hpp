@@ -51,7 +51,7 @@ namespace ConfParseUtil
 	bool isHeadZero(const std::string& str);
 
 	std::string intToString(int i);
-	size_t toSizeT(const std::string& str);
+	std::string ipv4NameResolution(const std::string& hostName);
 
 	//LocationCtxは種類があるため判別のために初期値はいれない
 	struct SLocation
@@ -66,7 +66,7 @@ namespace ConfParseUtil
 		std::string cgiParam;
 		std::string cgiStore;
 
-		std::string return_;
+		std::string redirect;
 	};
 
 	//parse時にserverに関する情報をまとめておきたい。VServerとの情報の切り離しがconfのparse時は厄介だから

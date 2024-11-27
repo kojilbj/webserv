@@ -79,6 +79,12 @@ ErrorPages::ErrorPages(const ErrorPages& other)
 
 ErrorPages::~ErrorPages(void) { }
 
+void ErrorPages::clear(void)
+{
+	if (!errorPages_.empty())
+		errorPages_.clear();
+}
+
 void ErrorPages::addErrorPage(const std::string& pagePath, const std::string& errorNumber)
 {
 	for (std::vector<ErrorPage>::iterator it = errorPages_.begin(); it != errorPages_.end(); it++)
