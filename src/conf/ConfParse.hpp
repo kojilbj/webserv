@@ -38,6 +38,8 @@ namespace Wbsv
 		static ConfCtx* createCtx(const std::string& ctxName);
 
 		static void store2Server(HttpConfCtx& httpCtx, const ConfParseUtil::SServer& serverInfo);
+		static void serverBzero(struct ConfParseUtil::SServer& serverInfo);
+		static void locationBzero(struct ConfParseUtil::SLocation& locationInfo);
 
 		static std::vector<ConfCtx*>
 		parser(const std::vector<std::string>& tokens,

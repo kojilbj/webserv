@@ -7,6 +7,8 @@ void HttpConfCtx::addServerCtx(void)
 	serverCtxs_.push_back(ServerCtx());
 }
 
+HttpConfCtx::~HttpConfCtx(void) { }
+
 void HttpConfCtx::initListening(std::vector<Listening>* lss) const
 {
 	std::vector<ServerCtx>::const_iterator it;

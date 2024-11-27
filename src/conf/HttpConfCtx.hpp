@@ -21,9 +21,9 @@ namespace Wbsv
 	class HttpConfCtx : public ConfCtx
 	{
 	public:
-		HttpConfCtx()
-			: ConfCtx("HTTP"){};
-		~HttpConfCtx(){};
+		HttpConfCtx(void)
+			: ConfCtx("HTTP") { };
+		~HttpConfCtx(void);
 
 		void addServer(struct ConfParseUtil::SServer server);
 		ServerCtx* getServerCtx(const std::string& ipAddress, const std::string& port);

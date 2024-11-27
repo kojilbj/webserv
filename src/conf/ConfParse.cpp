@@ -137,6 +137,30 @@ void ConfParse::store2Server(HttpConfCtx& httpCtx, const ConfParseUtil::SServer&
 	httpCtx.addServer(serverInfo);
 }
 
+void ConfParse::serverBzero(struct ConfParseUtil::SServer& serverInfo)
+{
+	serverInfo.listenPort.clear();
+	serverInfo.listenIP.clear();
+	serverInfo.defaultServer.clear();
+	serverInfo.locations.clear();
+	serverInfo.serverNames.clear();
+	serverInfo.errorPages.clear();
+	serverInfo.clientMaxBodySize.clear();
+}
+
+void ConfParse::locationBzero(struct ConfParseUtil::SLocation& locationInfo)
+{
+	locationInfo.path.clear();
+	locationInfo.root.clear();
+	locationInfo.index.clear();
+	locationInfo.autoIndex.clear();
+	locationInfo.limitExcept.clear();
+	locationInfo.cgiIndex.clear();
+	locationInfo.cgiParam.clear();
+	locationInfo.cgiStore.clear();
+	locationInfo.redirect.clear();
+}
+
 std::vector<ConfCtx*>
 ConfParse::parser(const std::vector<std::string>& tokens,
 				  const std::map<std::string, std::vector<std::string> > confRelatives)
@@ -152,76 +176,89 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 
 	it = tokens.begin();
 	blockStack.push("_");
-	// serverInfo = NULL;
-	// locationInfo = NULL;
-	bzero(&serverInfo, sizeof(serverInfo));
-	bzero(&locationInfo, sizeof(locationInfo));
+	serverBzero(serverInfo);
+	locationBzero(locationInfo);
 	//ブロックはblockStackに積んでいって、構造解析を行う。
 	//スタックにする理由は構造の解析を行うため、セマンティック解析はsetter()に情報を入れる前/後に行うことにする
-	while (it != tokens.end())
+	try
 	{
-		isPushed = false;
-		if (*it == "{")
+		while (it != tokens.end())
 		{
-			blockStack.push(*(it - 1));
-			isPushed = true;
-		}
-		else if (*it == "}")
-		{
-			if (blockStack.top() == "server")
+			isPushed = false;
+			if (*it == "{")
 			{
-				//serverInfoにstoreした情報をServerクラスに入れていく
-				httpCtx = dynamic_cast<HttpConfCtx*>(ctxs.back());
-				store2Server(*httpCtx, serverInfo);
-				// delete serverInfo;
-				bzero(&serverInfo, sizeof(serverInfo));
+				blockStack.push(*(it - 1));
+				isPushed = true;
 			}
-			if (blockStack.top() == "location")
+			else if (*it == "}")
 			{
-				serverInfo.locations.push_back(locationInfo);
-				bzero(&locationInfo, sizeof(locationInfo));
-				// delete locationInfo;
-			}
-			blockStack.pop();
-		}
-		//;があると値なので構造は検査しなくてい(;がない時に構造検査をする)
-		else if ((*it).find(";") == std::string::npos)
-			inspectStructure(*it, blockStack.top(), confRelatives);
-		if (blockStack.size() == 2 && isPushed)
-			ctxs.push_back(createCtx(blockStack.top()));
-		if (blockStack.top() == "server" && isPushed)
-		{
-			// serverInfo = new struct ConfParseUtil::SServer;
-			;
-		}
-		if (blockStack.top() == "location" && isPushed)
-		{
-			// locationInfo = new struct ConfParseUtil::SLocation;
-			;
-		}
-		//ディレクティブはstackには積まれない
-		if (isPushed == false)
-		{
-			directiveValue = keyValue(it, tokens);
-			if (!directiveValue.empty())
-			{
-				if (directiveValue.find(' ') == std::string::npos)
-					throw NoValueException("No Value: " + directiveValue);
-				//ここで一旦構造体に情報を詰め込んでおく
 				if (blockStack.top() == "server")
-					storeServerDirective(serverInfo, directiveValue);
-				//多分Locatinoで行くのは無理だからstructuer作る必要がある
+				{
+					//serverInfoにstoreした情報をServerクラスに入れていく
+					httpCtx = dynamic_cast<HttpConfCtx*>(ctxs.back());
+					store2Server(*httpCtx, serverInfo);
+					// delete serverInfo;
+					// bzero(&serverInfo, sizeof(serverInfo));
+					serverBzero(serverInfo);
+				}
 				if (blockStack.top() == "location")
-					storeLocationDirective(locationInfo, directiveValue);
-				//serverブロックが終わった時にクラスにaddする。その時にVServerの形成を行う
+				{
+					serverInfo.locations.push_back(locationInfo);
+					// bzero(&locationInfo, sizeof(locationInfo));
+					locationBzero(locationInfo);
+					// delete locationInfo;
+				}
+				blockStack.pop();
 			}
-			// Iteratorを値の分進める
-			it += ConfParseUtil::count(keyValue(it, tokens), ' ');
+			//;があると値なので構造は検査しなくてい(;がない時に構造検査をする)
+			else if ((*it).find(";") == std::string::npos)
+				inspectStructure(*it, blockStack.top(), confRelatives);
+			if (blockStack.size() == 2 && isPushed)
+				ctxs.push_back(createCtx(blockStack.top()));
+			if (blockStack.top() == "server" && isPushed)
+			{
+				// serverInfo = new struct ConfParseUtil::SServer;
+				;
+			}
+			if (blockStack.top() == "location" && isPushed)
+			{
+				// locationInfo = new struct ConfParseUtil::SLocation;
+				;
+			}
+			//ディレクティブはstackには積まれない
+			if (isPushed == false)
+			{
+				directiveValue = keyValue(it, tokens);
+				if (!directiveValue.empty())
+				{
+					if (directiveValue.find(' ') == std::string::npos)
+						throw NoValueException("No Value: " + directiveValue);
+					//ここで一旦構造体に情報を詰め込んでおく
+					if (blockStack.top() == "server")
+						storeServerDirective(serverInfo, directiveValue);
+					//多分Locatinoで行くのは無理だからstructuer作る必要がある
+					if (blockStack.top() == "location")
+						storeLocationDirective(locationInfo, directiveValue);
+					//serverブロックが終わった時にクラスにaddする。その時にVServerの形成を行う
+				}
+				// Iteratorを値の分進める
+				it += ConfParseUtil::count(keyValue(it, tokens), ' ');
+			}
+			it++;
 		}
-		it++;
+		if (blockStack.size() != 1)
+			throw UnclosedBraceException("Unclosed Brace " + blockStack.top());
 	}
-	if (blockStack.size() != 1)
-		throw UnclosedBraceException("Unclosed Brace " + blockStack.top());
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		if (!ctxs.empty())
+		{
+			for (std::vector<ConfCtx*>::iterator it = ctxs.begin(); it != ctxs.end(); it++)
+				delete *it;
+		}
+		throw std::runtime_error("Config File Error");
+	}
 	return ctxs;
 }
 

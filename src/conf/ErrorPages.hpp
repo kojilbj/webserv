@@ -38,6 +38,9 @@ public:
 	ErrorPages(void);
 	ErrorPages(const ErrorPages& errorPages);
 	~ErrorPages(void);
+
+	void clear(void);
+
 	void addErrorPage(const std::string& path, const std::string& errorNumber);
 	void addErrorPage(const ErrorPage& errorPage);
 

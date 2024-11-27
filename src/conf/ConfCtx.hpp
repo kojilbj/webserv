@@ -13,9 +13,9 @@ namespace Wbsv
 	{
 	public:
 		ConfCtx(const std::string& protoName)
-			: name(protoName){};
-		virtual ~ConfCtx(){};
-		virtual std::string getName()
+			: name(protoName) { };
+		virtual ~ConfCtx() { };
+		virtual std::string getName(void)
 		{
 			return name;
 		}
