@@ -47,9 +47,12 @@ VServerCtx::VServerCtx(const VServerCtx& other)
 VServerCtx::~VServerCtx()
 {
 	std::vector<LocationCtx*>::iterator it;
-	for (it = locationCtxs_.begin(); it != locationCtxs_.end(); it++)
+	if (!locationCtxs_.empty())
 	{
-		delete *it;
+		for (it = locationCtxs_.begin(); it != locationCtxs_.end(); it++)
+		{
+			delete *it;
+		}
 	}
 };
 
@@ -96,75 +99,100 @@ void VServerCtx::addLocation(struct ConfParseUtil::SLocation location)
 	if (!location.cgiIndex.empty())
 	{
 		cgiLocationCtx = new CgiLocationCtx();
-		if (!location.path.empty())
-			cgiLocationCtx->setPath(location.path);
-		if (!location.autoIndex.empty())
-			cgiLocationCtx->setAutoIndex(location.autoIndex);
-		if (!location.limitExcept.empty())
+		try
 		{
-			std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
-			cgiLocationCtx->setLimitExcept(0);
-			for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
+			if (!location.path.empty())
+				cgiLocationCtx->setPath(location.path);
+			if (!location.autoIndex.empty())
+				cgiLocationCtx->setAutoIndex(location.autoIndex);
+			if (!location.limitExcept.empty())
 			{
-				cgiLocationCtx->addLimitExcept(*it);
+				std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
+				cgiLocationCtx->setLimitExcept(0);
+				for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
+				{
+					cgiLocationCtx->addLimitExcept(*it);
+				}
 			}
+			if (!location.cgiIndex.empty())
+				cgiLocationCtx->setIndex(location.cgiIndex);
+			//paramがちょい不明
+			if (!location.cgiParam.empty())
+			{
+				std::string key = location.cgiParam.substr(0, location.cgiParam.find(' '));
+				std::string path = location.cgiParam.substr(location.cgiParam.find(' ') + 1);
+				cgiLocationCtx->setParam(key, path);
+			}
+			if (!location.cgiStore.empty())
+			{
+				cgiLocationCtx->setStore(location.cgiStore);
+			}
+			addLocation(cgiLocationCtx);
 		}
-		if (!location.cgiIndex.empty())
-			cgiLocationCtx->setIndex(location.cgiIndex);
-		//paramがちょい不明
-		if (!location.cgiParam.empty())
+		catch (std::exception& e)
 		{
-			std::string key = location.cgiParam.substr(0, location.cgiParam.find(' '));
-			std::string path = location.cgiParam.substr(location.cgiParam.find(' ') + 1);
-			cgiLocationCtx->setParam(key, path);
+			delete cgiLocationCtx;
+			throw e;
 		}
-		if (!location.cgiStore.empty())
-		{
-			cgiLocationCtx->setStore(location.cgiStore);
-		}
-		addLocation(cgiLocationCtx);
 	}
 	else if (!location.redirect.empty())
 	{
 		returnLocationCtx = new ReturnLocationCtx();
-		if (!location.path.empty())
-			returnLocationCtx->setPath(location.path);
-		if (!location.limitExcept.empty())
+		try
 		{
-			returnLocationCtx->setLimitExcept(0);
-			std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
-			for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
+			if (!location.path.empty())
+				returnLocationCtx->setPath(location.path);
+			if (!location.limitExcept.empty())
 			{
-				returnLocationCtx->addLimitExcept(*it);
+				returnLocationCtx->setLimitExcept(0);
+				std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
+				for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
+				{
+					returnLocationCtx->addLimitExcept(*it);
+				}
 			}
+			if (!location.limitExcept.empty())
+				returnLocationCtx->setLimitExcept(location.limitExcept);
+			if (!location.redirect.empty())
+				returnLocationCtx->setRedirect(location.redirect);
+			addLocation(returnLocationCtx);
 		}
-		if (!location.limitExcept.empty())
-			returnLocationCtx->setLimitExcept(location.limitExcept);
-		if (!location.redirect.empty())
-			returnLocationCtx->setRedirect(location.redirect);
-		addLocation(returnLocationCtx);
+		catch (std::exception& e)
+		{
+			delete returnLocationCtx;
+			throw e;
+		}
 	}
 	else
 	{
 		htmlLocationCtx = new HtmlLocationCtx();
-		if (!location.path.empty())
-			htmlLocationCtx->setPath(location.path);
-		if (!location.autoIndex.empty())
-			htmlLocationCtx->setAutoIndex(location.autoIndex);
-		if (!location.limitExcept.empty())
+		try
 		{
-			htmlLocationCtx->setLimitExcept(0);
-			std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
-			for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
+
+			if (!location.path.empty())
+				htmlLocationCtx->setPath(location.path);
+			if (!location.autoIndex.empty())
+				htmlLocationCtx->setAutoIndex(location.autoIndex);
+			if (!location.limitExcept.empty())
 			{
-				htmlLocationCtx->addLimitExcept(*it);
+				htmlLocationCtx->setLimitExcept(0);
+				std::vector<std::string> strs = ConfParseUtil::split(location.limitExcept, ' ');
+				for (std::vector<std::string>::iterator it = strs.begin(); it != strs.end(); it++)
+				{
+					htmlLocationCtx->addLimitExcept(*it);
+				}
 			}
+			if (!location.index.empty())
+				htmlLocationCtx->setIndex(location.index);
+			if (!location.root.empty())
+				htmlLocationCtx->setRoot(location.root);
+			addLocation(htmlLocationCtx);
 		}
-		if (!location.index.empty())
-			htmlLocationCtx->setIndex(location.index);
-		if (!location.root.empty())
-			htmlLocationCtx->setRoot(location.root);
-		addLocation(htmlLocationCtx);
+		catch (std::exception& e)
+		{
+			delete htmlLocationCtx;
+			throw e;
+		}
 	}
 }
 
