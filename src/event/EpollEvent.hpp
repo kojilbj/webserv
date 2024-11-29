@@ -29,7 +29,6 @@ namespace Wbsv
 
 	private:
 		int ep;
-		std::list<struct eventData*> freeList;
 	};
 
 } // namespace Wbsv

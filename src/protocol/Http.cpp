@@ -243,8 +243,9 @@ void Http::selectServerCtx(std::vector<ConfCtx*>* cfs, Listening* ls)
 				std::pair<string, string> listen = sit->getListen();
 				if (getaddrinfo(listen.first.c_str(), listen.second.c_str(), &hints, &result) != 0)
 				{
-					std::cerr << "getaddrinfo: " << strerror(errno) << std::endl;
-					exit(1);
+					std::string msg("getaddrinfo: ");
+					msg += strerror(errno);
+					throw std::string(msg);
 				}
 				struct sockaddr_in* addrIn = (struct sockaddr_in*)result->ai_addr;
 				if (addrIn->sin_port == ls->sockaddrIn.sin_port &&
@@ -356,9 +357,6 @@ int Http::processRequestLine()
 			printLog(LOG_DEBUG, "Version: HTTP/" + ma.str() + "." + mi.str());
 #endif
 			requestLineLen = pos;
-			/* processRequestUri(); */
-			/* processValidataHost(); */
-			/* setVirtualServer(); */
 			return processRequestHeader();
 		}
 		else if (rv != AGAIN)
@@ -423,11 +421,6 @@ int Http::processRequestHeader()
 #endif
 				if (readnum <= 0)
 					return ERROR;
-				/* if (readnum >= leftAvailableHeaderSize) */
-				/* { */
-				/* 	std::cout << "Request-Header Too Large (Bad Request)" << std::endl; */
-				/* 	return ERROR; */
-				/* } */
 				if (readnum == leftAvailableHeaderSize)
 					ready = true;
 				alreadyRead = true;
@@ -580,11 +573,6 @@ int Http::parseRequestLine()
 		case SEGMENT:
 			if (std::isalnum(headerIn[pos]))
 				break;
-			/* else if (headerIn[pos] == '%') */
-			/* { */
-			/* 	state = HEX; */
-			/* 	break; */
-			/* } */
 			else if (headerIn[pos] == SP)
 			{
 				state = VERSION_H;
@@ -593,35 +581,6 @@ int Http::parseRequestLine()
 				start = pos + 1;
 				break;
 			}
-			// else if (headerIn[pos] == '/')
-			// {
-			// 	if (headerIn[pos - 1] == '/')
-			// 		return INVALID_URI;
-			// 	break;
-			// }
-			// switch (headerIn[pos])
-			// {
-			// case ':':
-			// case '@':
-			// case '&':
-			// case '=':
-			// case '+':
-			// case '$':
-			// case ',':
-			// case '-':
-			// case '_':
-			// case '.':
-			// case '!':
-			// case '~':
-			// case '*':
-			// case '\'':
-			// case '(':
-			// case ')':
-			// case ';': // it may be out of rules
-			// 	break;
-			// default:
-			// 	return INVALID_URI;
-			// }
 			break;
 		case VERSION_H:
 			if (headerIn[pos] != 'H')
@@ -862,9 +821,7 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 				chunkSizeStr_ += buf[i];
 				std::stringstream ss;
 				ss << std::hex << chunkSizeStr_;
-				// ss << tmp;
 				ss >> chunkSize_;
-				// chunkSize_ += 100;
 				if (chunkSize_ == 0)
 					state = LAST_CHUNK_ALMOST_DONE;
 				else
@@ -904,9 +861,6 @@ int Http::parseChunkedRequest(const char* buf, size_t size)
 			state = CHUNK_DATA;
 			break;
 		case CHUNK_DATA:
-			// #ifdef DEBUG
-			// 			std::cout << countChunkData_ << std::endl;
-			// #endif
 			if (countChunkData_ == chunkSize_)
 			{
 				if (buf[i] != CR)
@@ -950,7 +904,7 @@ int Http::processRequest()
 	if (headersIn.find("Transfer-Encoding") != headersIn.end()) // chunked Transfer-Encoding
 	{
 		printLog(LOG_DEBUG, "processing transfer-encoding");
-		int rv = DONE;
+		int rv = OK;
 		if (alreadyRead)
 		{
 			if (headerIn.size() - pos > vserverCtx_->getClientMaxBodySize())
@@ -991,13 +945,6 @@ int Http::processRequest()
 				rv = parseChunkedRequest(headerIn.c_str() + pos,
 										 (headerIn.size() - pos > 1024) ? 1024
 																		: (headerIn.size() - pos));
-#ifdef DEBUG
-				std::cout << (rv == DONE	? "rv == DONE"
-							  : rv == ERROR ? "rv == ERROR"
-							  : rv == OK	? "rv == OK"
-											: "rv == AGAIN")
-						  << std::endl;
-#endif
 				if (rv == DONE)
 					break;
 				else if (rv == ERROR) // ERROR
@@ -1009,11 +956,6 @@ int Http::processRequest()
 					return finalizeRequest();
 				}
 				writenum = write(requestBodyFileFd_, unchunkedRequestBuf_, unchunkedRequestSize_);
-#ifdef DEBUG
-				std::cout << "writenum: " << writenum << std::endl;
-				std::cout << "unchunkedRequestSize_: " << unchunkedRequestSize_ << std::endl;
-				std::cout << "unchunkedRequestBuf_: " << unchunkedRequestBuf_ << std::endl;
-#endif
 				if (writenum < 0)
 				{
 					closeRequestBodyFileFd();
@@ -1066,13 +1008,6 @@ int Http::processRequest()
 			std::cout << "-----------------------------------------" << std::endl;
 #endif
 			rv = parseChunkedRequest(chunkedRequestBuf_, readnum);
-#ifdef DEBUG
-			std::cout << (rv == DONE	? "rv == DONE"
-						  : rv == ERROR ? "rv == ERROR"
-						  : rv == OK	? "rv == OK"
-										: "rv == AGAIN")
-					  << std::endl;
-#endif
 			if (rv == ERROR)
 			{
 				closeRequestBodyFileFd();
@@ -1083,11 +1018,6 @@ int Http::processRequest()
 			}
 			ssize_t writenum =
 				write(requestBodyFileFd_, unchunkedRequestBuf_, unchunkedRequestSize_);
-#ifdef DEBUG
-			std::cout << "writenum: " << writenum << std::endl;
-			std::cout << "unchunkedRequestSize_: " << unchunkedRequestSize_ << std::endl;
-			std::cout << "unchunkedRequestBuf_: " << unchunkedRequestBuf_ << std::endl;
-#endif
 			if (writenum < 0)
 			{
 				closeRequestBodyFileFd();
@@ -1139,10 +1069,6 @@ int Http::processRequest()
 			}
 			ssize_t writenum =
 				write(requestBodyFileFd_, headerIn.c_str() + pos, headerIn.size() - pos);
-#ifdef DEBUG
-			std::cout << "writenum: " << writenum << std::endl;
-			std::cout << "body: " << std::endl << headerIn.c_str() + pos << std::endl;
-#endif
 			if (writenum == -1)
 			{
 				closeRequestBodyFileFd();
@@ -1252,12 +1178,6 @@ int Http::finalizeRequest()
 {
 	printLog(LOG_DEBUG, "Http::finalizeRequest");
 	wevReady = true;
-	// if (requestBodyFileFd_ != -1)
-	// {
-	// 	close(requestBodyFileFd_);
-	// 	requestBodyFileFd_ = -1;
-	// 	std::remove(requestBodyFileName_.c_str());
-	// }
 	revHandler = &Http::finalizeRequest;
 	// it may be not needed
 	if (!alreadyWrite)
@@ -1419,7 +1339,6 @@ int Http::finalizeRequest()
 						  << std::endl;
 				std::cout << "readnum from regular file: " << readnum << std::endl;
 				std::cout << "writenum to client: " << writenum << std::endl;
-				std::cout << "send buf to client: " << responseBodyBuf_ << std::endl;
 				std::cout << "-----------------------------------------" << std::endl;
 #endif
 				if (writenum == -1)
@@ -1427,15 +1346,12 @@ int Http::finalizeRequest()
 					close(fd_);
 					return ERROR;
 				}
-				// if (writenum < readnum || writenum == 1024)
-				// {
 				responseState = messageBodyDoing;
 				if (writenum < readnum)
 					pos = writenum;
 				else
 					pos = 1024;
 				return AGAIN;
-				// }
 			}
 			else // continue ???
 				break;
@@ -1504,14 +1420,11 @@ int Http::finalizeRequest()
 					close(fd_);
 					return ERROR;
 				}
-				// if (writenum < readnum || writenum == 1024)
-				// {
 				if (writenum < readnum)
 					pos = writenum;
 				else
 					pos = 1024;
 				return AGAIN;
-				// }
 			}
 			else
 			{
@@ -1529,13 +1442,9 @@ int Http::finalizeRequest()
 					close(fd_);
 					return ERROR;
 				}
-				// if (writenum < sizeof(responseBodyBuf_) - pos || pos + writenum == 1024)
-				// {
 				pos += writenum;
 				return AGAIN;
-				// }
 			}
-			// close(fd_);
 		}
 		else
 		{
@@ -1562,6 +1471,7 @@ int Http::finalizeRequest()
 	{
 		continueRequest_ = false;
 		wevReady = false;
+		alreadyRead = true;
 		responseState = 0;
 		statusLine = "";
 		headerOut = "";
@@ -1586,7 +1496,6 @@ int Http::readDiscardedRequest()
 	char buf[bufSize];
 	std::memset(buf, 0, bufSize);
 	ssize_t readnum = recv(c.cfd, buf, bufSize, 0);
-	std::cout << readnum << std::endl;
 	if (readnum == -1 || readnum == 0 || readnum < bufSize)
 		return OK;
 	revHandler = &Http::readDiscardedRequest;

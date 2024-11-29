@@ -1,6 +1,7 @@
 #include "CgiLocationCtx.hpp"
 
 using namespace Wbsv;
+
 CgiLocationCtx::CgiLocationCtx(void)
 {
 #ifdef DEBUG
@@ -163,13 +164,14 @@ static int haveRightAccess(std::string& path)
 	// file
 	if (access(path.c_str(), F_OK) == -1)
 		return F_KO;
-	// if (access(path.c_str(), R_OK | X_OK) == -1)
-	// 	return RX_KO;
 	return FRX_OK;
 }
 
 int CgiLocationCtx::contentHandler(Http& h)
 {
+#ifdef DEBUG
+	printLog(LOG_DEBUG, "CgiLocationCtx::contentHandler");
+#endif
 	std::string scriptFileNameTmp = param_["SCRIPT_FILENAME"];
 	parseUri(h, param_, index_, store_);
 	headerIn2Param(h, param_);
@@ -191,11 +193,12 @@ int CgiLocationCtx::contentHandler(Http& h)
 		}
 	}
 #ifdef DEBUG
-	std::cout << "Cgi contentHandler" << std::endl;
+	printLog(LOG_DEBUG, "cgi environ created");
 	std::map<std::string, std::string>::iterator itDebug = param_.begin();
 	for (; itDebug != param_.end(); itDebug++)
 	{
-		std::cout << "{ " << itDebug->first << " : " << itDebug->second << " }" << std::endl;
+		std::string msg("{ ");
+		msg += itDebug->first + " : " + itDebug->second + " }\n";
 	}
 #endif
 	size_t pos = param_["SCRIPT_FILENAME"].rfind(".");
@@ -209,8 +212,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 	std::string ext(param_["SCRIPT_FILENAME"].substr(pos + 1));
 	if (ext == "php")
 	{
-		// pathname = "/home/kisobe/.brew/bin/php-cgi";
-		pathname = "/usr/bin/php-cgi";
+		pathname = "/home/kisobe/.brew/bin/php-cgi";
+		//pathname = "/usr/bin/php-cgi";
 	}
 	// else if (ext == "py")
 	// 	pathname = "/usr/bin/python3";
@@ -273,8 +276,11 @@ int CgiLocationCtx::contentHandler(Http& h)
 	}
 	if (pid == 0)
 	{
-		std::cout << "argv[0]: " << argv[0] << std::endl;
-		std::cout << "argv[1]: " << argv[1] << std::endl;
+#ifdef DEBUG
+		std::stringstream msg;
+		msg << "argv[0]: " << argv[0] << ", argv[1]: " << argv[1] << "\n";
+		printLog(LOG_DEBUG, msg.str());
+#endif
 		// child process
 		close(p2cFd[1]);
 		dup2(p2cFd[0], STDIN_FILENO);
@@ -283,7 +289,7 @@ int CgiLocationCtx::contentHandler(Http& h)
 		char** pEnvrion = environ;
 		execve(argv[0], argv, pEnvrion);
 		std::cerr << "execve: " << strerror(errno) << std::endl;
-		exit(EXIT_FAILURE);
+		std::exit(EXIT_FAILURE);
 	}
 	else
 	{
@@ -299,35 +305,6 @@ int CgiLocationCtx::contentHandler(Http& h)
 		fcntl(h.upstream->writeFd, F_SETFL, fcntl(h.upstream->writeFd, F_GETFL) | O_NONBLOCK);
 		fcntl(h.upstream->readFd, F_SETFL, fcntl(h.upstream->readFd, F_GETFL) | O_NONBLOCK);
 		h.upstream->p = reinterpret_cast<Protocol*>(&h);
-		// int fd = open(h.getRequestBodyFileName().c_str(), O_RDONLY);
-		// for (;;)
-		// {
-		// 	size_t bufSize = 1024;
-		// 	char buf[bufSize + 1];
-		// 	std::memset(buf, 0, bufSize + 1);
-		// 	ssize_t readnum = read(fd, buf, bufSize);
-		// 	if (readnum <= 0)
-		// 		break;
-		// 	// maybe block
-		// 	ssize_t writenum = write(p2cFd[1], buf, readnum);
-		// 	if (writenum < 0)
-		// 		return ERROR;
-		// }
-		// close(fd);
-		// close(p2cFd[1]);
-		// std::remove(h.getRequestBodyFileName().c_str());
-
-		// #ifdef DEBUG
-		// 		std::cout << "-----------------------" << std::endl;
-		// 		std::cout << "Cgi executed" << std::endl << "result:" << std::endl;
-		// 		size_t bufSize = 1024;
-		// 		char cgiBuf[bufSize + 1];
-		// 		std::memset(cgiBuf, 0, bufSize + 1);
-		// 		ssize_t cgiReadnum = read(c2pFd[0], cgiBuf, bufSize);
-		// 		std::cout << "readnum: " << cgiReadnum << std::endl;
-		// 		std::cout << "buf: " << cgiBuf << std::endl;
-		// 		std::cout << "-----------------------" << std::endl;
-		// #endif
 	}
 	return DONE;
 }

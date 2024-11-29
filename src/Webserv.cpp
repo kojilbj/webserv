@@ -67,25 +67,29 @@ void Webserv::openListeningSocket()
 		s = socket(it->family, it->socktype, 0);
 		if (s == -1)
 		{
-			std::cerr << "socket: " << strerror(errno) << std::endl;
-			exit(1);
+			std::string msg("socket: ");
+			msg += strerror(errno);
+			throw std::string(msg);
 		}
 		fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
 		int optval = 1;
 		if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1)
 		{
-			std::cerr << "setsockopt: " << strerror(errno) << std::endl;
-			exit(1);
+			std::string msg("setsockopt: ");
+			msg += strerror(errno);
+			throw std::string(msg);
 		}
 		if (bind(s, (struct sockaddr*)&it->sockaddrIn, it->socklen) != 0)
 		{
-			std::cerr << "bind: " << strerror(errno) << std::endl;
-			exit(1);
+			std::string msg("bind: ");
+			msg += strerror(errno);
+			throw std::string(msg);
 		}
 		if (listen(s, it->backlog) == -1)
 		{
-			std::cerr << "listen: " << strerror(errno) << std::endl;
-			exit(1);
+			std::string msg("listen: ");
+			msg += strerror(errno);
+			throw std::string(msg);
 		}
 		it->sfd = s;
 	}
@@ -112,8 +116,9 @@ void Webserv::acceptEvent(Listening* ls)
 #endif
 	if (cfd == -1)
 	{
-		std::cerr << "accept: " << strerror(errno) << std::endl;
-		exit(1);
+		std::string msg("accept: ");
+		msg += strerror(errno);
+		throw std::string(msg);
 	}
 	fcntl(cfd, F_SETFL, fcntl(cfd, F_GETFL) | O_NONBLOCK);
 	if (ls->protocol == "HTTP")
@@ -135,7 +140,6 @@ void Webserv::acceptEvent(Listening* ls)
 	else
 	{
 		/* you can add protocol (ex. mail, stream in nginx) */
-		std::cerr << "no such protocol" << std::endl;
-		exit(1);
+		throw std::string("no such protocol");
 	}
 }

@@ -18,8 +18,9 @@ void Epoll::init(Webserv& ws)
 	ep = epoll_create(1024); //ws.getListenings()->size() * 100);
 	if (ep == -1)
 	{
-		std::cerr << "epoll_create: " << strerror(errno) << std::endl;
-		exit(1);
+		std::string msg("epoll_create: ");
+		msg += strerror(errno);
+		throw std::string(msg);
 	}
 	std::vector<Listening>::iterator it;
 	for (it = ws.getListenings()->begin(); it != ws.getListenings()->end(); it++)
@@ -34,8 +35,9 @@ void Epoll::init(Webserv& ws)
 		freeList.push_back(ed);
 		if (epoll_ctl(ep, EPOLL_CTL_ADD, it->sfd, &eventList) == -1)
 		{
-			std::cerr << "epoll_ctl: " << strerror(errno) << std::endl;
-			exit(1);
+			std::string msg("epoll_ctl: ");
+			msg += strerror(errno);
+			throw std::string(msg);
 		}
 	}
 }
@@ -82,9 +84,6 @@ void Epoll::timeOutHandler(Webserv& ws)
 			{
 				printLog(LOG_DEBUG, "timeout");
 				timeout = true;
-				// close(p->c.cfd);
-				// ws.getFreeList()->remove(p);
-				// delete p;
 				struct eventData* tmp = *it;
 				freeList.remove(*it);
 				delete tmp;
@@ -118,13 +117,18 @@ void Epoll::timeOutHandler(Webserv& ws)
 			// default client_request_timeout is 10s
 			if (upstream->lastReadTime != -1 && std::time(NULL) - upstream->lastReadTime >= 10)
 			{
-				printLog(LOG_DEBUG, "timeout");
+				printLog(LOG_DEBUG, "upstream timeout");
 				timeout = true;
 				if (upstream->writeFd != -1)
+				{
 					close(upstream->writeFd);
+					upstream->writeFd = -1;
+				}
 				close(upstream->readFd);
+				upstream->readFd = -1;
+				struct eventData* tmp = *it;
 				freeList.remove(*it);
-				delete *it;
+				delete tmp;
 				Http* h = reinterpret_cast<Http*>(upstream->p);
 				kill(h->getChildPid(), SIGKILL);
 				h->wevReady = true;
@@ -168,10 +172,10 @@ void Epoll::processEvents(Webserv& ws)
 {
 #ifdef DEBUG
 	static int count = 0;
+	printLog(LOG_DEBUG, "waiting for next events ...");
 #endif
 	int maxEvents = 5;
 	struct epoll_event eventResult[maxEvents];
-	printLog(LOG_DEBUG, "waiting for next events ...");
 	// timeout is 10s
 	int events = epoll_wait(ep, eventResult, maxEvents, 10000);
 #ifdef DEBUG
@@ -190,6 +194,9 @@ void Epoll::processEvents(Webserv& ws)
 	{
 		/* this data pointer must be freed after use */
 		struct eventData* ed = reinterpret_cast<struct eventData*>(eventResult[i].data.ptr);
+		// sometimes closed fd event occured, so check whether it is closed.
+		if (!ed || std::find(freeList.begin(), freeList.end(), ed) == freeList.end())
+			continue;
 		if (ed->type == ListeningFd)
 		{
 			Listening* ls = ed->data.ls;
@@ -207,10 +214,11 @@ void Epoll::processEvents(Webserv& ws)
 			if (eventResult[i].events & EPOLLIN)
 				ws.acceptEvent(ls);
 			if (eventResult[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-				break;
+				continue;
 		}
 		else if (ed->type == ConnectionFd)
 		{
+			int rv = 0;
 			Protocol* p = ed->data.p;
 #ifdef DEBUG
 			std::stringstream fd;
@@ -254,7 +262,7 @@ void Epoll::processEvents(Webserv& ws)
 			}
 			else if ((eventResult[i].events & EPOLLIN))
 			{
-				int rv = p->invokeRevHandler();
+			    rv = p->invokeRevHandler();
 				if (rv == OK)
 				{
 					std::stringstream fd;
@@ -295,9 +303,10 @@ void Epoll::processEvents(Webserv& ws)
 					data_t data;
 					data.upstream = p->upstream;
 					ev->addEvent(p->upstream->writeFd, data, UpstreamFd, ADD);
-					// data_t data2;
-					// data2.p = p;
-					// ev->addEvent(p->c.cfd, data2, ConnectionFd, MOD);
+
+					data_t data2;
+					data2.p = NULL;
+					ev->addEvent(p->c.cfd, data2, ConnectionFd, MOD);
 				}
 				else
 				{
@@ -361,6 +370,20 @@ void Epoll::processEvents(Webserv& ws)
 					data.p = p;
 					ev->addEvent(p->c.cfd, data, ConnectionFd, MOD);
 				}
+				else if (rv == UPSTREAM_AGAIN)
+				{
+					printLog(
+						LOG_DEBUG,
+						"revHandler returned UPSTREAM_AGAIN, add upstream fd to epoll_wait and "
+						"go back to epoll_wait");
+					data_t data;
+					data.upstream = p->upstream;
+					ev->addEvent(p->upstream->writeFd, data, UpstreamFd, ADD);
+					
+					data_t data2;
+					data2.p = NULL;
+					ev->addEvent(p->c.cfd, data2, ConnectionFd, MOD);
+				}
 				else
 				{
 					std::stringstream fd;
@@ -416,8 +439,6 @@ void Epoll::processEvents(Webserv& ws)
 					data_t data;
 					data.upstream = upstream;
 					ev->addEvent(upstream->readFd, data, UpstreamFd, ADD);
-					// ws.getFreeList()->remove(p);
-					// delete p;
 				}
 				else if (rv == AGAIN)
 				{
@@ -431,11 +452,12 @@ void Epoll::processEvents(Webserv& ws)
 				{
 					printLog(LOG_DEBUG, "upstream revHandler returned ERROR, close connection");
 					close(upstream->writeFd);
+					upstream->writeFd = -1;
 					close(upstream->readFd);
+					upstream->readFd = -1;
 					data_t data;
 					data.p = upstream->p;
 					ev->addEvent(upstream->p->c.cfd, data, ConnectionFd, MOD);
-					// finalizeRequest
 				}
 				freeList.remove(ed);
 				delete ed;
@@ -446,22 +468,17 @@ void Epoll::processEvents(Webserv& ws)
 					upstream->peerClosed = true;
 				if (eventResult[i].events & EPOLLIN)
 					upstream->in = true;
-				// if (upstream->getRequestBodyFd() != -1)
-				// {
-				// 	close(upstream->getRequestBodyFd());
-				// 	upstream->setRequestBodyFd(-1);
-				// 	Http* h = reinterpret_cast<Http*>(upstream->p);
-				// 	std::remove(h->requestBodyFileName_.c_str());
-				// }
 				int rv = upstream->invokeRevHandler();
 				upstream->in = false;
 				if (rv == OK)
 				{
 					printLog(LOG_DEBUG, "upstream revHandler returned OK, close connection");
 					close(upstream->readFd);
+					upstream->readFd = -1;
 					data_t data;
 					data.p = upstream->p;
 					ev->addEvent(upstream->p->c.cfd, data, ConnectionFd, MOD);
+					//keepConnection = false;
 				}
 				else if (rv == AGAIN)
 				{
@@ -475,8 +492,12 @@ void Epoll::processEvents(Webserv& ws)
 				{
 					printLog(LOG_DEBUG, "upstream revHandler returned ERROR, close connection");
 					if (upstream->writeFd != -1)
+					{
 						close(upstream->writeFd);
+						upstream->writeFd = -1;
+					}
 					close(upstream->readFd);
+					upstream->readFd = -1;
 					data_t data;
 					data.p = upstream->p;
 					ev->addEvent(upstream->p->c.cfd, data, ConnectionFd, MOD);
@@ -486,12 +507,7 @@ void Epoll::processEvents(Webserv& ws)
 			}
 		}
 		else
-		{
-#ifdef DEBUG
-			std::cerr << "unknown event occured" << std::endl;
-#endif
-			break;
-		}
+			printLog(LOG_DEBUG, "unknown event occured");
 	}
 }
 
@@ -504,18 +520,25 @@ void Epoll::addEvent(int fd, data_t& data, int type, int option)
 		op = EPOLL_CTL_ADD;
 	else // MOD
 		op = EPOLL_CTL_MOD;
-	struct eventData* ed = new struct eventData;
-	ed->type = type;
-	if (type == ConnectionFd)
-		ed->data.p = data.p;
-	else // UpstreamFd
-		ed->data.upstream = data.upstream;
+	struct eventData* ed;
+	if (type == ConnectionFd && !data.p)
+		ed = NULL;
+	else
+	{
+		ed = new struct eventData;
+		ed->type = type;
+		if (type == ConnectionFd)
+			ed->data.p = data.p;
+		else // UpstreamFd
+			ed->data.upstream = data.upstream;
+	}
 	eventList.data.ptr = reinterpret_cast<void*>(ed);
-	freeList.push_back(ed);
+	if (ed)
+		freeList.push_back(ed);
 	if (epoll_ctl(ep, op, fd, &eventList) == -1)
 	{
-		std::cout << fd << std::endl;
-		std::cerr << "epoll_ctl: " << strerror(errno) << std::endl;
-		exit(1);
+		std::string msg("epoll_ctl: ");
+		msg += strerror(errno);
+		throw std::string(msg);
 	}
 }

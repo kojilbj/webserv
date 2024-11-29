@@ -2,6 +2,8 @@
 
 using namespace Wbsv;
 
+extern Event* ev;
+
 Protocol::~Protocol()
 {
 	std::vector<PhaseHandler*>::iterator it;
