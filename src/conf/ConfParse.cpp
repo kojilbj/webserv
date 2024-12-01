@@ -187,7 +187,12 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 			isPushed = false;
 			if (*it == "{")
 			{
-				blockStack.push(*(it - 1));
+				if (it == tokens.begin())
+					throw std::runtime_error("Undefined Block");
+				if (*(it - 1) == "{")
+					throw std::runtime_error("Consecutive '{");
+				else
+					blockStack.push(*(it - 1));
 				isPushed = true;
 			}
 			else if (*it == "}")
@@ -208,7 +213,10 @@ ConfParse::parser(const std::vector<std::string>& tokens,
 					locationBzero(locationInfo);
 					// delete locationInfo;
 				}
-				blockStack.pop();
+				if (blockStack.size() > 1)
+					blockStack.pop();
+				else
+					throw std::runtime_error("Extra '}'");
 			}
 			//;があると値なので構造は検査しなくてい(;がない時に構造検査をする)
 			else if ((*it).find(";") == std::string::npos)
