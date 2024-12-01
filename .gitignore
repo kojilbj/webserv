@@ -31,3 +31,7 @@ webserv
 *.exe
 *.out
 *.app
+
+# pytest
+__pycache__/
+.pytest_cache

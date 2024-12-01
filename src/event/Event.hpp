@@ -37,6 +37,7 @@ namespace Wbsv
 		virtual void processEventsLoop(Webserv& ws) = 0;
 		virtual void processEvents(Webserv& ws) = 0;
 		virtual void addEvent(int fd, data_t& data, int type, int option) = 0;
+		std::list<struct eventData*> freeList;
 	};
 } // namespace Wbsv
 

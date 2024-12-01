@@ -66,4 +66,5 @@ namespace Wbsv
 } // namespace Wbsv
 
 #include "Http.hpp"
+#include "log.hpp"
 #endif

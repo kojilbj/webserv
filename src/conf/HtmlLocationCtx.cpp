@@ -23,7 +23,7 @@ const std::string& HtmlLocationCtx::getRoot(void) const
 
 static int autoindexHandler(Http& h, std::string& dirname)
 {
-	std::cout << "autoindexHandler" << std::endl;
+	printLog(LOG_DEBUG, "autoindexHandler");
 	DIR* dirp = opendir(dirname.c_str());
 	if (!dirp)
 		return h.createResponse("404");
@@ -86,18 +86,12 @@ static int haveRightAccess(std::string& path, int method)
 				if (access(dir.c_str(), F_OK) == -1)
 					return F_KO;
 				if (access(dir.c_str(), X_OK) == -1)
-				{
-					std::cout << "X_KO: " << path.substr(0, i + 1) << std::endl;
 					return WX_KO;
-				}
 			}
 		}
 		std::string dir(path.substr(0, slashPos + 1));
 		if (access(dir.c_str(), W_OK) == -1)
-		{
-			std::cout << "W_KO: " << path.substr(0, slashPos + 1) << std::endl;
 			return WX_KO;
-		}
 		return FRWX_OK;
 	}
 	for (size_t i = 0; i < path.size(); i++)
@@ -145,7 +139,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 				h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
 				h.messageBodyOut = h.defaultErrorPages["403"];
 				std::stringstream size;
-				size << h.messageBodyOut;
+				size << h.messageBodyOut.size();
 				h.headerOut += "Content-Type: text/html\r\n";
 				h.headerOut += "Content-Length: " + size.str() + "\r\n";
 				return DONE;
@@ -174,7 +168,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 					h.statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
 					h.messageBodyOut = h.defaultErrorPages["500"];
 					std::stringstream size;
-					size << h.messageBodyOut;
+					size << h.messageBodyOut.size();
 					h.headerOut += "Content-Type: text/html\r\n";
 					h.headerOut += "Content-Length: " + size.str() + "\r\n";
 					return DONE;
@@ -218,7 +212,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 				h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
 				h.messageBodyOut = h.defaultErrorPages["403"];
 				std::stringstream size;
-				size << h.messageBodyOut;
+				size << h.messageBodyOut.size();
 				h.headerOut += "Content-Type: text/html\r\n";
 				h.headerOut += "Content-Length: " + size.str() + "\r\n";
 				return DONE;
@@ -229,7 +223,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 			h.statusLine = "HTTP/1.1 403 Forbidden\r\n";
 			h.messageBodyOut = h.defaultErrorPages["403"];
 			std::stringstream size;
-			size << h.messageBodyOut;
+			size << h.messageBodyOut.size();
 			h.headerOut += "Content-Type: text/html\r\n";
 			h.headerOut += "Content-Length: " + size.str() + "\r\n";
 			return DONE;
@@ -255,7 +249,7 @@ int HtmlLocationCtx::contentHandler(Http& h)
 				h.statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
 				h.messageBodyOut = h.defaultErrorPages["500"];
 				std::stringstream size;
-				size << h.messageBodyOut;
+				size << h.messageBodyOut.size();
 				h.headerOut += "Content-Type: text/html\r\n";
 				h.headerOut += "Content-Length: " + size.str() + "\r\n";
 				return DONE;

@@ -13,8 +13,8 @@ import test_417
 import test_501
 import test_502
 
-WEBSERV_URL = "http://172.17.0.2:8080"
-NGINX_URL = "http://172.17.0.2:8000"
+WEBSERV_URL = "http://127.0.0.1:8080"
+NGINX_URL = "http://127.0.0.1:8000"
 
 ROOT = "/home/kisobe/webserv/test/"
 
@@ -23,9 +23,9 @@ def test_responses():
         if i == 1:
             # update port
             global WEBSERV_URL
-            WEBSERV_URL = "http://172.17.0.2:8081"
+            WEBSERV_URL = "http://127.0.0.1:8081"
             global NGINX_URL
-            NGINX_URL = "http://172.17.0.2:8001"
+            NGINX_URL = "http://127.0.0.1:8001"
         test_100.test_Continue_response()
         test_200.test_OK_response()
         test_204.test_No_Content_response()
