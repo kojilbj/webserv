@@ -212,7 +212,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 	std::string ext(param_["SCRIPT_FILENAME"].substr(pos + 1));
 	if (ext == "php")
 	{
-		pathname = "/home/kisobe/.brew/bin/php-cgi";
+		//pathname = "/home/kisobe/.brew/bin/php-cgi";
+		pathname = "./php-cgi";
 		//pathname = "/usr/bin/php-cgi";
 	}
 	// else if (ext == "py")
@@ -287,7 +288,8 @@ int CgiLocationCtx::contentHandler(Http& h)
 		close(c2pFd[0]);
 		dup2(c2pFd[1], STDOUT_FILENO);
 		char** pEnvrion = environ;
-		execve(argv[0], argv, pEnvrion);
+		chdir("/home/kisobe/.brew/bin");
+		execve(pathname.c_str(), argv, pEnvrion);
 		std::cerr << "execve: " << strerror(errno) << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
