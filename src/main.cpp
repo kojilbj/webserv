@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
 {
 	std::string confFileName;
 	if (argc < 2)
-		confFileName = "default.conf";
+		confFileName = "./test/conf/default.conf";
 	else
 		confFileName = argv[1];
 	try
