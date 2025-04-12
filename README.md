@@ -21,6 +21,8 @@ make debug
 ![alt text](/.github/debug_message.png)
 
 ## development
+* [design](/.github/webserv_design.pdf)
+* [flow](/.github/webserv_flow.pdf)
 
 ## reference
 * https://nginx.org/
